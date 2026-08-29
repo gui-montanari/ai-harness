@@ -1,0 +1,204 @@
+{
+  "project_name": "acme-api",
+  "date": "2026-08-29",
+  "scope": "Repositório de exemplo (não é um projeto real). Serve para validar o PDF.",
+  "methodology": "Constituição: template AGENTS.md da coleção skills. Inventário simulado. Categorias mapeadas para src/core, src/application, src/infrastructure, api/.",
+  "report": {
+    "title": "Relatório de Auditoria de Princípios",
+    "kicker": "SSOT · SRP · HEXAGONAL · TDD",
+    "footer": "gerado por principios-audit",
+    "filename": "relatorio-auditoria-principios.pdf"
+  },
+  "category_labels": {
+    "ssot": "SSOT",
+    "dry": "DRY / duplicação",
+    "srp": "SRP / tamanho",
+    "hexagonal": "Hexagonal",
+    "tdd": "TDD",
+    "dead_code": "Código morto",
+    "yagni_kiss": "YAGNI / KISS"
+  },
+  "category_order": ["ssot", "dry", "srp", "hexagonal", "tdd", "dead_code", "yagni_kiss"],
+  "stack": {
+    "language": "Python 3.12",
+    "framework": "FastAPI",
+    "orm": "SQLAlchemy (deveria estar só em adapters)",
+    "auth": "JWT",
+    "frontend": "React + Vite",
+    "deploy": ["Docker", "GitHub Actions"],
+    "isolation_mechanism": "portas em core/; DI incompleta"
+  },
+  "coverage_notes": {
+    "ssot": "aplicável — regras de preço e tenant",
+    "dry": "aplicável — 12 clusters do scanner, 2 confirmados",
+    "srp": "aplicável — limites da constituição",
+    "hexagonal": "aplicável — core/application/infrastructure",
+    "tdd": "aplicável — tests/unit vs src/application",
+    "dead_code": "aplicável — ruff + leitura",
+    "yagni_kiss": "aplicável"
+  },
+  "findings": [
+    {
+      "id": "P-001",
+      "category": "hexagonal",
+      "severity": "critica",
+      "file": "src/core/domain/order.py",
+      "lines": "3-8",
+      "title": "Domínio importa SQLAlchemy",
+      "description": "A entidade de pedido herda o modelo ORM. core/ não pode conhecer o banco.",
+      "snippet": "from sqlalchemy.orm import Mapped\nclass Order(Base):\n    __tablename__ = \"orders\"",
+      "why_exploitable": "Trocar o banco ou testar o domínio sem I/O fica impossível; a regra vive no adaptador errado.",
+      "exploitability_conditions": "Qualquer teste ou evolução de persistência toca o domínio.",
+      "impact": "Acoplamento total domínio↔infra. DIP invertido.",
+      "fix": "Order vira dataclass/Pydantic puro em core; OrderRecord no adapter implementa OrderRepository.",
+      "acceptance_criteria": [
+        "src/core não importa sqlalchemy",
+        "import-linter barra a dependência no CI"
+      ]
+    },
+    {
+      "id": "P-002",
+      "category": "ssot",
+      "severity": "alta",
+      "file": "apps/web/src/pricing.ts",
+      "lines": "14-22",
+      "title": "Desconto calculado de novo no frontend",
+      "description": "A mesma fórmula de desconto progressivo existe em application/pricing.py.",
+      "snippet": "export function discount(total: number) {\n  return total > 1000 ? total * 0.1 : 0\n}",
+      "why_exploitable": "Dois donos. O backend muda a faixa e a UI mostra preço mentiroso.",
+      "exploitability_conditions": "Usuário vê o total antes do POST. O servidor ainda cobra o valor dele — mas a UI mente.",
+      "impact": "Inconsistência de preço; suporte; possível disputa contratual.",
+      "fix": "Frontend exibe o total que a API devolve. Uma fórmula, em application/pricing.py.",
+      "acceptance_criteria": [
+        "Nenhuma fórmula de faixa de desconto no frontend",
+        "Teste de contrato do payload de preço"
+      ]
+    },
+    {
+      "id": "P-003",
+      "category": "srp",
+      "severity": "media",
+      "file": "src/application/order_service.py",
+      "lines": "1-360",
+      "title": "OrderService cria, cobra, e-mail e CSV",
+      "description": "Arquivo com 360 linhas (limite de aplicação: 300) e quatro motivos para mudar.",
+      "snippet": "class OrderService:\n    def create(...): ...\n    def charge(...): ...\n    def send_receipt(...): ...\n    def export_csv(...): ...",
+      "why_exploitable": "Mudança de e-mail quebra cobrança. O nome já tem quatro verbos.",
+      "exploitability_conditions": "Qualquer PR neste arquivo.",
+      "impact": "Regressão cruzada; revisão cara; testes inchados.",
+      "fix": "Quatro use cases: CreateOrder, ChargeOrder, SendReceipt, ExportOrders. Cada um com porta certa.",
+      "acceptance_criteria": [
+        "Nenhum arquivo de application > 300 linhas",
+        "Cada use case testa um comportamento"
+      ]
+    },
+    {
+      "id": "P-004",
+      "category": "tdd",
+      "severity": "alta",
+      "file": "src/application/charge_order.py",
+      "lines": "1-80",
+      "title": "Cobrança sem teste de unidade",
+      "description": "O use case de cobrança não tem par em tests/unit. Só um e2e que mocka o gateway.",
+      "snippet": "# tests/unit/ — nenhum test_charge_order.py",
+      "why_exploitable": "A regra de recusa por saldo não quebra CI se for apagada.",
+      "exploitability_conditions": "Diff que altere charge_order.py.",
+      "impact": "Regressão silenciosa em dinheiro.",
+      "fix": "tests/unit/application/test_charge_order.py com saldo insuficiente, retry, idempotência — sem I/O.",
+      "acceptance_criteria": [
+        "Apagar a recusa por saldo quebra o unit",
+        "e2e não é o único teste da regra"
+      ]
+    },
+    {
+      "id": "P-005",
+      "category": "dead_code",
+      "severity": "baixa",
+      "file": "src/application/legacy_promo.py",
+      "lines": "1-40",
+      "title": "legacy_promo sem referências",
+      "description": "Módulo não é importado por application, api ou testes.",
+      "snippet": "def apply_promo_2019(order):  # ninguém chama",
+      "why_exploitable": "Leitor trata como regra vigente.",
+      "exploitability_conditions": "Leitura humana; não afeta runtime.",
+      "impact": "Ruído e risco de reativar regra morta.",
+      "fix": "Apagar o arquivo e o import residual se houver.",
+      "acceptance_criteria": [
+        "Arquivo removido",
+        "ruff/knip limpos"
+      ]
+    },
+    {
+      "id": "P-006",
+      "category": "yagni_kiss",
+      "severity": "media",
+      "file": "src/core/ports/publisher.py",
+      "lines": "1-70",
+      "title": "EventPublisher com um consumidor inexistente",
+      "description": "Porta de eventos, adapter Kafka e saga stub. O único fluxo ainda é síncrono no use case.",
+      "snippet": "class EventPublisher(Protocol):\n    def publish(self, topic: str, payload: dict) -> None: ...",
+      "why_exploitable": "Abstração sem segundo cliente. YAGNI + DIP de teatro.",
+      "exploitability_conditions": "Nenhum consumer no repo.",
+      "impact": "Custo de manutenção; falsa sensação de desacoplamento.",
+      "fix": "Remover porta/adapter até existir um consumidor real. Chamar o segundo use case direto.",
+      "acceptance_criteria": [
+        "Sem Kafka no compose deste bounded context",
+        "CreateOrder chama ChargeOrder via application, não via tópico"
+      ]
+    },
+    {
+      "id": "P-007",
+      "category": "dry",
+      "severity": "alta",
+      "file": "src/application/cancel_order.py",
+      "lines": "22-31",
+      "title": "Filtro de tenant copiado e divergente",
+      "description": "cancel usa organization_id; get_order usa tenant_id. Mesma decisão, dois donos.",
+      "snippet": "if order.organization_id != actor.org_id:\n    raise Forbidden()",
+      "why_exploitable": "Cancelamento aceita pedido que Get recusa, ou o contrário.",
+      "exploitability_conditions": "Usuário autenticado de outro tenant.",
+      "impact": "Furo de isolamento (também é segurança).",
+      "fix": "assert_same_tenant(order, actor) no core, único dono. Os dois use cases chamam.",
+      "acceptance_criteria": [
+        "Uma função de posse no core",
+        "Get e Cancel usam a mesma e quebram o mesmo teste"
+      ]
+    }
+  ],
+  "strengths": [
+    {
+      "title": "CreateOrder é um use case estreito",
+      "evidence": "Arquivo com 90 linhas, uma função pública, sem I/O direto — recebe OrderRepository.",
+      "file": "src/application/create_order.py:1-90"
+    },
+    {
+      "title": "Adaptador Redis não vaza no application",
+      "evidence": "CachePort no core; RedisCache só em infrastructure e no DI.",
+      "file": "src/infrastructure/di/container.py:40-55"
+    }
+  ],
+  "weaknesses": [
+    "O domínio ainda é modelo ORM — hexagonal furado na raiz.",
+    "Preço tem dois donos (API e SPA).",
+    "Cobrança, o caminho de dinheiro, não tem unit."
+  ],
+  "recommendations": [
+    { "priority": "P1", "text": "Separar entidade de domínio do modelo SQLAlchemy e trancar com import-linter." },
+    { "priority": "P1", "text": "Uma fórmula de desconto, no application; frontend só renderiza." },
+    { "priority": "P1", "text": "Unit de ChargeOrder com recusa por saldo, antes de qualquer extração." },
+    { "priority": "P2", "text": "Fatiar OrderService em use cases; posse de tenant no core." },
+    { "priority": "P3", "text": "Apagar legacy_promo e o EventPublisher sem consumidor." }
+  ],
+  "issues": [
+    {
+      "title": "[Princípios] core/domain/order.py acoplado ao SQLAlchemy",
+      "labels": ["architecture", "critica"],
+      "body": "## Problema\n\nA entidade de pedido no `core` herda o modelo ORM. Hexagonal e DIP invertidos: o domínio conhece o banco.\n\n## Evidência\n\n`src/core/domain/order.py:3-8`\n\n```python\nfrom sqlalchemy.orm import Mapped\nclass Order(Base):\n    __tablename__ = \"orders\"\n```\n\n## Impacto\n\nImpossível testar o domínio sem I/O; qualquer troca de persistência contamina a regra.\n\n## Sugestão de correção\n\n`Order` puro em `core`. `OrderRecord` + `OrderRepository` adapter. Composition root no DI. Contrato import-linter: core não importa sqlalchemy.\n\n## Critérios de aceite\n\n- [ ] `src/core` não importa sqlalchemy\n- [ ] import-linter no CI barra a dependência\n"
+    },
+    {
+      "title": "[Princípios] Desconto duplicado no frontend e ChargeOrder sem unit",
+      "labels": ["architecture", "alta"],
+      "body": "## Problema\n\nSSOT de preço furado (`apps/web/src/pricing.ts` e `application/pricing.py`) e o use case de cobrança sem `tests/unit`.\n\n## Evidência\n\n`apps/web/src/pricing.ts:14-22` e ausência de `tests/unit/**/test_charge_order.py`.\n\n## Impacto\n\nUI mentirosa; regressão de saldo não quebra CI.\n\n## Sugestão de correção\n\nTotal vem da API. Unit de ChargeOrder com saldo insuficiente — vermelho primeiro.\n\n## Critérios de aceite\n\n- [ ] Nenhuma fórmula de faixa no frontend\n- [ ] Apagar a recusa por saldo quebra o unit\n"
+    }
+  ]
+}

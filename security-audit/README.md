@@ -26,13 +26,13 @@ No repositório a auditar, com esta skill instalada:
 
 ou: “Revisa este código atrás de falhas de segurança.”
 
-O agente copia `scripts/generate_report.py` para `docs/security-audit/` do projeto auditado e gera o PDF em um venv local (nada global).
+O agente copia `shared/generate_report.py` para `docs/security-audit/` do projeto auditado e gera o PDF em um venv local (nada global).
 
 ## Regenerar o PDF
 
 ```bash
 cd docs/security-audit
 python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install -r requirements.txt   # copiado de shared/
 .venv/bin/python generate_report.py findings.json
 ```

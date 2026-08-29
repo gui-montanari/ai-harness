@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Gera o Relatório de Auditoria de Segurança em PDF (A4, pt-BR).
+"""Gera relatório de auditoria em PDF (A4, pt-BR).
+
+Usado por security-audit e principios-audit. Títulos, categorias e nome do
+arquivo vêm de findings.json (`report`, `category_labels`, `category_order`);
+os defaults preservam a auditoria de segurança.
 
 Uso (sempre em venv isolado):
 
     python generate_report.py findings.json
-    python generate_report.py findings.json -o relatorio-auditoria-seguranca.pdf
+    python generate_report.py findings.json -o relatorio.pdf
 """
 
 from __future__ import annotations
@@ -96,6 +100,47 @@ CAT_ORDER = [
     "chaves_expostas",
     "xss",
 ]
+DEFAULT_REPORT = {
+    "title": "Relatório de Auditoria de Segurança",
+    "kicker": "AUDITORIA DE SEGURANÇA · 5 CATEGORIAS",
+    "footer": "gerado por security-audit",
+    "filename": "relatorio-auditoria-seguranca.pdf",
+}
+
+
+def report_meta(data: dict) -> dict:
+    meta = dict(DEFAULT_REPORT)
+    meta.update(data.get("report") or {})
+    return meta
+
+
+def category_labels_of(data: dict) -> dict:
+    labels = dict(CAT_LABEL)
+    labels.update(data.get("category_labels") or {})
+    return labels
+
+
+def category_order_of(data: dict) -> list:
+    declared = data.get("category_order")
+    labels = category_labels_of(data)
+    if declared:
+        order = list(declared)
+    else:
+        order = [k for k in CAT_ORDER if k in labels]
+        for k in labels:
+            if k not in order:
+                order.append(k)
+    for f in data.get("findings") or []:
+        cat = f.get("category")
+        if cat and cat not in order:
+            order.append(cat)
+    return order
+
+
+def cat_name(data: dict, key: str) -> str:
+    return category_labels_of(data).get(key) or str(key).replace("_", " ")
+
+
 REQUIRED_TOP = [
     "project_name",
     "date",
@@ -144,8 +189,9 @@ def load_findings(path: Path) -> dict:
             die(f"finding[{i}] sem campos: {', '.join(miss)}")
         if f["severity"] not in SEV_LABEL:
             die(f"finding[{i}] severity inválida: {f['severity']}")
-        if f["category"] not in CAT_LABEL:
-            die(f"finding[{i}] category inválida: {f['category']}")
+        cat = f.get("category") or ""
+        if not str(cat).replace("_", "").isalnum():
+            die(f"finding[{i}] category inválida: {cat}")
     data.setdefault("coverage_notes", {})
     return data
 
@@ -420,9 +466,10 @@ def make_chip(severity: str, st: dict) -> Table:
 
 
 def cover_banner(data: dict, st: dict, width: float) -> Table:
-    title = f"Relatório de Auditoria de Segurança — {esc(data['project_name'])}"
+    meta = report_meta(data)
+    title = f"{esc(meta['title'])} — {esc(data['project_name'])}"
     inner = [
-        [Paragraph("AUDITORIA DE SEGURANÇA · 5 CATEGORIAS", st["cover_kicker"])],
+        [Paragraph(esc(meta["kicker"]), st["cover_kicker"])],
         [Paragraph(title, st["cover_title"])],
         [
             Paragraph(
@@ -584,13 +631,15 @@ def draw_donut(counts: Counter, dest: Path) -> None:
     plt.close(fig)
 
 
-def draw_bars(cat_counts: Counter, dest: Path) -> None:
-    labels = [CAT_LABEL[k] for k in CAT_ORDER]
-    values = [cat_counts.get(k, 0) for k in CAT_ORDER]
+def draw_bars(data: dict, cat_counts: Counter, dest: Path) -> None:
+    order = category_order_of(data)
+    labels = [cat_name(data, k) for k in order]
+    values = [cat_counts.get(k, 0) for k in order]
     fig, ax = plt.subplots(figsize=(5.6, 4.2), dpi=160)
     fig.patch.set_facecolor("white")
     ax.set_facecolor("white")
-    bar_colors = ["#0F172A", "#334155", "#B91C1C", "#EA580C", "#2563EB"]
+    palette = ["#0F172A", "#334155", "#B91C1C", "#EA580C", "#2563EB", "#D97706", "#059669"]
+    bar_colors = [palette[i % len(palette)] for i in range(len(labels))]
     y = range(len(labels))
     ax.barh(list(y), values, color=bar_colors, height=0.55)
     ax.set_yticks(list(y))
@@ -647,14 +696,14 @@ def findings_table(findings: list, st: dict, width: float) -> Table:
     return t
 
 
-def finding_detail(f: dict, st: dict, width: float) -> list:
+def finding_detail(data: dict, f: dict, st: dict, width: float) -> list:
     chip = make_chip(f["severity"], st)
     head = Table(
         [
             [
                 chip,
                 Paragraph(
-                    f"<b>{esc(f['id'])}</b> · {esc(CAT_LABEL.get(f['category'], f['category']))}<br/>"
+                    f"<b>{esc(f['id'])}</b> · {esc(cat_name(data, f['category']))}<br/>"
                     f"{esc(f['title'])}",
                     st["body_left"],
                 ),
@@ -803,7 +852,7 @@ def build_story(data: dict, st: dict, chart_dir: Path) -> list:
     donut_path = chart_dir / "donut.png"
     bars_path = chart_dir / "bars.png"
     draw_donut(counts, donut_path)
-    draw_bars(cat_counts, bars_path)
+    draw_bars(data, cat_counts, bars_path)
 
     story: list = []
 
@@ -822,14 +871,10 @@ def build_story(data: dict, st: dict, chart_dir: Path) -> list:
         story.append(Spacer(1, 8))
         story.append(Paragraph("Aplicabilidade das categorias", st["h2"]))
         cov_rows = [[Paragraph("<b>Categoria</b>", st["cell_bold"]), Paragraph("<b>Nota</b>", st["cell_bold"])]]
-        key_map = {
-            "banco_sem_tranca": "1. Banco sem tranca",
-            "permissao_navegador": "2. Permissão no navegador",
-            "idor": "3. IDOR",
-            "chaves_expostas": "4. Chaves expostas",
-            "xss": "5. Inputs sem tratamento",
-        }
-        for k, label in key_map.items():
+        order = category_order_of(data)
+        extra = [k for k in coverage.keys() if k not in order]
+        for i, k in enumerate(order + extra, start=1):
+            label = f"{i}. {cat_name(data, k)}"
             cov_rows.append(
                 [
                     Paragraph(esc(label), st["cell"]),
@@ -953,7 +998,7 @@ def build_story(data: dict, st: dict, chart_dir: Path) -> list:
         story.append(Spacer(1, 12))
         story.append(Paragraph("Detalhamento por achado", st["h2"]))
         for f in findings:
-            story.extend(finding_detail(f, st, width))
+            story.extend(finding_detail(data, f, st, width))
 
     # --- e) Recomendações ---
     story.append(Spacer(1, 10))
@@ -1027,30 +1072,31 @@ def build_story(data: dict, st: dict, chart_dir: Path) -> list:
     return story
 
 
-def add_header_footer(canvas, doc, project: str):
+def add_header_footer(canvas, doc, data: dict):
+    meta = report_meta(data)
+    project = data["project_name"]
     canvas.saveState()
     page_w, page_h = A4
-    # header
     canvas.setFillColor(NAVY)
     canvas.rect(0, page_h - 0.45 * cm, page_w, 0.45 * cm, stroke=0, fill=1)
     canvas.setFillColor(MUTED)
     canvas.setFont("Helvetica", 8)
-    header = f"Relatório de Auditoria de Segurança — {project}"
+    header = f"{meta['title']} — {project}"
     canvas.drawString(2 * cm, page_h - 1.35 * cm, header)
     canvas.setStrokeColor(LINE)
     canvas.setLineWidth(0.5)
     canvas.line(2 * cm, page_h - 1.5 * cm, page_w - 2 * cm, page_h - 1.5 * cm)
-    # footer
     canvas.line(2 * cm, 1.55 * cm, page_w - 2 * cm, 1.55 * cm)
     canvas.setFillColor(MUTED)
     canvas.setFont("Helvetica", 8)
-    canvas.drawString(2 * cm, 1.1 * cm, "Uso interno · gerado por security-audit")
+    canvas.drawString(2 * cm, 1.1 * cm, f"Uso interno · {meta['footer']}")
     canvas.drawRightString(page_w - 2 * cm, 1.1 * cm, f"Página {doc.page}")
     canvas.restoreState()
 
 
 def generate(data: dict, output: Path) -> None:
     st = styles()
+    meta = report_meta(data)
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="audit-charts-") as tmp:
         chart_dir = Path(tmp)
@@ -1062,32 +1108,32 @@ def generate(data: dict, output: Path) -> None:
             rightMargin=2 * cm,
             topMargin=2.1 * cm,
             bottomMargin=2 * cm,
-            title=f"Relatório de Auditoria de Segurança — {data['project_name']}",
-            author="security-audit",
+            title=f"{meta['title']} — {data['project_name']}",
+            author=meta["footer"],
         )
         doc.build(
             story,
-            onFirstPage=lambda c, d: add_header_footer(c, d, data["project_name"]),
-            onLaterPages=lambda c, d: add_header_footer(c, d, data["project_name"]),
+            onFirstPage=lambda c, d: add_header_footer(c, d, data),
+            onLaterPages=lambda c, d: add_header_footer(c, d, data),
         )
     print(f"wrote {output}")
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="Gera o PDF da auditoria de segurança.")
+    p = argparse.ArgumentParser(description="Gera o PDF de uma auditoria (segurança ou princípios).")
     p.add_argument("findings", type=Path, help="Caminho para findings.json")
     p.add_argument(
         "-o",
         "--output",
         type=Path,
         default=None,
-        help="PDF de saída (default: relatorio-auditoria-seguranca.pdf ao lado do JSON)",
+        help="PDF de saída (default: report.filename no JSON, ao lado do findings)",
     )
     args = p.parse_args()
     if not args.findings.is_file():
         die(f"arquivo não encontrado: {args.findings}")
     data = load_findings(args.findings)
-    output = args.output or (args.findings.parent / "relatorio-auditoria-seguranca.pdf")
+    output = args.output or (args.findings.parent / report_meta(data)["filename"])
     generate(data, output)
 
 
