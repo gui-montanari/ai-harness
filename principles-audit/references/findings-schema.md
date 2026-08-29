@@ -26,7 +26,7 @@ O gerador `shared/generate_report.py` lê este JSON. Além dos campos comuns da 
     "scalability": "Escala / desacoplamento",
     "resilience": "Resiliência / workers",
     "runtime": "Runtime (async, tenant, retry, semáforo, idempotência)",
-    "consistency": "Consistência (nomes, schema/model)"
+    "consistency": "Consistência (nomes, schema/model, YYYYMMDD_VV)"
   },
   "category_order": ["ssot", "dry", "srp", "hexagonal", "tdd", "dead_code", "yagni_kiss", "security", "scalability", "resilience", "runtime", "consistency"],
   "stack": {
@@ -50,7 +50,7 @@ O gerador `shared/generate_report.py` lê este JSON. Além dos campos comuns da 
     "scalability": "aplicável — compose, workers, donos de tabela",
     "resilience": "aplicável — restart, ACK, DLQ, drain",
     "runtime": "aplicável — políticas globais; o resto herda",
-    "consistency": "aplicável — §3.1 nomes e papéis"
+    "consistency": "aplicável — §3.1 nomes e papéis; §3.2 migrations YYYYMMDD_VV"
   },
   "findings": [],
   "strengths": [],

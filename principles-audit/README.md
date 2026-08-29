@@ -1,6 +1,6 @@
 # principles-audit
 
-Varredura de princípios: SSOT (global → herda), DRY, SRP, hexagonal, TDD, código morto, YAGNI, segurança, escala, resiliência, runtime (async-only, tenant, semáforo, retry, idempotência), consistência (nomes da indústria, schema ≠ entity ≠ record).
+Varredura de princípios: SSOT (global → herda), DRY, SRP, hexagonal, TDD, código morto, YAGNI, segurança, escala, resiliência, runtime (async-only, tenant, semáforo, retry, idempotência), consistência (nomes da indústria, schema ≠ entity ≠ record, migrations `YYYYMMDD_VV`).
 
 Comando: `/principles-audit`  
 Aliases: `/principios-audit` · `/hexagonal-audit`

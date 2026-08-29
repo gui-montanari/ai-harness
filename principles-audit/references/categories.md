@@ -168,7 +168,13 @@ Achado quando:
 - O mesmo tipo é entidade **e** row ORM **e** schema de API
 - `models.py` (ou `types.ts`) mistura os três papéis
 - Bounded context B usa pastas/sufixos diferentes do A sem plano
+- Arquivo de schema `001_*.sql`, `init.sql`, ou montado em `docker-entrypoint-initdb.d`
+- Filename de migration que não casa `YYYYMMDD_VV__snake_description` (constituição §3.2)
+- Prefixo `YYYYMMDD_VV` duplicado no repositório
+- Compose/Makefile aplica dump (`psql < …`) em vez do runner
+- Senha de role, token ou segredo no SQL da migration
+- Dois runners (Alembic **e** SQL cru, Prisma **e** dump) no mesmo schema
 
-**Protegido:** `Order` no domain, `OrderRecord` no adapter, `OrderCreateRequest`/`OrderResponse` na borda; `CreateOrder` como use case; ruff/eslint no CI.
+**Protegido:** `Order` no domain, `OrderRecord` no adapter, `OrderCreateRequest`/`OrderResponse` na borda; `CreateOrder` como use case; ruff/eslint no CI; migrations `YYYYMMDD_VV__…` aplicadas por um runner com ledger.
 
-Correção: alinhar ao padrão **já usado no repo** (indústria da linguagem). Não inventar um quarto sufixo.
+Correção: alinhar ao padrão **já usado no repo** (indústria da linguagem). Não inventar um quarto sufixo. Schema: um runner, filename §3.2.

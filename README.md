@@ -11,7 +11,7 @@ Cada skill é uma pasta com um `SKILL.md` (metadados + instruções) e, quando n
 | Skill | Quando usar |
 |-------|-------------|
 | [`security-audit`](./security-audit/) | Auditoria de segurança em cinco categorias (isolamento de tenant, autorização só no frontend, IDOR, segredos hardcoded, XSS), com relatório PDF em pt-BR e issues prontas para o GitHub. Comando: `/security-audit` |
-| [`principles-audit`](./principles-audit/) | Varredura contra o `AGENTS.md`: hexagonal, TDD, runtime, consistência de nomes e schema/model. Comando: `/principles-audit` |
+| [`principles-audit`](./principles-audit/) | Varredura contra o `AGENTS.md`: hexagonal, TDD, runtime, consistência de nomes, schema/model e migrations `YYYYMMDD_VV`. Comando: `/principles-audit` |
 
 ## Como usar
 

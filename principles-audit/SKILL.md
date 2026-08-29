@@ -7,7 +7,8 @@ description: >
   file size limits, import leaks, worker auto-recovery, DLQ, decoupling, microservices,
   scalability, performance, architectural security, async-only, multi-tenant isolation,
   semaphore, retry policy, idempotency, naming conventions, schema vs domain
-  vs persistence model separation, or repo-wide consistency.
+  vs persistence model separation, schema migrations, YYYYMMDD_VV filenames,
+  docker-entrypoint-initdb dumps, init.sql, or repo-wide consistency.
   Also when they run /principles-audit, /hexagonal-audit, or say "varredura de princípios".
 ---
 
@@ -33,7 +34,7 @@ Entregue achados verificados no código, inventário de cobertura, PDF em pt-BR 
 - [ ] 10. Escala / desacoplamento — worker vs microsserviço, estado, backpressure, dados
 - [ ] 11. Resiliência — restart, ACK, DLQ, drain, probes
 - [ ] 12. Runtime — async-only; tenant/retry/semáforo/idempotência **globais** (o resto herda)
-- [ ] 13. Consistência — nomes da indústria; schema ≠ entity ≠ record; mesmo desenho no repo
+- [ ] 13. Consistência — nomes da indústria; schema ≠ entity ≠ record; migrations `YYYYMMDD_VV__…`; mesmo desenho no repo
 - [ ] 14. Registrar o que está CORRETO (cobertura por camada)
 - [ ] 15. findings.json + PDF + rasterizar páginas
 - [ ] 16. Entregar no chat: arquivo:linha + caminhos
@@ -68,6 +69,8 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 | “Retry no use case é mais claro” | Retry é política global. Use case não tem `for _ in range`. |
 | “Pydantic no domínio é mais rápido” | Schema de borda ≠ entidade. ORM ≠ domínio. §3.1. |
 | “Neste módulo a gente usa camelCase em Python” | O repo tem um case. Indústria da linguagem. |
+| “O init.sql do compose é só para o primeiro boot” | É segundo dono do schema. Migration versionada + runner. Constituição §3.2. |
+| “Alembic já ordena pelos revision ids” | O filename no git ainda precisa `YYYYMMDD_VV`. Ordem visível sem a ferramenta. |
 
 ## Passo 0 — Constituição e stack
 
@@ -106,7 +109,7 @@ Severidade:
 |-------|--------|
 | `critica` | `core` depende de infra; regra de dinheiro/tenant/auth em dois donos; escrita de negócio sem teste; worker de cobrança sem idempotência; dois serviços escrevendo a mesma tabela |
 | `alta` | vazamento de camada; arquivo ≥ 2× o limite; duplicação de regra; módulo novo sem unit; fila sem DLQ/ACK invertido; API e worker no mesmo processo com estado na RAM; falha aberta / tenant no body; I/O sync no event loop; retry/idempotência copiados no use case |
-| `media` | arquivo acima do duro; função > 50; restart ausente; timeout ausente; liveness acoplada ao Redis; microsserviço sem o critério da constituição; `gather` sem semáforo; `OrderService`; schema=ORM |
+| `media` | arquivo acima do duro; função > 50; restart ausente; timeout ausente; liveness acoplada ao Redis; microsserviço sem o critério da constituição; `gather` sem semáforo; `OrderService`; schema=ORM; migration sem `YYYYMMDD_VV` |
 | `baixa` | cheiro de tamanho; código comentado; helper genérico; probe único para vivo e pronto; acrônimo inconsistente (`HTTPClient` vs `HttpClient`) |
 | `informativa` | fronteira ainda sem import-linter; dívida declarada no plano |
 

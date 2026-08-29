@@ -211,6 +211,37 @@ Use case **não** se chama `OrderService`. Handler **não** se chama `order_util
 
 **Teste:** abra dois módulos distantes. Sem olhar o autor, o desenho é o mesmo?
 
+### 3.2 Nome e ordem de migration
+
+Schema evolui por arquivo versionado no git. **Um dono:** o runner (`make migrate` / serviço `migrate` no compose). Dump em `docker-entrypoint-initdb.d`, `001_init.sql`, `psql < dump.sql` no Makefile ou SQL colado no container é segundo dono — achado.
+
+Nome canônico do artefato no git (SQL cru, revisão Alembic ou script Prisma):
+
+```text
+YYYYMMDD_VV__snake_description.sql
+```
+
+Regex: `^[0-9]{8}_[0-9]{2}__[a-z0-9_]+(\.sql|\.py)$`
+
+| Parte | Significa |
+|-------|-----------|
+| `YYYYMMDD` | data de criação (calendário UTC do autor) |
+| `VV` | versão de dois dígitos **naquele dia**, começando em `01` |
+| `__` | separador obrigatório |
+| `snake_description` | o que muda; só `[a-z0-9_]` |
+
+Regras:
+
+- ordem de aplicação = ordem lexicográfica do **filename**, não da pasta
+- prefixo `YYYYMMDD_VV` é único no repositório inteiro
+- próximo número do dia: `max(VV)+1`; dia novo começa em `01`
+- forward-only; destrutiva não no mesmo deploy que remove o último leitor
+- ledger (`schema_migrations` ou a tabela da ferramenta) registra o filename; reaplicar é no-op
+- senha, token e segredo **não** moram no SQL; role recebe senha por env no runner
+- ferramenta (SQL cru, Alembic, Prisma) é **uma**; dois runners no mesmo schema é SSOT furado
+
+**Teste:** `ls` nos diretórios de migration. Sem olhar o runner, a ordem de apply é óbvia?
+
 ---
 
 ## 4. Stack canônica (produto novo)
@@ -223,7 +254,7 @@ Escolha **uma** coluna e seja hexagonal nela. Não misture Django-views-com-regr
 | API | FastAPI | NestJS (domínio **fora** dos controllers) |
 | Tipos | Pydantic v2 | Zod na borda; tipos de domínio no `core` |
 | DB | PostgreSQL 16 + **RLS** | PostgreSQL 16 + RLS |
-| Migrações | Alembic | Prisma migrate **ou** SQL versionado — um dono, nunca dois |
+| Migrações | SQL versionado ou Alembic — um dono; filename §3.2 | Prisma migrate **ou** SQL versionado — um dono; filename §3.2 |
 | Cache / fila | Redis | Redis |
 | HTTP client | porta + **httpx async** (sem `requests`) | porta + fetch/undici **async** (sem `*Sync`) |
 | Runtime | asyncio; `asyncio_mode = strict` | Promises; sem `*Sync` no request path |
@@ -242,7 +273,7 @@ Escolha **uma** coluna e seja hexagonal nela. Não misture Django-views-com-regr
 Comandos canônicos na raiz (`Makefile` é SSOT de *como rodar*):
 
 ```
-make setup | lint | typecheck | test | build | up | down
+make setup | lint | typecheck | test | check-migrations | migrate | build | up | down
 ```
 
 CI chama os mesmos alvos. Ninguém documenta um comando que o Makefile não tem.
@@ -268,7 +299,7 @@ Toda mudança, por menor que seja, passa por isto **antes** do primeiro teste. S
 | 11 | Resiliência | Worker morre no meio? Restart, DLQ, drain? Retry **global**? Idempotência **global**? |
 | 12 | Operação | Log sem PII, métrica, rollback, probe de vivo vs pronto, dono da flag? |
 | 13 | Runtime / SSOT | Async-only? Políticas (tenant, retry, semáforo, idempotência) num dono, o resto herda? |
-| 14 | Consistência | Case da linguagem? Schema ≠ entity ≠ record? Mesmos sufixos no repo inteiro? |
+| 14 | Consistência | Case da linguagem? Schema ≠ entity ≠ record? Mesmos sufixos no repo inteiro? Migration `YYYYMMDD_VV__…` (§3.2)? |
 
 Trivial = um bug óbvio, um nome, um teste faltando em código que você não está reestruturando. Na dúvida, **não é trivial**: plano.
 
@@ -303,7 +334,7 @@ Status: rascunho | aprovado | feito
 | resiliência | ...
 | operação | ...
 | runtime (async, tenant, retry, semáforo, idempotência) | ... |
-| consistência (nomes, schema/model) | ... |
+| consistência (nomes, schema/model, YYYYMMDD_VV) | ... |
 
 ## Abordagem
 <uma abordagem. Não três ensaios.>
@@ -375,6 +406,7 @@ CI: unit + contract + lint + fronteiras **sempre**. Integration/e2e no pipeline 
 - `stop_grace_period` / `terminationGracePeriodSeconds` ≥ o prazo de drain do worker.
 - Limites de CPU/memória. Sem limite, um leak mata o nó e todos os vizinhos.
 - Compose: um serviço = um processo. Segredos só por env/secret, nunca `environment: PASSWORD=...` commitado.
+- Schema entra pelo runner de migration (`make migrate` / serviço `migrate` que completa **antes** da API). Proibido `docker-entrypoint-initdb.d`, `001_init.sql` e `psql < dump.sql`.
 - Mesma imagem em dev/CI/prod; o que muda é config. API e worker **podem** ser a mesma imagem com `command` diferente.
 - Tag imutável (git SHA). `latest` não é versão.
 
@@ -559,5 +591,7 @@ Não invente skill, pasta, ADR ou diagrama “para completar”. Skills de audit
 - `getOrder` em Python ou `OrderService` com três verbos
 - Entidade de domínio = modelo ORM = schema FastAPI/Zod no mesmo tipo
 - `models.py` god-file; segundo bounded context com pastas diferentes sem plano
+- `001_init.sql`, dump em `docker-entrypoint-initdb.d`, ou `psql < dump.sql` no Makefile
+- migration sem data+versão (`YYYYMMDD_VV`) no filename; prefixo duplicado; dois runners de schema
 
 Qualquer um desses: pare, volte às dimensões, corrija o plano. Não empurre o diff.
