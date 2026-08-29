@@ -212,6 +212,53 @@ def shingles(text: str, size: int = 10) -> dict[str, list[int]]:
     return out
 
 
+def scan_deploy(repo: Path) -> dict:
+    """Sinais de resiliência/escala em compose e Dockerfile. O agente confirma."""
+    compose_files: list[str] = []
+    dockerfiles: list[str] = []
+    signals: list[dict] = []
+    for path in repo.rglob("*"):
+        if not path.is_file() or should_skip(path):
+            continue
+        name = path.name.lower()
+        rel = str(path.relative_to(repo))
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if name.startswith("docker-compose") or name in {"compose.yml", "compose.yaml"}:
+            compose_files.append(rel)
+            if not re.search(r"^\s*restart:\s*", text, re.M):
+                signals.append({"file": rel, "kind": "no_restart_policy"})
+            if "healthcheck:" not in text.lower():
+                signals.append({"file": rel, "kind": "compose_no_healthcheck"})
+            if re.search(r"command:.*(?:&&|;).*worker", text, re.I):
+                signals.append({"file": rel, "kind": "api_and_worker_same_command"})
+        elif name == "dockerfile":
+            dockerfiles.append(rel)
+            if "HEALTHCHECK" not in text:
+                signals.append({"file": rel, "kind": "dockerfile_no_healthcheck"})
+            if not re.search(r"^USER\s+", text, re.M):
+                signals.append({"file": rel, "kind": "dockerfile_runs_as_root"})
+        elif path.suffix in {".yaml", ".yml"} and any(
+            p in rel.lower() for p in ("/deploy/", "/k8s/", "/helm/", "/charts/")
+        ):
+            if "kind: Deployment" in text or "kind: StatefulSet" in text:
+                if "livenessProbe" not in text and "liveness_probe" not in text:
+                    signals.append({"file": rel, "kind": "k8s_no_liveness"})
+                if "readinessProbe" not in text and "readiness_probe" not in text:
+                    signals.append({"file": rel, "kind": "k8s_no_readiness"})
+                if "restartPolicy" in text and re.search(
+                    r"restartPolicy:\s*(Never|OnFailure)", text
+                ):
+                    signals.append({"file": rel, "kind": "k8s_restart_not_always"})
+    return {
+        "compose_files": compose_files,
+        "dockerfiles": dockerfiles,
+        "signals": signals,
+    }
+
+
 def classify_file(path: Path, repo: Path, text: str) -> dict:
     rel = str(path.relative_to(repo))
     layer = detect_layer(path)
@@ -274,6 +321,7 @@ def main() -> None:
         dupes.append({"files": sorted(uniq_files), "example_lines": locs[:4]})
 
     files.sort(key=lambda r: (-int(r["over_file"]), -r["lines"]))
+    deploy = scan_deploy(repo)
     summary = {
         "root": str(repo),
         "n_files": len(files),
@@ -281,9 +329,10 @@ def main() -> None:
         "n_functions_over": sum(len(f["functions_over"]) for f in files),
         "n_layer_leaks": sum(len(f["infra_imports"]) for f in files),
         "n_duplicate_clusters": len(dupes),
+        "n_deploy_signals": len(deploy["signals"]),
         "limits": LIMITS,
     }
-    out = {"summary": summary, "files": files, "duplicates": dupes[:80]}
+    out = {"summary": summary, "files": files, "duplicates": dupes[:80], "deploy": deploy}
     json.dump(out, sys.stdout, ensure_ascii=False, indent=2)
     sys.stdout.write("\n")
 

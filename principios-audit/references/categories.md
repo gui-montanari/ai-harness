@@ -1,4 +1,4 @@
-# Sete categorias — como varrer
+# Dez categorias — como varrer
 
 A definição do princípio está no `AGENTS.md`. Aqui: **o que abrir e o que conta como achado**. Use o `inventory.json` como fila.
 
@@ -82,3 +82,58 @@ Olhe `tests/` vs `src/`. Liste use cases/handlers **sem** par de teste. Cada um 
 - `dict[str, Any]` / `any` atravessando o domínio (KISS + solidez)
 
 Não acuse de YAGNI um porto com um adaptador real + um fake de teste: isso é hexagonal.
+
+Não acuse de YAGNI um **worker** no mesmo bounded context (API ≠ processo). Acuse um **microsserviço** extra sem o critério da constituição §8.2.
+
+## 8. Segurança arquitetural (`security`)
+
+Não substitui `/security-audit` (IDOR linha a linha, XSS, chaves, RLS). Aqui: o desenho **impede** a classe de falha.
+
+Fila: handlers, use cases, compose, Dockerfiles, settings.
+
+Achado quando:
+
+- Default permissivo (segue sem tenant / sem auth)
+- Tenant ou `user_id` vindo do body/query como fonte da verdade
+- Papel checado só no frontend (aponte o handler sem guard)
+- HTTP client / Redis / SMTP **sem timeout**
+- Role de DB da app é superuser/owner
+- Segredo em imagem, compose literal, log
+- `except Exception: continue` em caminho autenticado
+- Fetch de URL fornecida pelo usuário sem allowlist
+
+Se o achado for um IDOR concreto com `arquivo:linha` de posse ausente: registre **aqui** se for padrão arquitetural (nenhum handler verifica posse) e deixe o detalhe rota-a-rota para `/security-audit` quando o humano pedir as duas. Não omita o padrão.
+
+## 9. Escala / desacoplamento (`scalability`)
+
+Fila: `docker-compose*`, `runtimes/`, `workers/`, charts, quem escreve em quais tabelas, HTTP entre serviços.
+
+Achado quando:
+
+- Trabalho pesado no request HTTP (PDF, ETL, fan-out) sem fila
+- Worker e API no **mesmo processo**, estado na RAM (conexão websocket global, cache unbounded, “singleton” mutável)
+- Coleção sem paginação; N+1 visível no use case/adapter
+- Dois deployáveis com `import` de implementação ou **mesma tabela escrita pelos dois**
+- HTTP síncrono em cadeia no hot path (A→B→C→D)
+- Microsserviço extra **sem** fechar o critério §8.2 (ou worker idempotente ainda inexistente)
+- Fila / buffer sem teto; `gather` sem limite
+- Cache como fonte da verdade (sem TTL, sem invalidação)
+
+**Protegido:** API e worker, mesma imagem, `command` diferente, réplicas do worker, contrato versionado, um escritor por agregado.
+
+## 10. Resiliência (`resilience`)
+
+Fila: compose/k8s `restartPolicy`, probes, entrypoint do worker, ACK da fila, testes de 2ª entrega.
+
+Achado quando:
+
+- Serviço sem política de restart
+- Um container, vários processos (`supervisord` escondendo falha; `nohup`)
+- ACK/commit da mensagem **antes** do efeito persistido
+- Sem DLQ / retry infinito sem jitter
+- Sem handler de SIGTERM (deploy mata no meio e some a mensagem, ou duplica)
+- Liveness = ping no Redis/DB (blip derruba o cluster)
+- Side-effect (cobrança, e-mail, WMS) sem chave de idempotência
+- Sem teste da 2ª entrega do mesmo `message_id`
+
+O scanner pode marcar `deploy.signals` (restart/health). Confirme no arquivo. Sem compose no repo: declare N/A da parte de orquestração; a idempotência do use case **ainda vale**.

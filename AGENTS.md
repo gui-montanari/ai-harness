@@ -8,7 +8,7 @@ Código e prosa de produto: **português brasileiro**. Identificadores, APIs pú
 
 ## 0. Como usar este arquivo
 
-Antes de implementar, o agente **lê esta constituição** e responde, em silêncio, às dez dimensões da §5. Se alguma dimensão falha, não se escreve código — escreve-se o plano ou pergunta-se.
+Antes de implementar, o agente **lê esta constituição** e responde, em silêncio, às dimensões da §5. Se alguma dimensão falha, não se escreve código — escreve-se o plano ou pergunta-se. **Zero violação:** um “sim, mas só neste arquivo” ainda é violação.
 
 Não gere documentação extra. Este arquivo + o plano em `docs/plans/` (quando houver trabalho a analisar) bastam. README, ADRs, wikis e “architecture.md” só existem se o humano pedir.
 
@@ -25,7 +25,8 @@ Não gere documentação extra. Este arquivo + o plano em `docs/plans/` (quando 
 7. **Zero duplicação.** Copiar lógica é bug futuro. Extrair para o dono do fato.
 8. **Zero código morto.** Se não corre em produção nem em teste, apaga.
 9. **YAGNI + KISS.** Não construa o que o requisito de agora não exige. Simples e sólido.
-10. **Segurança, desempenho e escala são requisitos**, não “depois”. Isolamento de tenant, auth no servidor, queries no limite, I/O explícito.
+10. **Segurança, desempenho, escala e resiliência são requisitos do mesmo diff**, não “depois”. Isolamento de tenant, auth no servidor, I/O com timeout, worker que sobrevive à própria morte.
+11. **Zero violação.** Não se negocia princípio contra prazo, demos ou “é só um worker”. O atalho vira o sistema.
 
 Violar a letra é violar o espírito. Não há atalho “só desta vez”.
 
@@ -68,7 +69,9 @@ DRY não é “extrair tudo para utils”. É **não ter dois donos da mesma dec
 
 ### YAGNI — não construa o futuro imaginado
 
-Proibido neste turno, salvo o humano pedir: feature flag morta, “base genérica para outros provedores”, microserviço novo para uma tela, event bus para um único consumidor, abstraction para um único implementador.
+Proibido neste turno, salvo o humano pedir: feature flag morta, “base genérica para outros provedores”, **microserviço novo para uma tela**, event bus para um único consumidor *no mesmo processo*, abstraction para um único implementador.
+
+Microserviço **não** é YAGNI quando o critério da §8.2 fecha (escala, falha e release independentes **e** contrato já existe). Até lá: processo/worker separado no mesmo bounded context — hexagonal, não teatro distribuído.
 
 **Teste:** o requisito atual quebra se eu não fizer isso? Se não, não faça.
 
@@ -206,7 +209,7 @@ CI chama os mesmos alvos. Ninguém documenta um comando que o Makefile não tem.
 
 ---
 
-## 5. Analisar antes — as dez dimensões
+## 5. Analisar antes — as doze dimensões
 
 Toda mudança, por menor que seja, passa por isto **antes** do primeiro teste. Se a mudança não for trivial (mais de um arquivo, contrato, ou comportamento), o resultado vira plano em `docs/plans/<slug>.md`.
 
@@ -217,11 +220,13 @@ Toda mudança, por menor que seja, passa por isto **antes** do primeiro teste. S
 | 3 | SRP | Esta unidade ganha um segundo motivo para mudar? |
 | 4 | Hexagonal | Em que camada isso mora? Que porta existe ou falta? |
 | 5 | DRY | Isto já está escrito? É decisão ou mapeamento? |
-| 6 | YAGNI/KISS | O requisito de *agora* exige esta abstração? |
+| 6 | YAGNI/KISS | O requisito de *agora* exige esta abstração **ou** este serviço extra? |
 | 7 | TDD | Qual teste vai falhar primeiro, e o que ele prova? |
-| 8 | Segurança | Tenant, authz no servidor, input, segredo, IDOR? |
-| 9 | Performance/escala | Hot path? N+1? I/O no loop? Paginação? Idempotência? |
-| 10 | Operação | Log, métrica, falha, rollback, feature flag com dono? |
+| 8 | Segurança | Tenant do contexto? Authz no servidor? Input na borda? Segredo fora? Falha fechada? |
+| 9 | Performance | Hot path? N+1? I/O no loop? Paginação? Índice? Timeout em todo I/O? |
+| 10 | Escala / desacoplamento | Estado no processo? Gargalo é CPU, I/O ou fila? Cabe worker antes de outro serviço? |
+| 11 | Resiliência | Worker morre no meio — o que acontece? Restart, DLQ, drain, idempotência? |
+| 12 | Operação | Log sem PII, métrica, rollback, probe de vivo vs pronto, dono da flag? |
 
 Trivial = um bug óbvio, um nome, um teste faltando em código que você não está reestruturando. Na dúvida, **não é trivial**: plano.
 
@@ -251,7 +256,9 @@ Status: rascunho | aprovado | feito
 | yagni | ...
 | tdd | ...
 | segurança | ...
-| perf | ...
+| performance | ...
+| escala | ...
+| resiliência | ...
 | operação | ...
 
 ## Abordagem
@@ -301,6 +308,7 @@ Onde o teste vive:
 | O quê | Onde |
 |-------|------|
 | Regra de domínio / use case | `tests/unit` — sem I/O |
+| Idempotência do worker (2ª entrega) | `tests/unit` do use case, relógio/fila mockados |
 | Adaptador obedece porta | `tests/contract` |
 | SQL, fila, HTTP real | `tests/integration` |
 | Jornada | `tests/e2e` — poucos, estáveis |
@@ -314,9 +322,14 @@ CI: unit + contract + lint + fronteiras **sempre**. Integration/e2e no pipeline 
 ### Docker
 
 - Multi-stage. Imagem final mínima, **non-root**, sem toolchain, sem `.git`, sem `.env`.
-- `HEALTHCHECK` ou probe equivalente.
+- **Um processo por container.** O orquestrador é o supervisor. Não esconda um tree de processos dentro da imagem.
+- `restart: unless-stopped` (compose) / `restartPolicy: Always` (k8s) em API **e** workers. Sem política = sem auto-recovery.
+- Probes distintos: **startup** (subiu), **liveness** (processo morto → mata e recria), **readiness** (não aceita carga). Liveness que depende de Redis/DB derruba o pod no blip do dependente — readiness que não olha a fila manda trabalho para um morto-vivo.
+- `HEALTHCHECK` no Dockerfile **ou** probe no orquestrador — um dono, não os dois divergindo.
+- `stop_grace_period` / `terminationGracePeriodSeconds` ≥ o prazo de drain do worker.
+- Limites de CPU/memória. Sem limite, um leak mata o nó e todos os vizinhos.
 - Compose: um serviço = um processo. Segredos só por env/secret, nunca `environment: PASSWORD=...` commitado.
-- Mesma imagem em dev/CI/prod; o que muda é config.
+- Mesma imagem em dev/CI/prod; o que muda é config. API e worker **podem** ser a mesma imagem com `command` diferente.
 - Tag imutável (git SHA). `latest` não é versão.
 
 ### CI
@@ -334,33 +347,81 @@ Dois ambientes (dev/prod) **não** se misturam por merge de branch longa. Entreg
 
 ---
 
-## 8. Performance, escala, segurança, solidez
+## 8. Segurança, performance, escala, resiliência, robustez
 
-Não são fases. São o mesmo diff.
+Não são fases. São o mesmo diff. **Falha em qualquer subseção = o diff não entra.** Varredura profunda de exploits (IDOR, XSS, chaves, RLS): skill `security-audit`. Aqui: invariantes de **construção**.
 
-**Performance / escala**
+### 8.1 Segurança (todo use case)
 
-- Sem N+1. Lista em batch. Paginação obrigatória em coleção.
-- Sem I/O síncrono no loop. Sem query no domínio.
-- Timeout, retry com jitter, idempotência em escrita e em consumidor.
-- Índice nasce com a query, não “quando doer”.
-- Trabalho pesado: fila + worker, não o request HTTP.
+- **Falha fechada.** Sem contexto autenticado, sem tenant, sem papel: recusa. Default permissivo é violação.
+- **Tenant do contexto**, nunca do body/query escolhido pelo cliente.
+- **Authz no servidor** (application), não só na UI. O frontend não é fronteira de privilégio.
+- **Posse no get/mutate por ID** (IDOR). UUID não autoriza.
+- **Segredo fora do git, da imagem e do log.** `${VAR:-secret}` é segredo. Startup recusa default conhecido.
+- **Input na borda** (schema). HTML/e-mail/PDF escapados. URL de usuário: allowlist (SSRF).
+- **Least privilege:** role de DB do runtime não é owner de schema; adapter de pagamento não recebe a chave de outro bounded context.
+- **Timeout em todo I/O de saída.** Sem timeout = worker preso = fila morta = superfície de DoS.
+- **Pino de dependência.** Instalação em runtime na imagem de prod é proibida.
+- Ação privilegiada: trilha de auditoria (quem, o quê, quando, tenant).
 
-**Segurança**
+### 8.2 Escala e desacoplamento (quando partir o processo / o serviço)
 
-- Isolamento de tenant no servidor (RLS e/ou filtro do contexto autenticado — SSOT do isolamento).
-- Autorização no handler/use case, não só na UI.
-- IDOR: todo get/mutate por ID verifica posse.
-- Segredo fora do git; default `${VAR:-secret}` é segredo.
-- Input na borda; HTML/e-mail escapados.
-- Auditoria de segurança: skill `security-audit`.
+Desacoplar **não** é abrir repositório. Ordem canônica — pule um degrau só com evidência de carga ou de falha:
 
-**Solidez / elegância**
+1. **Código hexagonal** no mesmo deployável (já é desacoplamento).
+2. **Processo separado, mesma imagem:** API ≠ worker. Compose/k8s escala réplicas do worker sem tocar a API.
+3. **Fila + consumidores concorrentes.** Worker **stateless**. Estado vive no banco/fila, não na RAM do processo (senão o restart perde trabalho e o scale-out mente).
+4. **Outro deployável / microsserviço** somente se **todos** fecharem:
 
-- Falha explícita (tipo, erro de domínio), não `None` silencioso.
-- Logs estruturados, sem PII.
+| Precisa ser verdade | Senão |
+|---------------------|--------|
+| Carga ou ciclo de release **independentes** | é o mesmo serviço com dois containers |
+| Fronteira de falha: a API deve viver se este worker morrer (e vice-versa) | ainda é o mesmo processo lógico |
+| **Contrato** já existe (HTTP/evento versionado); nenhum import de implementação | é monólito distribuído |
+| **Dados:** um escritor por agregado; sem tabela compartilhada “porque é mais fácil” | é banco compartilhado, o pior acoplamento |
+| Dono claro (time ou módulo) para operar o serviço | é pedaço órfão |
+
+Proibido como “escala”: dois serviços falando SQL na mesma tabela; HTTP síncrono no hot path encadeando 4 hops; `shared/` de implementação entre serviços; extrair microsserviço antes de ter o worker idempotente.
+
+Hot path: paginação, batch, sem N+1, sem I/O no loop, sem query no domínio. Trabalho pesado sai do request: **enfileira e responde**. Cache tem TTL e invalidação explícita — cache não é SSOT.
+
+Backpressure: fila com teto; 429/503 quando cheia; nunca buffer infinito em memória.
+
+### 8.3 Resiliência e auto-recovery de workers
+
+O processo **vai** morrer (OOM, deploy, nó, bug). Recovery correto é requisito de arquitetura, não de ops.
+
+| Peça | Obrigatório |
+|------|-------------|
+| Política de restart | compose/k8s/systemd **sempre** recria API e worker |
+| Crash-only + idempotência | a mesma mensagem pode rodar 2×; o efeito de negócio é 1× (chave de idempotência / outbox) |
+| ACK | só depois do efeito persistido. Crash antes do ACK = redelivery, não perda silenciosa |
+| DLQ | após N falhas com backoff+jitter. Poison pill não trava a fila |
+| Drain | SIGTERM: para de puxar, termina in-flight até um deadline, NACK o resto |
+| Supervisor | um processo visível ao orquestrador; não “nohup dentro do entrypoint” |
+| Circuito | dependência caída não replica a queda para todo o cluster (timeout, bulkhead, circuit breaker no **adapter**) |
+| Relógio | tempo é porta (`Clock`). Teste de retry não dorme de verdade |
+
+Retry sem jitter e sem teto é amplificador de outage. “Vamos deixar o k8s reiniciar” **sem** idempotência é duplicar cobrança, e-mail, side-effect.
+
+O domínio não conhece Kafka/Redis/Celery. A **porta** é `Queue` / `WorkerHeartbeat`. Auto-recovery é infra; a **correção** do reprocessamento é regra de application/core (idempotência).
+
+### 8.4 Performance
+
+- Sem N+1. Lista em batch. Coleção sem paginação = achado.
+- Sem I/O síncrono no loop. Pool de conexões com teto; nunca conexão por request “no feeling”.
+- Índice nasce com a query.
+- Payload enxuto. Não serializar o agregado inteiro “por se acaso”.
+- Medir o hot path (trace) antes de “otimizar” o que não dói.
+
+### 8.5 Robustez e elegância
+
+- Falha explícita (tipo / erro de domínio). `except: pass` e `None` silencioso são violação.
+- Sem catch-all que engole e segue. Ou trata, ou propaga.
+- Logs estruturados, sem PII, com `tenant_id` / `request_id` / `message_id`.
 - Nomes que dizem a regra (`deny_if_other_tenant`, não `check`).
-- Diff pequeno, comportamento completo. Não “metade do use case para commitar cedo”.
+- Concorrência **limitada** (semáforo, `prefetch`, pool). “Unbounded gather” não é elegância.
+- Diff pequeno, comportamento **completo**. Não metade do use case para commitar cedo.
 
 ---
 
@@ -389,7 +450,7 @@ ler constituição → dimensões (§5)
         │
         ├─ mínimo verde
         │
-        ├─ refatorar (limites SRP, DRY, camadas)
+        ├─ refatorar (limites SRP, DRY, camadas, resiliência)
         │
         ├─ make lint && make test
         │
@@ -409,9 +470,16 @@ Não invente skill, pasta, ADR ou diagrama “para completar”. Skills de audit
 - Arquivo passando de 250 linhas de domínio sem fatiar
 - Teste escrito depois, verde de primeira, sem ter visto o vermelho
 - `utils.py` / `helpers.ts` ganhando regra de negócio
-- Novo microserviço, bus ou “plataforma” sem requisito
+- Novo microserviço, bus ou “plataforma” sem o critério da §8.2
+- Worker sem `restart`, sem drain, sem idempotência, ou com estado só na RAM
+- Fila sem teto, sem DLQ, ACK antes de persistir
+- Dois serviços escrevendo a mesma tabela
+- HTTP síncrono encadeado no hot path “porque desacopla”
+- Liveness probe que cai o cluster inteiro quando o Redis pisca
+- `except: pass`, timeout ausente, retry infinito sem jitter
 - Markdown novo fora de `docs/plans/` sem o humano pedir
 - Commit com segredo, dump, `.env`, fixture com PII
 - “É só um if” no lugar errado da camada
+- “A gente vê segurança/escala depois”
 
 Qualquer um desses: pare, volte às dimensões, corrija o plano. Não empurre o diff.

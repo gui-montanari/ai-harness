@@ -10,7 +10,7 @@ O gerador `shared/generate_report.py` lê este JSON. Além dos campos comuns da 
   "methodology": "Constituição: AGENTS.md da raiz. Inventário via scan_inventory.py. Categorias mapeadas para src/core, src/application, src/infrastructure, api/.",
   "report": {
     "title": "Relatório de Auditoria de Princípios",
-    "kicker": "SSOT · SRP · HEXAGONAL · TDD",
+    "kicker": "SSOT · HEXAGONAL · TDD · RESILIÊNCIA · ESCALA",
     "footer": "gerado por principios-audit",
     "filename": "relatorio-auditoria-principios.pdf"
   },
@@ -21,9 +21,12 @@ O gerador `shared/generate_report.py` lê este JSON. Além dos campos comuns da 
     "hexagonal": "Hexagonal",
     "tdd": "TDD",
     "dead_code": "Código morto",
-    "yagni_kiss": "YAGNI / KISS"
+    "yagni_kiss": "YAGNI / KISS",
+    "security": "Segurança arquitetural",
+    "scalability": "Escala / desacoplamento",
+    "resilience": "Resiliência / workers"
   },
-  "category_order": ["ssot", "dry", "srp", "hexagonal", "tdd", "dead_code", "yagni_kiss"],
+  "category_order": ["ssot", "dry", "srp", "hexagonal", "tdd", "dead_code", "yagni_kiss", "security", "scalability", "resilience"],
   "stack": {
     "language": "Python 3.12",
     "framework": "FastAPI",
@@ -40,7 +43,10 @@ O gerador `shared/generate_report.py` lê este JSON. Além dos campos comuns da 
     "hexagonal": "aplicável — camadas core/application/infrastructure",
     "tdd": "aplicável",
     "dead_code": "aplicável",
-    "yagni_kiss": "aplicável"
+    "yagni_kiss": "aplicável",
+    "security": "aplicável — invariantes de construção; exploits profundos = /security-audit",
+    "scalability": "aplicável — compose, workers, donos de tabela",
+    "resilience": "aplicável — restart, ACK, DLQ, drain"
   },
   "findings": [],
   "strengths": [],

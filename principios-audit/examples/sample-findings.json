@@ -5,7 +5,7 @@
   "methodology": "Constituição: template AGENTS.md da coleção skills. Inventário simulado. Categorias mapeadas para src/core, src/application, src/infrastructure, api/.",
   "report": {
     "title": "Relatório de Auditoria de Princípios",
-    "kicker": "SSOT · SRP · HEXAGONAL · TDD",
+    "kicker": "SSOT · HEXAGONAL · TDD · RESILIÊNCIA · ESCALA",
     "footer": "gerado por principios-audit",
     "filename": "relatorio-auditoria-principios.pdf"
   },
@@ -16,9 +16,12 @@
     "hexagonal": "Hexagonal",
     "tdd": "TDD",
     "dead_code": "Código morto",
-    "yagni_kiss": "YAGNI / KISS"
+    "yagni_kiss": "YAGNI / KISS",
+    "security": "Segurança arquitetural",
+    "scalability": "Escala / desacoplamento",
+    "resilience": "Resiliência / workers"
   },
-  "category_order": ["ssot", "dry", "srp", "hexagonal", "tdd", "dead_code", "yagni_kiss"],
+  "category_order": ["ssot", "dry", "srp", "hexagonal", "tdd", "dead_code", "yagni_kiss", "security", "scalability", "resilience"],
   "stack": {
     "language": "Python 3.12",
     "framework": "FastAPI",
@@ -35,7 +38,10 @@
     "hexagonal": "aplicável — core/application/infrastructure",
     "tdd": "aplicável — tests/unit vs src/application",
     "dead_code": "aplicável — ruff + leitura",
-    "yagni_kiss": "aplicável"
+    "yagni_kiss": "aplicável",
+    "security": "aplicável — invariantes de construção",
+    "scalability": "aplicável — compose + donos de tabela",
+    "resilience": "aplicável — restart, ACK, DLQ"
   },
   "findings": [
     {
@@ -163,6 +169,60 @@
         "Uma função de posse no core",
         "Get e Cancel usam a mesma e quebram o mesmo teste"
       ]
+    },
+    {
+      "id": "P-008",
+      "category": "security",
+      "severity": "alta",
+      "file": "src/application/charge_order.py",
+      "lines": "44-49",
+      "title": "HTTP do gateway de pagamento sem timeout",
+      "description": "O adapter chama Stripe sem timeout. Worker preso = fila morta = DoS acidental.",
+      "snippet": "resp = httpx.post(url, json=payload)  # sem timeout=",
+      "why_exploitable": "Dependência lenta segura o worker para sempre. Escala e segurança (disponibilidade) quebram juntas.",
+      "exploitability_conditions": "Gateway lento ou unreachable.",
+      "impact": "Fila trava; cobranças atrasam; réplicas não ajudam se todas prendem.",
+      "fix": "Timeout no adapter (porta HttpClient com budget). Circuit breaker. Nunca no core.",
+      "acceptance_criteria": [
+        "Toda chamada de saída tem timeout",
+        "Teste de contrato do adapter com relógio congelado"
+      ]
+    },
+    {
+      "id": "P-009",
+      "category": "scalability",
+      "severity": "alta",
+      "file": "docker-compose.yml",
+      "lines": "12-20",
+      "title": "API e worker no mesmo processo",
+      "description": "O serviço `api` roda uvicorn e o consumer da fila no mesmo container, com cache unbounded em RAM.",
+      "snippet": "command: python -m api.boot  # sobe HTTP + consumer no mesmo processo",
+      "why_exploitable": "Não dá para escalar consumidores sem escalar a API. Restart perde o cache e o trabalho in-flight.",
+      "exploitability_conditions": "Pico de fila ou deploy.",
+      "impact": "Scale-out inútil; acoplamento de falha HTTP↔worker.",
+      "fix": "Mesma imagem, dois serviços: command da API e command do runtime worker. Estado na fila/DB.",
+      "acceptance_criteria": [
+        "compose com serviço worker separado e restart unless-stopped",
+        "Nenhum cache de trabalho só em RAM"
+      ]
+    },
+    {
+      "id": "P-010",
+      "category": "resilience",
+      "severity": "critica",
+      "file": "src/infrastructure/adapters/queue_consumer.py",
+      "lines": "30-41",
+      "title": "ACK da fila antes de persistir a cobrança",
+      "description": "O consumer dá ACK e depois chama ChargeOrder. Crash no meio perde o efeito e a mensagem.",
+      "snippet": "await queue.ack(msg)\nawait charge_order(msg.payload)",
+      "why_exploitable": "Morte do processo (OOM, deploy sem drain) some com o trabalho. Auto-recovery recria o pod vazio.",
+      "exploitability_conditions": "Qualquer kill -9 entre ACK e commit.",
+      "impact": "Pedido cobrado ou não, sem redelivery. Dinheiro e consistência.",
+      "fix": "ChargeOrder primeiro (idempotente). ACK só depois do persist. DLQ após N falhas. SIGTERM com drain.",
+      "acceptance_criteria": [
+        "Teste unitário da 2ª entrega do mesmo message_id não duplica cobrança",
+        "ACK depois do efeito; compose com stop_grace_period"
+      ]
     }
   ],
   "strengths": [
@@ -180,13 +240,15 @@
   "weaknesses": [
     "O domínio ainda é modelo ORM — hexagonal furado na raiz.",
     "Preço tem dois donos (API e SPA).",
-    "Cobrança, o caminho de dinheiro, não tem unit."
+    "Cobrança, o caminho de dinheiro, não tem unit.",
+    "Worker e API no mesmo processo, ACK antes do efeito — auto-recovery recria o vazio."
   ],
   "recommendations": [
     { "priority": "P1", "text": "Separar entidade de domínio do modelo SQLAlchemy e trancar com import-linter." },
     { "priority": "P1", "text": "Uma fórmula de desconto, no application; frontend só renderiza." },
     { "priority": "P1", "text": "Unit de ChargeOrder com recusa por saldo, antes de qualquer extração." },
     { "priority": "P2", "text": "Fatiar OrderService em use cases; posse de tenant no core." },
+    { "priority": "P1", "text": "Separar processo do worker, ACK depois do persist, timeout e idempotência na cobrança." },
     { "priority": "P3", "text": "Apagar legacy_promo e o EventPublisher sem consumidor." }
   ],
   "issues": [
@@ -199,6 +261,11 @@
       "title": "[Princípios] Desconto duplicado no frontend e ChargeOrder sem unit",
       "labels": ["architecture", "alta"],
       "body": "## Problema\n\nSSOT de preço furado (`apps/web/src/pricing.ts` e `application/pricing.py`) e o use case de cobrança sem `tests/unit`.\n\n## Evidência\n\n`apps/web/src/pricing.ts:14-22` e ausência de `tests/unit/**/test_charge_order.py`.\n\n## Impacto\n\nUI mentirosa; regressão de saldo não quebra CI.\n\n## Sugestão de correção\n\nTotal vem da API. Unit de ChargeOrder com saldo insuficiente — vermelho primeiro.\n\n## Critérios de aceite\n\n- [ ] Nenhuma fórmula de faixa no frontend\n- [ ] Apagar a recusa por saldo quebra o unit\n"
+    },
+    {
+      "title": "[Princípios] Worker sem auto-recovery correto (ACK antecipado, mesmo processo da API)",
+      "labels": ["architecture", "critica"],
+      "body": "## Problema\n\nO consumer dá ACK antes de persistir a cobrança e roda no mesmo processo da API. Restart do orquestrador não recupera o trabalho — some ou duplica.\n\n## Evidência\n\n`src/infrastructure/adapters/queue_consumer.py:30-41` — `ack` antes de `charge_order`.\n`docker-compose.yml:12-20` — HTTP + consumer no mesmo `command`.\n\n## Impacto\n\nPerda ou duplicação de cobrança no deploy/OOM. Impossível escalar consumidores à parte da API.\n\n## Sugestão de correção\n\nMesma imagem, serviço worker separado, `restart: unless-stopped`, drain no SIGTERM, ChargeOrder idempotente, ACK depois do persist, DLQ, timeout no adapter HTTP.\n\n## Critérios de aceite\n\n- [ ] 2ª entrega do mesmo `message_id` não duplica cobrança\n- [ ] ACK somente após persist\n- [ ] compose: worker próprio com restart e grace period\n"
     }
   ]
 }
