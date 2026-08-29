@@ -1,0 +1,183 @@
+{
+  "project_name": "acme-api",
+  "date": "2026-08-29",
+  "scope": "Repositório completo na branch main (commit de exemplo). Inclui API NestJS, frontend Next.js, docker-compose, Helm e GitHub Actions.",
+  "methodology": "Stack detectada: TypeScript, NestJS + Next.js, Prisma, JWT em cookie httpOnly. Categoria 1 mapeada para filtro manual por organizationId (não há RLS). Categoria 2 cruza gates isAdmin do App Router com os controllers Nest. Categoria 3 inventariou todos os handlers em src/modules/**/*.controller.ts. Categoria 4 varreu código, charts, CI e git log -p. Categoria 5 buscou dangerouslySetInnerHTML, v-html e templates de e-mail.",
+  "stack": {
+    "language": "TypeScript",
+    "framework": "NestJS 10 + Next.js 15",
+    "orm": "Prisma",
+    "auth": "JWT em cookie httpOnly",
+    "frontend": "Next.js App Router",
+    "deploy": ["Dockerfile", "docker-compose.yml", "Helm", "GitHub Actions"],
+    "isolation_mechanism": "filtro manual por organizationId no Nest; sem RLS no Postgres"
+  },
+  "coverage_notes": {
+    "banco_sem_tranca": "aplicável — isolamento por organizationId no Prisma; sem RLS",
+    "permissao_navegador": "aplicável — gates isAdmin no frontend cruzados com guards Nest",
+    "idor": "aplicável — 28 handlers inventariados em coverage.md",
+    "chaves_expostas": "aplicável — código, compose, Helm, CI e git history",
+    "xss": "aplicável — Next.js + templates Handlebars de e-mail"
+  },
+  "findings": [
+    {
+      "id": "F-001",
+      "category": "idor",
+      "severity": "alta",
+      "file": "apps/api/src/orders/orders.controller.ts",
+      "lines": "42-58",
+      "title": "GET /orders/:id devolve pedido de qualquer organização",
+      "description": "O handler busca o pedido só pela PK e não compara organizationId com o tenant do JWT.",
+      "snippet": "return this.prisma.order.findUnique({ where: { id } });",
+      "why_exploitable": "Qualquer sessão autenticada lê o pedido de outro tenant conhecendo o UUID.",
+      "exploitability_conditions": "Requer JWT válido. IDs UUID vazam na listagem do próprio tenant.",
+      "impact": "Leitura cross-tenant de pedidos, clientes e valores.",
+      "fix": "Após carregar, recusar se order.organizationId !== ctx.orgId (404).",
+      "acceptance_criteria": [
+        "GET com ID de outro tenant retorna 404",
+        "Teste de integração cobre o caso cross-tenant"
+      ]
+    },
+    {
+      "id": "F-002",
+      "category": "banco_sem_tranca",
+      "severity": "critica",
+      "file": "apps/api/src/reports/reports.service.ts",
+      "lines": "17-31",
+      "title": "Exportação CSV de pedidos sem filtro de tenant",
+      "description": "O relatório administrativo lista todos os pedidos do banco. Não aplica organizationId.",
+      "snippet": "const rows = await this.prisma.order.findMany({ include: { customer: true } });\nreturn toCsv(rows);",
+      "why_exploitable": "Um usuário autenticado de qualquer org baixa a base inteira.",
+      "exploitability_conditions": "Rota autenticada; o frontend esconde o botão de exportar para não-admin, mas a API não checa papel nem tenant.",
+      "impact": "Vazamento massivo de dados de todos os inquilinos.",
+      "fix": "Filtrar por ctx.orgId e exigir role admin no servidor.",
+      "acceptance_criteria": [
+        "CSV contém apenas linhas da organização do chamador",
+        "Usuário sem papel admin recebe 403"
+      ]
+    },
+    {
+      "id": "F-003",
+      "category": "permissao_navegador",
+      "severity": "alta",
+      "file": "apps/web/app/settings/users/page.tsx",
+      "lines": "12-18",
+      "title": "Gestão de usuários oculta no UI, API sem guard de admin",
+      "description": "A página só renderiza se isAdmin; POST /users/:id/role não usa RolesGuard.",
+      "snippet": "if (!session.user.isAdmin) return null;\n// API:\n@Post(':id/role')\nsetRole(@Param('id') id: string, @Body() body: RoleDto) { ... }",
+      "why_exploitable": "Um usuário comum autentica e chama POST /users/:id/role diretamente.",
+      "exploitability_conditions": "Sessão autenticada de membro comum. Sem MFA extra.",
+      "impact": "Escalada de privilégio para admin da organização.",
+      "fix": "Aplicar @Roles('admin') + RolesGuard no controller e na Server Action.",
+      "acceptance_criteria": [
+        "POST sem papel admin retorna 403",
+        "Teste e2e cobre membro comum"
+      ]
+    },
+    {
+      "id": "F-004",
+      "category": "chaves_expostas",
+      "severity": "critica",
+      "file": "deploy/helm/values.yaml",
+      "lines": "24-26",
+      "title": "JWT_SECRET com default commitado no Helm",
+      "description": "O chart usa um default público. Não há validação de startup que recuse o valor.",
+      "snippet": "jwtSecret: \"${JWT_SECRET:-super-secret-dev-key}\"",
+      "why_exploitable": "Quem conhece o default forja JWTs de qualquer usuário se o valor não for sobrescrito em produção.",
+      "exploitability_conditions": "Explorável se o release de produção não define JWT_SECRET. O values de staging no repo também usa o default.",
+      "impact": "Forja de sessão, impersonação total.",
+      "fix": "Remover default; falhar o bootstrap se o secret for vazio ou igual à lista de defaults conhecidos.",
+      "acceptance_criteria": [
+        "Helm sem valor default para jwtSecret",
+        "API recusa subir com secret na denylist"
+      ]
+    },
+    {
+      "id": "F-005",
+      "category": "xss",
+      "severity": "media",
+      "file": "apps/web/components/CommentBody.tsx",
+      "lines": "8-11",
+      "title": "Comentário renderizado com dangerouslySetInnerHTML",
+      "description": "O corpo do comentário (input do usuário) é injetado como HTML. DOMPurify está no package.json mas não é chamado aqui.",
+      "snippet": "<div dangerouslySetInnerHTML={{ __html: comment.body }} />",
+      "why_exploitable": "Um comentário com <script> ou onerror em <img> executa no browser de quem abre o pedido.",
+      "exploitability_conditions": "Qualquer usuário que possa comentar. Sessão da vítima ao abrir o thread.",
+      "impact": "XSS armazenado: sequestro de sessão da vítima no origem da app.",
+      "fix": "Passar comment.body por DOMPurify.sanitize antes de renderizar, ou renderizar texto puro.",
+      "acceptance_criteria": [
+        "Payload <img onerror=alert(1)> não dispara",
+        "Sanitização coberta por teste de componente"
+      ]
+    },
+    {
+      "id": "F-006",
+      "category": "chaves_expostas",
+      "severity": "baixa",
+      "file": "docker-compose.yml",
+      "lines": "41-43",
+      "title": "Senha padrão do Postgres no compose de desenvolvimento",
+      "description": "POSTGRES_PASSWORD tem default 'postgres'. README pede troca, mas o compose sobe assim.",
+      "snippet": "POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}",
+      "why_exploitable": "Relevante se o compose for usado fora de loopback. Em laptop local o impacto é limitado.",
+      "exploitability_conditions": "Porta 5432 publicada em rede não confiável.",
+      "impact": "Acesso ao banco de desenvolvimento.",
+      "fix": "Remover default e falhar se a variável estiver ausente.",
+      "acceptance_criteria": [
+        "compose up sem POSTGRES_PASSWORD falha",
+        "README documenta a variável obrigatória"
+      ]
+    }
+  ],
+  "strengths": [
+    {
+      "title": "DELETE /orders/:id valida posse",
+      "evidence": "Compara order.organizationId com o tenant do JWT antes do delete em todos os caminhos.",
+      "file": "apps/api/src/orders/orders.controller.ts:90-104"
+    },
+    {
+      "title": "Router de billing exige assinatura no servidor",
+      "evidence": "BillingGuard verifica subscription.status no Nest, não só o badge no frontend.",
+      "file": "apps/api/src/billing/billing.guard.ts:1-40"
+    },
+    {
+      "title": "Templates de e-mail usam escape do Handlebars",
+      "evidence": "{{body}} sem triple-stash; nenhum {{{ }}} com input de usuário.",
+      "file": "apps/api/src/mail/templates/*.hbs"
+    }
+  ],
+  "weaknesses": [
+    "Listagens, GET por ID e exportações não repetem o filtro de tenant que o DELETE já faz — o isolamento não é uniforme.",
+    "Papel admin é enforceado na UI e em alguns módulos, mas a gestão de usuários e o CSV ficaram de fora.",
+    "Defaults de segredo no Helm podem ir para produção sem o bootstrap recusar."
+  ],
+  "recommendations": [
+    { "priority": "P1", "text": "Centralizar o guard de tenant (Prisma middleware ou interceptor Nest) e falhar fechado quando organizationId estiver ausente no contexto." },
+    { "priority": "P1", "text": "Remover defaults de JWT_SECRET e recusar a subida da API se o valor estiver na denylist." },
+    { "priority": "P2", "text": "Aplicar RolesGuard em todas as rotas de gestão de usuários, papéis e exportação." },
+    { "priority": "P2", "text": "Sanitizar HTML de comentários com DOMPurify no ponto de renderização." },
+    { "priority": "P3", "text": "Tornar senhas do docker-compose obrigatórias, sem default." }
+  ],
+  "issues": [
+    {
+      "title": "[Segurança] GET /orders/:id e exportação CSV sem isolamento de tenant",
+      "labels": ["security", "critica"],
+      "body": "## Problema\n\nO GET por ID e a exportação CSV de pedidos não filtram por `organizationId`. O DELETE da mesma entidade já valida posse, então o buraco é inconsistente — não é ausência total de isolamento.\n\nUm usuário autenticado de outro tenant lê pedidos alheios (IDOR) e, pelo CSV, a base inteira (banco sem tranca).\n\n## Evidência\n\n`apps/api/src/orders/orders.controller.ts:42-58`\n\n```ts\nreturn this.prisma.order.findUnique({ where: { id } });\n```\n\n`apps/api/src/reports/reports.service.ts:17-31`\n\n```ts\nconst rows = await this.prisma.order.findMany({ include: { customer: true } });\nreturn toCsv(rows);\n```\n\n## Impacto\n\nLeitura cross-tenant de pedidos e vazamento massivo via CSV.\n\n## Sugestão de correção\n\nFiltrar por `ctx.orgId` em toda leitura. Recusar GET de outro tenant com 404. Exigir papel admin no CSV **e** manter o filtro de tenant.\n\n## Critérios de aceite\n\n- [ ] GET com ID de outro tenant retorna 404\n- [ ] CSV contém apenas linhas da organização do chamador\n- [ ] Teste de integração cobre o caso cross-tenant\n"
+    },
+    {
+      "title": "[Segurança] POST /users/:id/role sem RolesGuard",
+      "labels": ["security", "alta"],
+      "body": "## Problema\n\nA UI esconde a gestão de usuários com `isAdmin`, mas o endpoint de troca de papel não verifica o privilégio no servidor.\n\n## Evidência\n\n`apps/web/app/settings/users/page.tsx:12-18` e o controller Nest correspondente sem `@Roles('admin')`.\n\n## Impacto\n\nEscalada de privilégio para admin da organização.\n\n## Sugestão de correção\n\nAplicar `RolesGuard` no controller e na Server Action.\n\n## Critérios de aceite\n\n- [ ] POST sem papel admin retorna 403\n- [ ] Teste e2e cobre membro comum\n"
+    },
+    {
+      "title": "[Segurança] Defaults de segredo no Helm e no docker-compose",
+      "labels": ["security", "critica"],
+      "body": "## Problema\n\n`JWT_SECRET` tem default público no Helm (`super-secret-dev-key`) e a API não recusa esse valor na subida. O compose usa senha padrão `postgres`.\n\n## Evidência\n\n`deploy/helm/values.yaml:24-26`\n\n```yaml\njwtSecret: \"${JWT_SECRET:-super-secret-dev-key}\"\n```\n\n`docker-compose.yml:41-43` — `POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}`\n\n## Impacto\n\nForja de JWT se o default for a produção; acesso ao banco de desenvolvimento se a porta vazar.\n\n## Sugestão de correção\n\nRemover defaults. Denylist no bootstrap. Compose falha sem variável.\n\n## Critérios de aceite\n\n- [ ] Helm sem valor default para jwtSecret\n- [ ] API recusa subir com secret na denylist\n- [ ] compose up sem POSTGRES_PASSWORD falha\n"
+    },
+    {
+      "title": "[Segurança] XSS armazenado em CommentBody via dangerouslySetInnerHTML",
+      "labels": ["security", "media"],
+      "body": "## Problema\n\nComentários de usuário são injetados como HTML. `dompurify` está nas dependências e não é usado neste componente.\n\n## Evidência\n\n`apps/web/components/CommentBody.tsx:8-11`\n\n```tsx\n<div dangerouslySetInnerHTML={{ __html: comment.body }} />\n```\n\n## Impacto\n\nXSS armazenado no origem da aplicação.\n\n## Sugestão de correção\n\n`DOMPurify.sanitize(comment.body)` ou texto puro.\n\n## Critérios de aceite\n\n- [ ] Payload `<img onerror=alert(1)>` não dispara\n- [ ] Teste de componente cobre a sanitização\n"
+    }
+  ]
+}
