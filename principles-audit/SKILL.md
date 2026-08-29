@@ -1,13 +1,14 @@
 ---
-name: principios-audit
+name: principles-audit
 license: MIT
 description: >
   Use when the user asks to audit architecture or design principles, check hexagonal
   layers, SSOT, SRP, DRY, YAGNI, KISS, SOLID, TDD, dead code, duplicated logic,
   file size limits, import leaks, worker auto-recovery, DLQ, decoupling, microservices,
   scalability, performance, architectural security, async-only, multi-tenant isolation,
-  semaphore, retry policy, or idempotency (global policy inherited, not copied).
-  Also when they run /principios-audit, /hexagonal-audit, or say "varredura de princípios".
+  semaphore, retry policy, idempotency, naming conventions, schema vs domain
+  vs persistence model separation, or repo-wide consistency.
+  Also when they run /principles-audit, /hexagonal-audit, or say "varredura de princípios".
 ---
 
 # Auditoria de princípios (varredura completa)
@@ -32,9 +33,10 @@ Entregue achados verificados no código, inventário de cobertura, PDF em pt-BR 
 - [ ] 10. Escala / desacoplamento — worker vs microsserviço, estado, backpressure, dados
 - [ ] 11. Resiliência — restart, ACK, DLQ, drain, probes
 - [ ] 12. Runtime — async-only; tenant/retry/semáforo/idempotência **globais** (o resto herda)
-- [ ] 13. Registrar o que está CORRETO (cobertura por camada)
-- [ ] 14. findings.json + PDF + rasterizar páginas
-- [ ] 15. Entregar no chat: arquivo:linha + caminhos
+- [ ] 13. Consistência — nomes da indústria; schema ≠ entity ≠ record; mesmo desenho no repo
+- [ ] 14. Registrar o que está CORRETO (cobertura por camada)
+- [ ] 15. findings.json + PDF + rasterizar páginas
+- [ ] 16. Entregar no chat: arquivo:linha + caminhos
 ```
 
 Não feche sem o inventário do scanner **e** sem o PDF verificado.
@@ -64,37 +66,39 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 | “Cada handler filtra tenant, está seguro” | Filtro copiado é segundo dono. Isolamento é contexto/RLS **global**. |
 | “É só um requests.get no async” | Bloqueia o loop. Async-only. |
 | “Retry no use case é mais claro” | Retry é política global. Use case não tem `for _ in range`. |
+| “Pydantic no domínio é mais rápido” | Schema de borda ≠ entidade. ORM ≠ domínio. §3.1. |
+| “Neste módulo a gente usa camelCase em Python” | O repo tem um case. Indústria da linguagem. |
 
 ## Passo 0 — Constituição e stack
 
 1. Leia `AGENTS.md` na raiz do projeto auditado. Se não existir, leia `<SKILL_DIR>/../AGENTS.md`.
 2. Detecte: linguagem, framework, pastas de camada (`core`/`domain`, `application`, `infrastructure`/`adapters`, `presentation`/`api`, `tests`).
-3. Mapeie as 11 categorias para **esta** árvore (pastas, compose, workers, filas, políticas globais). Grave em `docs/principios-audit/stack.md`.
+3. Mapeie as 12 categorias para **esta** árvore (pastas, compose, workers, filas, políticas globais, nomes). Grave em `docs/principles-audit/stack.md`.
 4. Procedimento fino: [references/categories.md](references/categories.md).
 
 ## Passo 1 — Inventário (obrigatório)
 
 ```bash
-python3 <SKILL_DIR>/../shared/scan_inventory.py . > docs/principios-audit/inventory.json
+python3 <SKILL_DIR>/../shared/scan_inventory.py . > docs/principles-audit/inventory.json
 ```
 
 O JSON lista todos os arquivos de código, camada inferida, linhas vs limite, funções/classes estouradas, imports de infra em `core`/`application`, clusters de duplicação textual, `deploy.signals` (restart, healthcheck, probes, API+worker no mesmo command) e `runtime_smells` (`time.sleep`, `requests`, `readFileSync`, `gather(*)`).
 
 **O scanner não fecha a auditoria.** Ele impede amostragem. Cada `over_file`, `functions_over`, `infra_imports`, cluster de `duplicates` e `deploy.signals` vira: achado confirmado, falso positivo documentado, ou N/A.
 
-Percorra `inventory.json` **por completo**. Marque em `docs/principios-audit/coverage.md`:
+Percorra `inventory.json` **por completo**. Marque em `docs/principles-audit/coverage.md`:
 
 ```
-arquivo  camada  linhas  SRP  hexagonal  dry/ssot  tdd  morto  segurança  escala  resiliência  runtime  status
+arquivo  camada  linhas  SRP  hexagonal  dry/ssot  tdd  morto  segurança  escala  resiliência  runtime  consistência  status
 ```
 
 status: `ok` | `achado` | `n/a`.
 
 ## Achado — formato
 
-Grave em `docs/principios-audit/findings.json`. Schema: [references/findings-schema.md](references/findings-schema.md).
+Grave em `docs/principles-audit/findings.json`. Schema: [references/findings-schema.md](references/findings-schema.md).
 
-Categorias (`category`): `ssot` | `dry` | `srp` | `hexagonal` | `tdd` | `dead_code` | `yagni_kiss` | `security` | `scalability` | `resilience` | `runtime`
+Categorias (`category`): `ssot` | `dry` | `srp` | `hexagonal` | `tdd` | `dead_code` | `yagni_kiss` | `security` | `scalability` | `resilience` | `runtime` | `consistency`
 
 Severidade:
 
@@ -102,19 +106,19 @@ Severidade:
 |-------|--------|
 | `critica` | `core` depende de infra; regra de dinheiro/tenant/auth em dois donos; escrita de negócio sem teste; worker de cobrança sem idempotência; dois serviços escrevendo a mesma tabela |
 | `alta` | vazamento de camada; arquivo ≥ 2× o limite; duplicação de regra; módulo novo sem unit; fila sem DLQ/ACK invertido; API e worker no mesmo processo com estado na RAM; falha aberta / tenant no body; I/O sync no event loop; retry/idempotência copiados no use case |
-| `media` | arquivo acima do duro; função > 50; restart ausente; timeout ausente; liveness acoplada ao Redis; microsserviço sem o critério da constituição; `gather` sem semáforo |
-| `baixa` | cheiro de tamanho; código comentado; helper genérico; probe único para vivo e pronto |
+| `media` | arquivo acima do duro; função > 50; restart ausente; timeout ausente; liveness acoplada ao Redis; microsserviço sem o critério da constituição; `gather` sem semáforo; `OrderService`; schema=ORM |
+| `baixa` | cheiro de tamanho; código comentado; helper genérico; probe único para vivo e pronto; acrônimo inconsistente (`HTTPClient` vs `HttpClient`) |
 | `informativa` | fronteira ainda sem import-linter; dívida declarada no plano |
 
-## Passo 14 — PDF
+## Passo 15 — PDF
 
-Obrigatório: `docs/principios-audit/relatorio-auditoria-principios.pdf`.
+Obrigatório: `docs/principles-audit/relatorio-auditoria-principios.pdf`.
 
 ```bash
-mkdir -p docs/principios-audit
-cp <SKILL_DIR>/../shared/generate_report.py docs/principios-audit/
-cp <SKILL_DIR>/../shared/requirements.txt docs/principios-audit/
-cd docs/principios-audit
+mkdir -p docs/principles-audit
+cp <SKILL_DIR>/../shared/generate_report.py docs/principles-audit/
+cp <SKILL_DIR>/../shared/requirements.txt docs/principles-audit/
+cd docs/principles-audit
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/python generate_report.py findings.json
@@ -131,7 +135,7 @@ pdfinfo relatorio-auditoria-principios.pdf
 
 Corrija defeito visual e regenere.
 
-## Passo 15 — Entrega no chat
+## Passo 16 — Entrega no chat
 
 1. Constituição usada (path) e camadas detectadas.
 2. Números do inventário: arquivos, estouro de limite, leaks, clusters duplicados.

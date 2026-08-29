@@ -1,4 +1,4 @@
-# Schema de `docs/principios-audit/findings.json`
+# Schema de `docs/principles-audit/findings.json`
 
 O gerador `shared/generate_report.py` lê este JSON. Além dos campos comuns da auditoria de segurança, preencha `report`, `category_labels` e `category_order`.
 
@@ -11,7 +11,7 @@ O gerador `shared/generate_report.py` lê este JSON. Além dos campos comuns da 
   "report": {
     "title": "Relatório de Auditoria de Princípios",
     "kicker": "SSOT · HEXAGONAL · TDD · RESILIÊNCIA · ESCALA",
-    "footer": "gerado por principios-audit",
+    "footer": "gerado por principles-audit",
     "filename": "relatorio-auditoria-principios.pdf"
   },
   "category_labels": {
@@ -25,9 +25,10 @@ O gerador `shared/generate_report.py` lê este JSON. Além dos campos comuns da 
     "security": "Segurança arquitetural",
     "scalability": "Escala / desacoplamento",
     "resilience": "Resiliência / workers",
-    "runtime": "Runtime (async, tenant, retry, semáforo, idempotência)"
+    "runtime": "Runtime (async, tenant, retry, semáforo, idempotência)",
+    "consistency": "Consistência (nomes, schema/model)"
   },
-  "category_order": ["ssot", "dry", "srp", "hexagonal", "tdd", "dead_code", "yagni_kiss", "security", "scalability", "resilience", "runtime"],
+  "category_order": ["ssot", "dry", "srp", "hexagonal", "tdd", "dead_code", "yagni_kiss", "security", "scalability", "resilience", "runtime", "consistency"],
   "stack": {
     "language": "Python 3.12",
     "framework": "FastAPI",
@@ -48,7 +49,8 @@ O gerador `shared/generate_report.py` lê este JSON. Além dos campos comuns da 
     "security": "aplicável — invariantes de construção; exploits profundos = /security-audit",
     "scalability": "aplicável — compose, workers, donos de tabela",
     "resilience": "aplicável — restart, ACK, DLQ, drain",
-    "runtime": "aplicável — políticas globais; o resto herda"
+    "runtime": "aplicável — políticas globais; o resto herda",
+    "consistency": "aplicável — §3.1 nomes e papéis"
   },
   "findings": [],
   "strengths": [],

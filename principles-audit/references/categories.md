@@ -1,4 +1,4 @@
-# Onze categorias — como varrer
+# Doze categorias — como varrer
 
 A definição do princípio está no `AGENTS.md`. Aqui: **o que abrir e o que conta como achado**. Use o `inventory.json` como fila.
 
@@ -155,3 +155,20 @@ Achado quando a política **não tem dono global** ou o local **copia** em vez d
 **Protegido:** um `RetryPolicy` + um `IdempotencyStore` + um contexto de tenant + semáforos no DI; adapters e consumers só recebem. Teste da 2ª entrega e teste de outro tenant no adapter.
 
 Não acuse o fake de teste que implementa a mesma porta — isso é hexagonal. Acuse o segundo `retry()` escrito na mão.
+
+## 12. Consistência (`consistency`) — nomes e schema/model
+
+Constituição §3.1. Fila: um módulo antigo e um novo; `models.py`; tipos Pydantic/Zod vs ORM vs domínio.
+
+Achado quando:
+
+- Case fora da linguagem (`getOrder` em Python, `get_order` em TS)
+- `HTTPClient` e `HttpClient` no mesmo repo
+- Use case chamado `OrderService` / `*Utils` / `*Helper` com regra
+- O mesmo tipo é entidade **e** row ORM **e** schema de API
+- `models.py` (ou `types.ts`) mistura os três papéis
+- Bounded context B usa pastas/sufixos diferentes do A sem plano
+
+**Protegido:** `Order` no domain, `OrderRecord` no adapter, `OrderCreateRequest`/`OrderResponse` na borda; `CreateOrder` como use case; ruff/eslint no CI.
+
+Correção: alinhar ao padrão **já usado no repo** (indústria da linguagem). Não inventar um quarto sufixo.

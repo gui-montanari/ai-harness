@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Gera relatório de auditoria em PDF (A4, pt-BR).
 
-Usado por security-audit e principios-audit. Títulos, categorias e nome do
+Usado por security-audit e principles-audit. Títulos, categorias e nome do
 arquivo vêm de findings.json (`report`, `category_labels`, `category_order`);
 os defaults preservam a auditoria de segurança.
 

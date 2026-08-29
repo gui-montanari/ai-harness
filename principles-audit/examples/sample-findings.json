@@ -6,7 +6,7 @@
   "report": {
     "title": "Relatório de Auditoria de Princípios",
     "kicker": "SSOT · HEXAGONAL · TDD · RESILIÊNCIA · ESCALA",
-    "footer": "gerado por principios-audit",
+    "footer": "gerado por principles-audit",
     "filename": "relatorio-auditoria-principios.pdf"
   },
   "category_labels": {

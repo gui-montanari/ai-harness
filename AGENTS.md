@@ -27,7 +27,8 @@ Não gere documentação extra. Este arquivo + o plano em `docs/plans/` (quando 
 9. **YAGNI + KISS.** Não construa o que o requisito de agora não exige. Simples e sólido.
 10. **Segurança, desempenho, escala e resiliência são requisitos do mesmo diff**, não “depois”. Isolamento de tenant, auth no servidor, I/O com timeout, worker que sobrevive à própria morte.
 11. **Runtime elegante:** async-only no caminho de I/O; isolamento multi-tenant, semáforo, retry e idempotência são **políticas globais** — o resto herda. Zero `if tenant` / `for _ in range(3)` copiado no handler.
-12. **Zero violação.** Não se negocia princípio contra prazo, demos ou “é só um worker”. O atalho vira o sistema.
+12. **Nomes e tipos no padrão da indústria, iguais no repo inteiro.** Função, classe, arquivo, schema e model não improvisam. §3.1.
+13. **Zero violação.** Não se negocia princípio contra prazo, demos ou “é só um worker”. O atalho vira o sistema.
 
 Violar a letra é violar o espírito. Não há atalho “só desta vez”.
 
@@ -175,6 +176,41 @@ Monorepo só quando os artefatos **nascem e versionam juntos**. Mesmo assim: nen
 
 Não criar pacote `shared/` que vira lixeira. O que é compartilhado ou é contrato publicado ou não é compartilhado.
 
+### 3.1 Nomes, consistência e separação de tipos
+
+O **mesmo padrão em todo o repositório**. Não um bounded context em camelCase e outro em snake_case. A linguagem manda o case; o repo manda os **sufixos e o lugar**.
+
+**Identificadores (indústria, por linguagem):**
+
+| Coisa | Python | TypeScript |
+|-------|--------|------------|
+| Função, método, variável | `snake_case` | `camelCase` |
+| Classe, tipo, componente | `PascalCase` | `PascalCase` |
+| Constante | `UPPER_SNAKE` | `UPPER_SNAKE` |
+| Arquivo | `order.py` casa com `Order` / `create_order.py` com `CreateOrder` | `createOrder.ts` / `Order.ts` |
+| Teste | `test_<unidade>.py` | `<unidade>.test.ts` |
+
+Proibido no mesmo idioma: `getOrder` em Python, `get_order` em TS, `HTTPClient` num arquivo e `HttpClient` no vizinho. Acrônimo: um jeito só (`Http`, `Id`, `Url`) — o do ecossistema.
+
+**Papéis (SRP + hexagonal) — três tipos, três casas:**
+
+| Papel | Onde | Nome | É |
+|-------|------|------|---|
+| Entidade / valor de domínio | `core/domain/` | `Order`, `Money` | regra de negócio, sem ORM, sem HTTP |
+| Schema / DTO de borda | `presentation/` (request/response) | `OrderCreateRequest`, `OrderResponse` | validação de I/O. Pydantic/Zod **aqui** |
+| Record de persistência | `infrastructure/adapters/` | `OrderRecord` / `OrderRow` | mapeia tabela. ORM **aqui** |
+| Porto | `core/ports/` | `OrderRepository`, `Clock`, `HttpClient` | interface |
+| Caso de uso | `application/` | `CreateOrder`, `ChargeOrder` | um verbo, um motivo |
+| Adapter | `infrastructure/adapters/` | `PostgresOrderRepository`, `StripeGateway` | implementação do porto |
+
+Um `Order` que é entidade **e** tabela SQLAlchemy **e** payload FastAPI é violação de SRP e de hexagonal. O mapper vive no adapter (mecânico; DRY não exige “utils”).
+
+Use case **não** se chama `OrderService`. Handler **não** se chama `order_utils`. Pasta **não** mistura `models.py` god-file com entidade + schema + row.
+
+**Consistência do repo:** o segundo bounded context copia a **forma** do primeiro (mesmos sufixos, mesmas pastas, mesmos verbos). Exceção só no plano, com prazo para alinhar. Linter de estilo (ruff/eslint) é o piso; o padrão de nomes de papel é esta tabela.
+
+**Teste:** abra dois módulos distantes. Sem olhar o autor, o desenho é o mesmo?
+
 ---
 
 ## 4. Stack canônica (produto novo)
@@ -232,6 +268,7 @@ Toda mudança, por menor que seja, passa por isto **antes** do primeiro teste. S
 | 11 | Resiliência | Worker morre no meio? Restart, DLQ, drain? Retry **global**? Idempotência **global**? |
 | 12 | Operação | Log sem PII, métrica, rollback, probe de vivo vs pronto, dono da flag? |
 | 13 | Runtime / SSOT | Async-only? Políticas (tenant, retry, semáforo, idempotência) num dono, o resto herda? |
+| 14 | Consistência | Case da linguagem? Schema ≠ entity ≠ record? Mesmos sufixos no repo inteiro? |
 
 Trivial = um bug óbvio, um nome, um teste faltando em código que você não está reestruturando. Na dúvida, **não é trivial**: plano.
 
@@ -266,6 +303,7 @@ Status: rascunho | aprovado | feito
 | resiliência | ...
 | operação | ...
 | runtime (async, tenant, retry, semáforo, idempotência) | ... |
+| consistência (nomes, schema/model) | ... |
 
 ## Abordagem
 <uma abordagem. Não três ensaios.>
@@ -489,7 +527,7 @@ ler constituição → dimensões (§5)
         └─ não abrir PR / não mergear / não documentar extra
 ```
 
-Não invente skill, pasta, ADR ou diagrama “para completar”. Skills de auditoria (`/principios-audit`, `/security-audit`) quando o humano pedir varredura — não a cada diff.
+Não invente skill, pasta, ADR ou diagrama “para completar”. Skills de auditoria (`/principles-audit`, `/security-audit`) quando o humano pedir varredura — não a cada diff.
 
 ---
 
@@ -518,5 +556,8 @@ Não invente skill, pasta, ADR ou diagrama “para completar”. Skills de audit
 - `for _ in range(3): try` no use case (retry sem dono)
 - `asyncio.gather(*tasks)` sem semáforo
 - `processed = set()` em memória como idempotência
+- `getOrder` em Python ou `OrderService` com três verbos
+- Entidade de domínio = modelo ORM = schema FastAPI/Zod no mesmo tipo
+- `models.py` god-file; segundo bounded context com pastas diferentes sem plano
 
 Qualquer um desses: pare, volte às dimensões, corrija o plano. Não empurre o diff.

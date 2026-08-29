@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inventário estrutural para /principios-audit.
+"""Inventário estrutural para /principles-audit.
 
 Não julga arquitetura — lista o que existe para a varredura não ser amostragem.
 Limites de SRP: os da constituição (AGENTS.md). Exclui gerado/vendored.

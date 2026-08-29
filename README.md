@@ -11,7 +11,7 @@ Cada skill é uma pasta com um `SKILL.md` (metadados + instruções) e, quando n
 | Skill | Quando usar |
 |-------|-------------|
 | [`security-audit`](./security-audit/) | Auditoria de segurança em cinco categorias (isolamento de tenant, autorização só no frontend, IDOR, segredos hardcoded, XSS), com relatório PDF em pt-BR e issues prontas para o GitHub. Comando: `/security-audit` |
-| [`principios-audit`](./principios-audit/) | Varredura contra o `AGENTS.md`: SSOT (global→herda), hexagonal, TDD, segurança, escala, auto-recovery, async-only, tenant, semáforo, retry, idempotência. Comandos: `/principios-audit`, `/hexagonal-audit` |
+| [`principles-audit`](./principles-audit/) | Varredura contra o `AGENTS.md`: hexagonal, TDD, runtime, consistência de nomes e schema/model. Comando: `/principles-audit` |
 
 ## Como usar
 
@@ -27,7 +27,7 @@ cd skills
 ```bash
 mkdir -p ~/.claude/skills
 ln -s "$(pwd)/security-audit" ~/.claude/skills/security-audit
-ln -s "$(pwd)/principios-audit" ~/.claude/skills/principios-audit
+ln -s "$(pwd)/principles-audit" ~/.claude/skills/principles-audit
 ```
 
 ### Grok
@@ -35,7 +35,7 @@ ln -s "$(pwd)/principios-audit" ~/.claude/skills/principios-audit
 ```bash
 mkdir -p ~/.grok/skills
 ln -s "$(pwd)/security-audit" ~/.grok/skills/security-audit
-ln -s "$(pwd)/principios-audit" ~/.grok/skills/principios-audit
+ln -s "$(pwd)/principles-audit" ~/.grok/skills/principles-audit
 ```
 
 ### Codex / outros runtimes Agent Skills
@@ -43,10 +43,10 @@ ln -s "$(pwd)/principios-audit" ~/.grok/skills/principios-audit
 ```bash
 mkdir -p ~/.agents/skills
 ln -s "$(pwd)/security-audit" ~/.agents/skills/security-audit
-ln -s "$(pwd)/principios-audit" ~/.agents/skills/principios-audit
+ln -s "$(pwd)/principles-audit" ~/.agents/skills/principles-audit
 ```
 
-Depois, no chat: `/security-audit`, `/principios-audit` ou `/hexagonal-audit`.
+Depois, no chat: `/security-audit`, `/principles-audit` ou `/hexagonal-audit`.
 
 ## Convenção
 
