@@ -24,6 +24,15 @@ O que procurar:
 
 Aponte **onde o mecanismo está ausente ou furado**, não apenas que “falta RLS” de forma genérica.
 
+Isolamento é **uma política global** (constituição §8.6): contexto autenticado + RLS `FORCE` (ou session `SET`) + posse no core. Handlers, workers, jobs e exports **herdam**. Achado extra quando:
+
+- cada query copia `WHERE tenant_id =` com lógica **divergente** (segundo dono)
+- o worker/job roda **sem** restaurar o contexto de tenant da mensagem
+- o cliente manda `tenantId`/`orgId` e o servidor confia
+- RLS existe mas **não** é `FORCE` (a app pode “esquecer” o filtro)
+
+O mecanismo correto **substitui** a cópia. Não peça para adicionar o 41º `if tenant` — peça para o handler herdar o dono.
+
 ## 2. PERMISSÃO DEFINIDA NO NAVEGADOR
 
 Operações privilegiadas (admin, configurações, gestão de usuários, escritas perigosas) em que o **frontend esconde a UI** por papel (`isAdmin`, `canEdit`, `role`, `permissions`, feature flag de role) mas o **servidor não faz a verificação equivalente**.

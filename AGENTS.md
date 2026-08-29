@@ -20,13 +20,14 @@ Não gere documentação extra. Este arquivo + o plano em `docs/plans/` (quando 
 2. **Analisar antes de implementar.** Sem invariante clara, sem código.
 3. **TDD.** Comportamento novo começa por um teste que falha. Sem exceção “é simples”.
 4. **Hexagonal.** Domínio não conhece framework, banco, HTTP, SDK, UI.
-5. **Uma casa por fato (SSOT).** A regra vive num único lugar. O resto lê esse lugar.
+5. **Uma casa por fato (SSOT).** A regra vive num único lugar. O resto **herda** — não copia.
 6. **Uma razão para mudar (SRP).** Arquivo, função e tipo descrevem-se sem “e”.
 7. **Zero duplicação.** Copiar lógica é bug futuro. Extrair para o dono do fato.
 8. **Zero código morto.** Se não corre em produção nem em teste, apaga.
 9. **YAGNI + KISS.** Não construa o que o requisito de agora não exige. Simples e sólido.
 10. **Segurança, desempenho, escala e resiliência são requisitos do mesmo diff**, não “depois”. Isolamento de tenant, auth no servidor, I/O com timeout, worker que sobrevive à própria morte.
-11. **Zero violação.** Não se negocia princípio contra prazo, demos ou “é só um worker”. O atalho vira o sistema.
+11. **Runtime elegante:** async-only no caminho de I/O; isolamento multi-tenant, semáforo, retry e idempotência são **políticas globais** — o resto herda. Zero `if tenant` / `for _ in range(3)` copiado no handler.
+12. **Zero violação.** Não se negocia princípio contra prazo, demos ou “é só um worker”. O atalho vira o sistema.
 
 Violar a letra é violar o espírito. Não há atalho “só desta vez”.
 
@@ -48,6 +49,8 @@ Uma regra de negócio, um contrato, um número, um nome de campo, um limite, uma
 | Doc que compete com o código | comentário que restata o `if` |
 
 **Teste:** “Se essa regra mudar amanhã, quantos arquivos eu edito?” A resposta correta é **um** (mais testes). Se for dois, alguém está copiando.
+
+**Global primeiro, o resto herda.** Isolamento de tenant, retry, idempotência, semáforo, timeout e o event loop **não** se reimplementam por rota, por worker, por adapter. Vivem num dono (core + composition root). Handler, use case e consumer **chamam** o dono. Cópia “parecida” é segundo dono — mesmo que o if caiba em três linhas.
 
 ### DRY — zero lógica duplicada
 
@@ -186,7 +189,8 @@ Escolha **uma** coluna e seja hexagonal nela. Não misture Django-views-com-regr
 | DB | PostgreSQL 16 + **RLS** | PostgreSQL 16 + RLS |
 | Migrações | Alembic | Prisma migrate **ou** SQL versionado — um dono, nunca dois |
 | Cache / fila | Redis | Redis |
-| HTTP client | porta + adaptador | porta + adaptador |
+| HTTP client | porta + **httpx async** (sem `requests`) | porta + fetch/undici **async** (sem `*Sync`) |
+| Runtime | asyncio; `asyncio_mode = strict` | Promises; sem `*Sync` no request path |
 | Testes | pytest, asyncio strict | vitest / node:test |
 | Lint / types | ruff + mypy | eslint + `tsc --noEmit` |
 | Fronteiras | import-linter | dependency-cruiser |
@@ -197,7 +201,7 @@ Escolha **uma** coluna e seja hexagonal nela. Não misture Django-views-com-regr
 
 **Frontend não calcula regra de negócio.** Pode validar UX (campo vazio, máscara). Autorização, preço, tenant, estoque: servidor.
 
-**Não** para código novo, salvo legado inescapável: regra em stored procedure *e* no serviço; Server Action do Next como único backend sem `core`; ORM no controller; `any` / `dict` atravessando o domínio.
+**Não** para código novo, salvo legado inescapável: regra em stored procedure *e* no serviço; Server Action do Next como único backend sem `core`; ORM no controller; `any` / `dict` atravessando o domínio; `requests`/`time.sleep` no event loop.
 
 Comandos canônicos na raiz (`Makefile` é SSOT de *como rodar*):
 
@@ -209,7 +213,7 @@ CI chama os mesmos alvos. Ninguém documenta um comando que o Makefile não tem.
 
 ---
 
-## 5. Analisar antes — as doze dimensões
+## 5. Analisar antes — as dimensões
 
 Toda mudança, por menor que seja, passa por isto **antes** do primeiro teste. Se a mudança não for trivial (mais de um arquivo, contrato, ou comportamento), o resultado vira plano em `docs/plans/<slug>.md`.
 
@@ -222,11 +226,12 @@ Toda mudança, por menor que seja, passa por isto **antes** do primeiro teste. S
 | 5 | DRY | Isto já está escrito? É decisão ou mapeamento? |
 | 6 | YAGNI/KISS | O requisito de *agora* exige esta abstração **ou** este serviço extra? |
 | 7 | TDD | Qual teste vai falhar primeiro, e o que ele prova? |
-| 8 | Segurança | Tenant do contexto? Authz no servidor? Input na borda? Segredo fora? Falha fechada? |
-| 9 | Performance | Hot path? N+1? I/O no loop? Paginação? Índice? Timeout em todo I/O? |
+| 8 | Segurança | Tenant do **contexto global**? Authz no servidor? Input na borda? Segredo fora? Falha fechada? |
+| 9 | Performance | Hot path? N+1? I/O **async**? Paginação? Índice? Timeout em todo I/O? Semáforo do recurso? |
 | 10 | Escala / desacoplamento | Estado no processo? Gargalo é CPU, I/O ou fila? Cabe worker antes de outro serviço? |
-| 11 | Resiliência | Worker morre no meio — o que acontece? Restart, DLQ, drain, idempotência? |
+| 11 | Resiliência | Worker morre no meio? Restart, DLQ, drain? Retry **global**? Idempotência **global**? |
 | 12 | Operação | Log sem PII, métrica, rollback, probe de vivo vs pronto, dono da flag? |
+| 13 | Runtime / SSOT | Async-only? Políticas (tenant, retry, semáforo, idempotência) num dono, o resto herda? |
 
 Trivial = um bug óbvio, um nome, um teste faltando em código que você não está reestruturando. Na dúvida, **não é trivial**: plano.
 
@@ -260,6 +265,7 @@ Status: rascunho | aprovado | feito
 | escala | ...
 | resiliência | ...
 | operação | ...
+| runtime (async, tenant, retry, semáforo, idempotência) | ... |
 
 ## Abordagem
 <uma abordagem. Não três ensaios.>
@@ -308,7 +314,9 @@ Onde o teste vive:
 | O quê | Onde |
 |-------|------|
 | Regra de domínio / use case | `tests/unit` — sem I/O |
-| Idempotência do worker (2ª entrega) | `tests/unit` do use case, relógio/fila mockados |
+| Idempotência (2ª entrega / mesmo Idempotency-Key) | `tests/unit` do use case, relógio/fila mockados |
+| Isolamento de tenant (RLS/contexto + posse) | `tests/unit` + um teste de adapter com sessão de outro tenant |
+| Retry só em erro transitório | `tests/unit` do adapter com `Clock` fake |
 | Adaptador obedece porta | `tests/contract` |
 | SQL, fila, HTTP real | `tests/integration` |
 | Jornada | `tests/e2e` — poucos, estáveis |
@@ -354,7 +362,7 @@ Não são fases. São o mesmo diff. **Falha em qualquer subseção = o diff não
 ### 8.1 Segurança (todo use case)
 
 - **Falha fechada.** Sem contexto autenticado, sem tenant, sem papel: recusa. Default permissivo é violação.
-- **Tenant do contexto**, nunca do body/query escolhido pelo cliente.
+- **Tenant do contexto global**, nunca do body/query. O mecanismo é um (§8.6); handler não copia `if tenant`.
 - **Authz no servidor** (application), não só na UI. O frontend não é fronteira de privilégio.
 - **Posse no get/mutate por ID** (IDOR). UUID não autoriza.
 - **Segredo fora do git, da imagem e do log.** `${VAR:-secret}` é segredo. Startup recusa default conhecido.
@@ -402,14 +410,14 @@ O processo **vai** morrer (OOM, deploy, nó, bug). Recovery correto é requisito
 | Circuito | dependência caída não replica a queda para todo o cluster (timeout, bulkhead, circuit breaker no **adapter**) |
 | Relógio | tempo é porta (`Clock`). Teste de retry não dorme de verdade |
 
-Retry sem jitter e sem teto é amplificador de outage. “Vamos deixar o k8s reiniciar” **sem** idempotência é duplicar cobrança, e-mail, side-effect.
+Retry e idempotência **não** se escrevem no consumer. São as políticas globais da §8.6. Retry sem jitter/teto é amplificador de outage. Restart sem idempotência duplica cobrança.
 
-O domínio não conhece Kafka/Redis/Celery. A **porta** é `Queue` / `WorkerHeartbeat`. Auto-recovery é infra; a **correção** do reprocessamento é regra de application/core (idempotência).
+O domínio não conhece Kafka/Redis/Celery. A **porta** é `Queue` / `WorkerHeartbeat`. Auto-recovery é infra; a **correção** do reprocessamento é o dono global de idempotência.
 
 ### 8.4 Performance
 
 - Sem N+1. Lista em batch. Coleção sem paginação = achado.
-- Sem I/O síncrono no loop. Pool de conexões com teto; nunca conexão por request “no feeling”.
+- I/O **async**. Sync no event loop é achado. Pool de conexões com teto; o teto é o semáforo global do recurso (§8.6).
 - Índice nasce com a query.
 - Payload enxuto. Não serializar o agregado inteiro “por se acaso”.
 - Medir o hot path (trace) antes de “otimizar” o que não dói.
@@ -420,8 +428,32 @@ O domínio não conhece Kafka/Redis/Celery. A **porta** é `Queue` / `WorkerHear
 - Sem catch-all que engole e segue. Ou trata, ou propaga.
 - Logs estruturados, sem PII, com `tenant_id` / `request_id` / `message_id`.
 - Nomes que dizem a regra (`deny_if_other_tenant`, não `check`).
-- Concorrência **limitada** (semáforo, `prefetch`, pool). “Unbounded gather” não é elegância.
+- Concorrência limitada pelo **semáforo global** do recurso (§8.6). “Unbounded gather” não é elegância.
 - Diff pequeno, comportamento **completo**. Não metade do use case para commitar cedo.
+
+### 8.6 Runtime elegante — async, tenant, semáforo, retry, idempotência
+
+Política **uma vez**. Quem executa **herda**. Copiar o if no handler é o anti-padrão.
+
+| Política | Dono (global) | Herda |
+|----------|---------------|--------|
+| Isolamento multi-tenant | contexto autenticado + RLS `FORCE` (ou session `SET`) + `assert_same_tenant` no **core** | HTTP, worker, job, export, admin, GraphQL. Sem contexto = recusa |
+| Async-only | event loop único; portas de I/O `async` | todo adapter de rede/disco/fila. Sync só no composition root, no plano, como legado |
+| Semáforo | um budget por classe de recurso (`db`, `http`, `llm`, `queue`) injetado no DI | `gather`, consumer `prefetch`, pool. Prefetch ≤ semáforo |
+| Retry | `RetryPolicy` (N, backoff exponencial, **jitter**, teto, erros transitórios) + porta `Clock` | adapters de I/O. Use case **não** tem `for _ in range` |
+| Idempotência | `IdempotencyStore` + chave canônica `tenant + comando + natural_key` | todo comando com side-effect e todo consumer. 2ª entrega devolve o 1º resultado |
+
+**Async-only (caminho de I/O).** Python: `async def`, `httpx`/`asyncpg`/`redis.asyncio`; pytest `asyncio_mode = strict`. Proibido no request/worker: `requests`, `time.sleep`, `psycopg2` sync, `subprocess.run`, `open().read` de rede. TypeScript: `await`; proibido `readFileSync` / `execSync` / `*Sync` no hot path. CPU-bound: `to_thread` / worker de processo — não fingir que é async.
+
+**Isolamento multi-tenant.** A sessão de banco **já nasce** no tenant (RLS FORCE ou equivalente). Worker restaura o contexto a partir da mensagem **antes** do use case. Job sem tenant no payload recusa. Filtro `WHERE tenant_id =` copiado em 40 repositórios, cada um um pouco diferente, é SSOT furado: o dono é a sessão/RLS + posse no core; apague as cópias divergentes.
+
+**Semáforo.** Um objeto por recurso, no DI. Não `Semaphore(10)` solto no módulo. Fila: `prefetch` ≤ o semáforo. Estouro = backpressure (429/NACK), não buffer infinito.
+
+**Retry.** Só timeout, conexão, 429, 503, reset. Nunca 4xx de negócio, validação, conflito de idempotência. Sem jitter e sem teto = achado. Teste com `Clock` fake — não dorme de verdade.
+
+**Idempotência.** Persistência da chave **antes** (ou na mesma transação) do side-effect; senão outbox. Header `Idempotency-Key` ou `message_id` da fila. Sem o store global, cada use case inventa um `processed_ids` em RAM — morre no restart e fura o tenant.
+
+Elegância = chamar o dono em uma linha, não um bloco copiado.
 
 ---
 
@@ -450,7 +482,7 @@ ler constituição → dimensões (§5)
         │
         ├─ mínimo verde
         │
-        ├─ refatorar (limites SRP, DRY, camadas, resiliência)
+        ├─ refatorar (SRP, DRY, camadas, runtime global)
         │
         ├─ make lint && make test
         │
@@ -481,5 +513,10 @@ Não invente skill, pasta, ADR ou diagrama “para completar”. Skills de audit
 - Commit com segredo, dump, `.env`, fixture com PII
 - “É só um if” no lugar errado da camada
 - “A gente vê segurança/escala depois”
+- `time.sleep` / `requests` / `readFileSync` no caminho do request ou do worker
+- `if tenant_id !=` copiado no handler em vez do contexto/RLS global
+- `for _ in range(3): try` no use case (retry sem dono)
+- `asyncio.gather(*tasks)` sem semáforo
+- `processed = set()` em memória como idempotência
 
 Qualquer um desses: pare, volte às dimensões, corrija o plano. Não empurre o diff.

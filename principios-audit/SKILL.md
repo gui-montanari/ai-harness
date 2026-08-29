@@ -5,7 +5,8 @@ description: >
   Use when the user asks to audit architecture or design principles, check hexagonal
   layers, SSOT, SRP, DRY, YAGNI, KISS, SOLID, TDD, dead code, duplicated logic,
   file size limits, import leaks, worker auto-recovery, DLQ, decoupling, microservices,
-  scalability, performance, or architectural security (fail-closed, tenant, timeouts).
+  scalability, performance, architectural security, async-only, multi-tenant isolation,
+  semaphore, retry policy, or idempotency (global policy inherited, not copied).
   Also when they run /principios-audit, /hexagonal-audit, or say "varredura de princípios".
 ---
 
@@ -29,10 +30,11 @@ Entregue achados verificados no código, inventário de cobertura, PDF em pt-BR 
 - [ ] 8. YAGNI / KISS — abstração sem segundo cliente; overengineering
 - [ ] 9. Segurança arquitetural — falha fechada, tenant, authz, timeout, segredo (exploits profundos: /security-audit)
 - [ ] 10. Escala / desacoplamento — worker vs microsserviço, estado, backpressure, dados
-- [ ] 11. Resiliência — restart, idempotência, ACK, DLQ, drain, probes
-- [ ] 12. Registrar o que está CORRETO (cobertura por camada)
-- [ ] 13. findings.json + PDF + rasterizar páginas
-- [ ] 14. Entregar no chat: arquivo:linha + caminhos
+- [ ] 11. Resiliência — restart, ACK, DLQ, drain, probes
+- [ ] 12. Runtime — async-only; tenant/retry/semáforo/idempotência **globais** (o resto herda)
+- [ ] 13. Registrar o que está CORRETO (cobertura por camada)
+- [ ] 14. findings.json + PDF + rasterizar páginas
+- [ ] 15. Entregar no chat: arquivo:linha + caminhos
 ```
 
 Não feche sem o inventário do scanner **e** sem o PDF verificado.
@@ -59,12 +61,15 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 | “O k8s já reinicia” | Restart sem idempotência duplica side-effect. É achado de resiliência. |
 | “Dois serviços no mesmo banco é desacoplado” | É o pior acoplamento. Escala falsa. |
 | “Segurança é a outra skill” | Exploits profundos são `/security-audit`. Falha aberta, tenant no body, timeout ausente entram **aqui**. |
+| “Cada handler filtra tenant, está seguro” | Filtro copiado é segundo dono. Isolamento é contexto/RLS **global**. |
+| “É só um requests.get no async” | Bloqueia o loop. Async-only. |
+| “Retry no use case é mais claro” | Retry é política global. Use case não tem `for _ in range`. |
 
 ## Passo 0 — Constituição e stack
 
 1. Leia `AGENTS.md` na raiz do projeto auditado. Se não existir, leia `<SKILL_DIR>/../AGENTS.md`.
 2. Detecte: linguagem, framework, pastas de camada (`core`/`domain`, `application`, `infrastructure`/`adapters`, `presentation`/`api`, `tests`).
-3. Mapeie as 10 categorias para **esta** árvore (pastas, compose, workers, filas). Grave em `docs/principios-audit/stack.md`.
+3. Mapeie as 11 categorias para **esta** árvore (pastas, compose, workers, filas, políticas globais). Grave em `docs/principios-audit/stack.md`.
 4. Procedimento fino: [references/categories.md](references/categories.md).
 
 ## Passo 1 — Inventário (obrigatório)
@@ -73,14 +78,14 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 python3 <SKILL_DIR>/../shared/scan_inventory.py . > docs/principios-audit/inventory.json
 ```
 
-O JSON lista todos os arquivos de código, camada inferida, linhas vs limite, funções/classes estouradas, imports de infra em `core`/`application`, clusters de duplicação textual, e `deploy.signals` (restart, healthcheck, probes, API+worker no mesmo command).
+O JSON lista todos os arquivos de código, camada inferida, linhas vs limite, funções/classes estouradas, imports de infra em `core`/`application`, clusters de duplicação textual, `deploy.signals` (restart, healthcheck, probes, API+worker no mesmo command) e `runtime_smells` (`time.sleep`, `requests`, `readFileSync`, `gather(*)`).
 
 **O scanner não fecha a auditoria.** Ele impede amostragem. Cada `over_file`, `functions_over`, `infra_imports`, cluster de `duplicates` e `deploy.signals` vira: achado confirmado, falso positivo documentado, ou N/A.
 
 Percorra `inventory.json` **por completo**. Marque em `docs/principios-audit/coverage.md`:
 
 ```
-arquivo  camada  linhas  SRP  hexagonal  dry/ssot  tdd  morto  segurança  escala  resiliência  status
+arquivo  camada  linhas  SRP  hexagonal  dry/ssot  tdd  morto  segurança  escala  resiliência  runtime  status
 ```
 
 status: `ok` | `achado` | `n/a`.
@@ -89,19 +94,19 @@ status: `ok` | `achado` | `n/a`.
 
 Grave em `docs/principios-audit/findings.json`. Schema: [references/findings-schema.md](references/findings-schema.md).
 
-Categorias (`category`): `ssot` | `dry` | `srp` | `hexagonal` | `tdd` | `dead_code` | `yagni_kiss` | `security` | `scalability` | `resilience`
+Categorias (`category`): `ssot` | `dry` | `srp` | `hexagonal` | `tdd` | `dead_code` | `yagni_kiss` | `security` | `scalability` | `resilience` | `runtime`
 
 Severidade:
 
 | Nível | Quando |
 |-------|--------|
 | `critica` | `core` depende de infra; regra de dinheiro/tenant/auth em dois donos; escrita de negócio sem teste; worker de cobrança sem idempotência; dois serviços escrevendo a mesma tabela |
-| `alta` | vazamento de camada; arquivo ≥ 2× o limite; duplicação de regra; módulo novo sem unit; fila sem DLQ/ACK invertido; API e worker no mesmo processo com estado na RAM; falha aberta / tenant no body |
-| `media` | arquivo acima do duro; função > 50; restart ausente; timeout ausente; liveness acoplada ao Redis; microsserviço sem o critério da constituição |
+| `alta` | vazamento de camada; arquivo ≥ 2× o limite; duplicação de regra; módulo novo sem unit; fila sem DLQ/ACK invertido; API e worker no mesmo processo com estado na RAM; falha aberta / tenant no body; I/O sync no event loop; retry/idempotência copiados no use case |
+| `media` | arquivo acima do duro; função > 50; restart ausente; timeout ausente; liveness acoplada ao Redis; microsserviço sem o critério da constituição; `gather` sem semáforo |
 | `baixa` | cheiro de tamanho; código comentado; helper genérico; probe único para vivo e pronto |
 | `informativa` | fronteira ainda sem import-linter; dívida declarada no plano |
 
-## Passo 13 — PDF
+## Passo 14 — PDF
 
 Obrigatório: `docs/principios-audit/relatorio-auditoria-principios.pdf`.
 
@@ -126,7 +131,7 @@ pdfinfo relatorio-auditoria-principios.pdf
 
 Corrija defeito visual e regenere.
 
-## Passo 14 — Entrega no chat
+## Passo 15 — Entrega no chat
 
 1. Constituição usada (path) e camadas detectadas.
 2. Números do inventário: arquivos, estouro de limite, leaks, clusters duplicados.

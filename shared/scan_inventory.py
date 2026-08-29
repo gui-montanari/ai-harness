@@ -272,6 +272,18 @@ def classify_file(path: Path, repo: Path, text: str) -> dict:
     over_cls = [u for u in units if u["kind"] == "class" and u["lines"] > LIMITS["class"]]
     imps = imports_of(text, ext)
     leaks = sorted({i for i in imps if i in INFRA_HINTS}) if layer in {"core", "application"} else []
+    smells = []
+    checks = (
+        (r"\btime\.sleep\s*\(", "time_sleep"),
+        (r"\brequests\.(get|post|put|patch|delete)\s*\(", "sync_requests"),
+        (r"\breadFileSync\s*\(", "readfilesync"),
+        (r"\bexecSync\s*\(", "execsync"),
+        (r"\bsubprocess\.run\s*\(", "subprocess_run"),
+        (r"asyncio\.gather\s*\(\s*\*", "unbounded_gather"),
+    )
+    for pat, kind in checks:
+        if re.search(pat, text):
+            smells.append(kind)
     return {
         "file": rel,
         "layer": layer,
@@ -283,6 +295,7 @@ def classify_file(path: Path, repo: Path, text: str) -> dict:
         "infra_imports": leaks,
         "n_functions": sum(1 for u in units if u["kind"] == "function"),
         "n_classes": sum(1 for u in units if u["kind"] == "class"),
+        "runtime_smells": smells,
     }
 
 
@@ -330,6 +343,7 @@ def main() -> None:
         "n_layer_leaks": sum(len(f["infra_imports"]) for f in files),
         "n_duplicate_clusters": len(dupes),
         "n_deploy_signals": len(deploy["signals"]),
+        "n_runtime_smells": sum(len(f.get("runtime_smells") or []) for f in files),
         "limits": LIMITS,
     }
     out = {"summary": summary, "files": files, "duplicates": dupes[:80], "deploy": deploy}

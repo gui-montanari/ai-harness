@@ -19,9 +19,10 @@
     "yagni_kiss": "YAGNI / KISS",
     "security": "Segurança arquitetural",
     "scalability": "Escala / desacoplamento",
-    "resilience": "Resiliência / workers"
+    "resilience": "Resiliência / workers",
+    "runtime": "Runtime (async, tenant, retry, semáforo, idempotência)"
   },
-  "category_order": ["ssot", "dry", "srp", "hexagonal", "tdd", "dead_code", "yagni_kiss", "security", "scalability", "resilience"],
+  "category_order": ["ssot", "dry", "srp", "hexagonal", "tdd", "dead_code", "yagni_kiss", "security", "scalability", "resilience", "runtime"],
   "stack": {
     "language": "Python 3.12",
     "framework": "FastAPI",
@@ -41,7 +42,8 @@
     "yagni_kiss": "aplicável",
     "security": "aplicável — invariantes de construção",
     "scalability": "aplicável — compose + donos de tabela",
-    "resilience": "aplicável — restart, ACK, DLQ"
+    "resilience": "aplicável — restart, ACK, DLQ",
+    "runtime": "aplicável — políticas globais; o resto herda"
   },
   "findings": [
     {
@@ -223,6 +225,24 @@
         "Teste unitário da 2ª entrega do mesmo message_id não duplica cobrança",
         "ACK depois do efeito; compose com stop_grace_period"
       ]
+    },
+    {
+      "id": "P-011",
+      "category": "runtime",
+      "severity": "alta",
+      "file": "src/application/charge_order.py",
+      "lines": "50-62",
+      "title": "Retry e tenant copiados no use case; I/O sync no loop",
+      "description": "ChargeOrder faz time.sleep+retry na mão, filtra tenant no if local e chama requests.post. Não herda RetryPolicy, contexto de tenant nem HttpClient async.",
+      "snippet": "for _ in range(3):\n    try:\n        if order.tenant_id != actor.tenant_id: raise Forbidden()\n        requests.post(url, json=body)\n        break\n    except Exception:\n        time.sleep(1)",
+      "why_exploitable": "Três donos novos: retry, isolamento, HTTP. Bloqueia o event loop. 4xx de negócio são retentados. Restart perde qualquer idempotência inexistente.",
+      "exploitability_conditions": "Caminho async da API/worker.",
+      "impact": "Loop travado, isolamento divergente, cobrança duplicável.",
+      "fix": "Herdar: contexto de tenant já setado; HttpClient async com timeout; RetryPolicy global (só transitório, jitter, Clock); IdempotencyStore com chave tenant+order_id.",
+      "acceptance_criteria": [
+        "Use case sem time.sleep, requests, for-retry, if tenant",
+        "2ª entrega e tenant errado cobertos em unit com Clock fake"
+      ]
     }
   ],
   "strengths": [
@@ -249,6 +269,7 @@
     { "priority": "P1", "text": "Unit de ChargeOrder com recusa por saldo, antes de qualquer extração." },
     { "priority": "P2", "text": "Fatiar OrderService em use cases; posse de tenant no core." },
     { "priority": "P1", "text": "Separar processo do worker, ACK depois do persist, timeout e idempotência na cobrança." },
+    { "priority": "P1", "text": "Políticas globais no DI (tenant, RetryPolicy, semáforo, IdempotencyStore, HttpClient async); use cases só herdam." },
     { "priority": "P3", "text": "Apagar legacy_promo e o EventPublisher sem consumidor." }
   ],
   "issues": [

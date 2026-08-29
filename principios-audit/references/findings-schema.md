@@ -24,9 +24,10 @@ O gerador `shared/generate_report.py` lê este JSON. Além dos campos comuns da 
     "yagni_kiss": "YAGNI / KISS",
     "security": "Segurança arquitetural",
     "scalability": "Escala / desacoplamento",
-    "resilience": "Resiliência / workers"
+    "resilience": "Resiliência / workers",
+    "runtime": "Runtime (async, tenant, retry, semáforo, idempotência)"
   },
-  "category_order": ["ssot", "dry", "srp", "hexagonal", "tdd", "dead_code", "yagni_kiss", "security", "scalability", "resilience"],
+  "category_order": ["ssot", "dry", "srp", "hexagonal", "tdd", "dead_code", "yagni_kiss", "security", "scalability", "resilience", "runtime"],
   "stack": {
     "language": "Python 3.12",
     "framework": "FastAPI",
@@ -46,7 +47,8 @@ O gerador `shared/generate_report.py` lê este JSON. Além dos campos comuns da 
     "yagni_kiss": "aplicável",
     "security": "aplicável — invariantes de construção; exploits profundos = /security-audit",
     "scalability": "aplicável — compose, workers, donos de tabela",
-    "resilience": "aplicável — restart, ACK, DLQ, drain"
+    "resilience": "aplicável — restart, ACK, DLQ, drain",
+    "runtime": "aplicável — políticas globais; o resto herda"
   },
   "findings": [],
   "strengths": [],

@@ -1,4 +1,4 @@
-# Dez categorias — como varrer
+# Onze categorias — como varrer
 
 A definição do princípio está no `AGENTS.md`. Aqui: **o que abrir e o que conta como achado**. Use o `inventory.json` como fila.
 
@@ -137,3 +137,21 @@ Achado quando:
 - Sem teste da 2ª entrega do mesmo `message_id`
 
 O scanner pode marcar `deploy.signals` (restart/health). Confirme no arquivo. Sem compose no repo: declare N/A da parte de orquestração; a idempotência do use case **ainda vale**.
+
+## 11. Runtime (`runtime`) — async, tenant, semáforo, retry, idempotência
+
+Constituição §8.6. Fila: `runtime_smells` do scanner + composition root + um use case típico + um consumer.
+
+Achado quando a política **não tem dono global** ou o local **copia** em vez de herdar:
+
+| Política | Achado |
+|----------|--------|
+| Async-only | `requests`, `time.sleep`, `readFileSync`, `execSync`, `psycopg2`/`subprocess.run` no path HTTP/worker |
+| Tenant | `if order.tenant_id !=` em cada handler, cada um um pouco diferente; worker que roda sem restaurar contexto; job/export sem tenant |
+| Semáforo | `asyncio.gather(*lista)` sem limite; `Semaphore(n)` solto no módulo; prefetch > budget |
+| Retry | `for _ in range(3): try` no use case; retry de 4xx de negócio; sem jitter; `time.sleep` de verdade no teste |
+| Idempotência | `processed = set()` em RAM; chave sem tenant; 2ª entrega duplica side-effect; store por use case em vez de um `IdempotencyStore` |
+
+**Protegido:** um `RetryPolicy` + um `IdempotencyStore` + um contexto de tenant + semáforos no DI; adapters e consumers só recebem. Teste da 2ª entrega e teste de outro tenant no adapter.
+
+Não acuse o fake de teste que implementa a mesma porta — isso é hexagonal. Acuse o segundo `retry()` escrito na mão.

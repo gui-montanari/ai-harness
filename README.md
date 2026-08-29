@@ -11,7 +11,7 @@ Cada skill é uma pasta com um `SKILL.md` (metadados + instruções) e, quando n
 | Skill | Quando usar |
 |-------|-------------|
 | [`security-audit`](./security-audit/) | Auditoria de segurança em cinco categorias (isolamento de tenant, autorização só no frontend, IDOR, segredos hardcoded, XSS), com relatório PDF em pt-BR e issues prontas para o GitHub. Comando: `/security-audit` |
-| [`principios-audit`](./principios-audit/) | Varredura contra o `AGENTS.md`: SSOT, DRY, SRP, hexagonal, TDD, código morto, YAGNI, segurança arquitetural, escala/desacoplamento, auto-recovery de workers. Comandos: `/principios-audit`, `/hexagonal-audit` |
+| [`principios-audit`](./principios-audit/) | Varredura contra o `AGENTS.md`: SSOT (global→herda), hexagonal, TDD, segurança, escala, auto-recovery, async-only, tenant, semáforo, retry, idempotência. Comandos: `/principios-audit`, `/hexagonal-audit` |
 
 ## Como usar
 

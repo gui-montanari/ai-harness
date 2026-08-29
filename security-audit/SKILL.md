@@ -60,7 +60,7 @@ Antes de qualquer categoria, identifique e registre:
 - mecanismo de auth (JWT, session, cookies, Supabase Auth, NextAuth, etc.)
 - frontend (se houver) e como fala com a API
 - deploy: Docker, CI, Helm, Terraform, compose, charts
-- **mecanismo de isolamento de tenant/dono**: RLS, middleware de tenant, filtro manual por `user_id`/`org_id`/`workspace_id`, schema-per-tenant, etc.
+- **mecanismo de isolamento de tenant/dono** (tem de ser **global**, o resto herda): RLS FORCE / session SET / middleware que cobre HTTP **e** worker; não um `if` copiado por rota. Ver constituição §8.6.
 
 Mapeie cada categoria para o equivalente dessa stack. Escreva o mapeamento em `docs/security-audit/stack.md` (vai para a capa do PDF).
 

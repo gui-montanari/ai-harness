@@ -1,6 +1,6 @@
 # principios-audit
 
-Varredura de princípios: SSOT, DRY, SRP, hexagonal, TDD, código morto, YAGNI/KISS, segurança arquitetural, escala/desacoplamento (workers vs microsserviço), resiliência (auto-recovery, DLQ, idempotência).
+Varredura de princípios: SSOT (global → herda), DRY, SRP, hexagonal, TDD, código morto, YAGNI, segurança, escala, resiliência, runtime (async-only, tenant, semáforo, retry, idempotência).
 
 Comandos: `/principios-audit` · `/hexagonal-audit`
 
