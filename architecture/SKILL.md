@@ -29,7 +29,8 @@ Vista mental (indústria, sem diagrama obrigatório): contexto → limites (cont
 |------------|-------|
 | API HTTP | `http-apis` |
 | Identidade | `auth` |
-| MCP | `mcp-servers` |
+| MCP (servidor / transporte) | `mcp-servers` |
+| MCP (tool / jornada / perfil) | `mcp-tools` |
 | Agente / Make / LangGraph | `agent-orchestration` |
 | Persistência | `persistence-ports` + `sql-migrations` + `sql-dialects` |
 | Eventos / outbox | `reliable-messaging` |

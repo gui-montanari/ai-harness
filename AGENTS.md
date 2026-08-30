@@ -173,7 +173,7 @@ Produto com API **e** UI — backend e frontend **não** ficam soltos na raiz. C
   .github/workflows/
 ```
 
-Frontend (quando existir UI) — skills `frontend-surfaces`, `frontend-login`, `frontend-shell`, `frontend-chat`, `frontend-backoffice`. Persistência — `persistence-ports` + `sql-migrations` + `sql-dialects`. Eventos — `reliable-messaging`. Cache — `cache-ports`. Arquivos — `object-storage`. Telemetria — `observability`. Workers — `background-workers`. Agentes — `agent-orchestration`. Fila operacional — `ops-backoffice`. Pipeline — `cicd`. Desenho e gate — `architecture`. Com dois consumidores reais, primitives vivem em `frontend/ui/` (tokens, i18n PT/EN, shells). Páginas e `lib/api.ts` ficam no app. `ui/` sem fetch e sem domínio. Identidade visual por tenant: `data-tenant` + `tenants/<id>.css`. Sem portal autenticado do colaborador no v1.
+Frontend (quando existir UI) — skills `frontend-surfaces`, `frontend-login`, `frontend-shell`, `frontend-chat`, `frontend-backoffice`. Persistência — `persistence-ports` + `sql-migrations` + `sql-dialects`. Eventos — `reliable-messaging`. Cache — `cache-ports`. Arquivos — `object-storage`. Telemetria — `observability`. Workers — `background-workers`. Agentes — `agent-orchestration`. MCP — `mcp-servers` + `mcp-tools`. Fila operacional — `ops-backoffice`. Pipeline — `cicd`. Desenho e gate — `architecture`. Com dois consumidores reais, primitives vivem em `frontend/ui/` (tokens, i18n PT/EN, shells). Páginas e `lib/api.ts` ficam no app. `ui/` sem fetch e sem domínio. Identidade visual por tenant: `data-tenant` + `tenants/<id>.css`. Sem portal autenticado do colaborador no v1.
 
 Repo só de API: `backend/` (ou `src/` hexagonal) sem inventar `frontend/` vazio. Repo só de UI: o inverso. **Misturar `services/` e `apps/` na raiz de um repo que tem os dois é achado.**
 
@@ -279,7 +279,7 @@ Probes `/health` e `/ready` não entram em `/api/v1`. Webhook de provider entra 
 
 Frontend chama `/api/v1/...`. Proxy de dev **não** apaga o prefixo.
 
-**Teste:** OpenAPI da app — toda rota de negócio começa com `/api/v1`? Todo `import pydantic` está em `presentation/schemas/`? Procedimento: skill `http-apis`. MCP: `mcp-servers`. Identidade: skill `auth`.
+**Teste:** OpenAPI da app — toda rota de negócio começa com `/api/v1`? Todo `import pydantic` está em `presentation/schemas/`? Procedimento: skill `http-apis`. MCP servidor: `mcp-servers`. Tool/jornada MCP: `mcp-tools`. Identidade: skill `auth`.
 
 ---
 

@@ -3,8 +3,8 @@ name: http-apis
 description: >
   Use when creating or changing a REST/HTTP API, FastAPI/Nest route, OpenAPI
   contract, /api/v1 endpoint, webhook, health/ready probe, or when Pydantic/Zod
-  would sit next to a handler. For MCP hosts use mcp-servers; for OAuth of LLM
-  connectors use auth.
+  would sit next to a handler. For the MCP server use mcp-servers; for each MCP
+  tool or agent journey use mcp-tools; for OAuth of LLM connectors use auth.
 ---
 
 # APIs HTTP
@@ -38,7 +38,7 @@ application/
 
 ## MCP
 
-Host de LLM não ganha regra própria. Skill `mcp-servers`: cada tool é um use case já existente. Auth: skill `auth`. Sem SQL no handler MCP.
+Host de LLM não ganha regra própria. Servidor: `mcp-servers`. Cada tool ou jornada: `mcp-tools` (o mesmo use case). Auth: skill `auth`.
 
 ## Auth
 

@@ -50,8 +50,10 @@ Não invente árvore `specialists/` só para ter “cara de multi-agent”.
   register.py     # composition; recebe OrchestrationRuntimePort, LLM, repos
   prompts/        # .md versionados; versão no trace
   nodes/          # só pipeline operacional
-  tools/          # schema, timeout, idempotency, allowlist
+  tools/          # internas do grafo: schema, timeout, idempotency, allowlist
 ```
+
+`tools/` do grafo **não** entram em `tools/list` do MCP. Publicar capacidade ou jornada: skill `mcp-tools`.
 
 `register.py` devolve o spec. O **adapter** (`make`, `langgraph`, …) compila e executa turno. Checkpointer do provider não é SSOT: o banco do serviço é.
 

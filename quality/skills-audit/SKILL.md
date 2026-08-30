@@ -109,7 +109,9 @@ Cada par tem de dizer, dos dois lados, o que **não** é desta skill. Ausência 
 | `persistence-ports` | `sql-dialects` / `sql-migrations` | porto/RLS ≠ dialeto ≠ filename |
 | `object-storage` | `persistence-ports` | blob ≠ linha SQL |
 | `ops-backoffice` | `frontend-backoffice` | domínio da fila ≠ UI |
-| `http-apis` | `mcp-servers` | REST ≠ tools MCP |
+| `http-apis` | `mcp-servers` | REST ≠ transporte MCP |
+| `mcp-servers` | `mcp-tools` | processo/transporte ≠ o que entra em `tools/list` |
+| `mcp-tools` | `agent-orchestration` | publicação MCP ≠ `tools/` interno do grafo |
 | `auth` | `oauth-connectors` | um catálogo; ponte só dispara OAuth de host |
 | `agent-orchestration` | `langgraph-agents` | spec ≠ StateGraph |
 | `cicd` | `sql-migrations` | job de CI ≠ regra de filename |

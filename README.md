@@ -14,6 +14,7 @@ backend/
   auth/
   http-apis/
   mcp-servers/
+  mcp-tools/
   oauth-connectors/        # ponte → auth
   sql-migrations/
   persistence-ports/
@@ -58,7 +59,8 @@ shared/                    # scanner/PDF dos audits
 |-------|--------|
 | [`http-apis`](./backend/http-apis/) | REST `/api/v1`, schemas ≠ Command. `/http-apis` |
 | [`auth`](./backend/auth/) | JWT, M2M, sessão, webhook HMAC, OAuth MCP. `/auth` |
-| [`mcp-servers`](./backend/mcp-servers/) | Borda MCP: tools = use cases. `/mcp-servers` |
+| [`mcp-servers`](./backend/mcp-servers/) | Borda MCP: transporte, `/mcp`, perfis. `/mcp-servers` |
+| [`mcp-tools`](./backend/mcp-tools/) | Tool atômica vs jornada; catálogo e perfil. `/mcp-tools` |
 | [`sql-migrations`](./backend/sql-migrations/) | `YYYYMMDD_VV`; no mesmo dia acrescentar no arquivo. `/sql-migrations` |
 | [`persistence-ports`](./backend/persistence-ports/) | DB só via porto; RLS. `/persistence-ports` |
 | [`sql-dialects`](./backend/sql-dialects/) | Postgres/SQL Server pela DSN; tipos portáteis. `/sql-dialects` |
