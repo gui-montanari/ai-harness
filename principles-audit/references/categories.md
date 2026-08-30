@@ -8,7 +8,7 @@ Procure o mesmo fato em dois lugares:
 
 - Fórmula, status machine, preço, desconto, timeout, tamanho de página
 - Filtro de tenant no handler **e** de novo no repo **com lógica diferente**
-- Campo com dois nomes sem anti-corruption (`accountId` no domínio lendo `stockfyClienteId` cru)
+- Campo com dois nomes sem anti-corruption (`accountId` no domínio lendo `externalCustomerId` cru)
 - Frontend calculando o que o backend já decide
 - Comentário/README que compete com o código (só é achado se **desvia** do código)
 

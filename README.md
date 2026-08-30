@@ -19,8 +19,8 @@ Cada skill é uma pasta com um `SKILL.md` (metadados + instruções) e, quando n
 | [`agent-orchestration`](./agent-orchestration/) | Agente de produto: spec neutro, Make/LangGraph só adapter, um agente no v1. `/agent-orchestration` |
 | [`langgraph-agents`](./langgraph-agents/) | Ponte: LangGraph é adapter. Use `agent-orchestration`. |
 | [`persistence-ports`](./persistence-ports/) | DB/Redis/blob só via porto; RLS; grafo e rota sem driver. `/persistence-ports` |
-| [`frontend-surfaces`](./frontend-surfaces/) | React, `ui/`, i18n PT/EN, tokens por tenant, home tipo Autodin. `/frontend-surfaces` |
-| [`frontend-chat`](./frontend-chat/) | Thread ChatGPT: bolha, composer, thinking; casca do stockfy-ai sem SSE/HITL. `/frontend-chat` |
+| [`frontend-surfaces`](./frontend-surfaces/) | React, `ui/`, i18n PT/EN, tokens por tenant, home pública com seções. `/frontend-surfaces` |
+| [`frontend-chat`](./frontend-chat/) | Thread de produto: bolha, composer, thinking; sem SSE/HITL no primitivo. `/frontend-chat` |
 
 ## Como usar
 

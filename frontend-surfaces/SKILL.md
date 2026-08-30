@@ -4,15 +4,15 @@ description: >
   Use when scaffolding or refactoring a React frontend, splitting public vs
   authenticated shells, adding i18n PT/EN, tenant visual tokens, shared UI
   primitives, designing a public home (hero, metric strip, sections, CTA),
-  or when the user mentions design system, Autodin visual language,
-  or /frontend-surfaces. For product chat use frontend-chat.
+  or when the user mentions design system or /frontend-surfaces. For product
+  chat use frontend-chat.
 ---
 
 # Superfícies frontend
 
-SSOT das regras: constituição `AGENTS.md` §3 e ADR-015 do produto. Este skill é o **lugar** dos arquivos. Não copie HTML, CSS, rotas, auth ou domínio de Autodin/Stockfy.
+SSOT das regras: constituição `AGENTS.md` §3. Este skill é o **lugar** dos arquivos. Não copie HTML, CSS, rotas, auth ou domínio de outro produto.
 
-Gramática visual e tokens: `references/design-system.md`. Thread ChatGPT: skill `frontend-chat`.
+Gramática visual e tokens: `references/design-system.md`. Thread de chat: skill `frontend-chat`.
 
 ## Árvore canônica
 
@@ -43,7 +43,7 @@ frontend/
 - Sem diretório `portal-user` no v1.
 - Tenant visual: `data-tenant` + arquivo em `tenants/`. O front **não** envia `tenant_id` para autorizar.
 - Idioma: dicionário `pt-BR` e `en` desde o primeiro commit de UI. Textos canônicos de produto continuam em `docs/requisitos.md`.
-- Autodin/Stockfy: copiar **propriedades** (home pública, shell autenticado, chat ChatGPT, estados vazios/erro, mobile, i18n). Não copiar implementação, paleta, rotas, HITL, SSE ou domínio.
+- Home pública, shell autenticado, chat, estados vazios/erro, mobile e i18n seguem a gramática deste skill. Não copiar implementação, paleta, rotas, HITL, SSE ou domínio de outro produto.
 - Hex só em `tokens.css` / `tenants/<id>.css`. Página e componente usam `var(--token)`.
 - Home pública é full-bleed. `site-shell` envolve o conteúdo interno, não o hero nem a faixa de métricas.
 - Chat: skill `frontend-chat`. Primitivo em `ui/src/chat/`; a página dona o fetch.
@@ -58,4 +58,4 @@ frontend/
 - pasta `models/`/`services/` no frontend com domínio de caso
 - hero em card escuro no lugar da gramática de seções
 - chat com input de uma linha, sem header, avatar, auto-resize ou Enter/Shift+Enter
-- copiar HTML/CSS do Autodin (roxo, órbitas, planos) ou do Stockfy (`--sc-accent: #2563eb`, SSE, markdown)
+- copiar HTML/CSS de outro produto (paleta, órbitas, planos, hex de chat, SSE, markdown)

@@ -3,14 +3,14 @@ name: frontend-chat
 description: >
   Use when creating or refactoring a product chat, conversation thread,
   ChatGPT-style composer, thinking/busy indicator, or when the user mentions
-  stockfy-ai chat, MessageBubble, ChatInput, ConversationThread, or /frontend-chat.
+  MessageBubble, ChatInput, ConversationThread, or /frontend-chat.
 ---
 
 # Chat de produto
 
-SSOT visual: tokens do tenant em `frontend-surfaces`. Este skill é **como montar o thread**. Não copie HTML, CSS, SSE, HITL, fetch ou paleta do stockfy-ai-web.
+SSOT visual: tokens do tenant em `frontend-surfaces`. Este skill é **como montar o thread**. Não copie HTML, CSS, SSE, HITL, fetch ou paleta de outro produto.
 
-Referência de comportamento: o chat do `stockfy-ai-web` (master). Recriar propriedades. Runtime (SSE, HITL, markdown, sidebar) fica na página só se o requisito pedir.
+Runtime (SSE, HITL, markdown, sidebar) fica na página só se o requisito pedir.
 
 ## Árvore canônica
 
@@ -28,7 +28,7 @@ frontend/<app>/src/pages/      # dona do fetch, i18n, opening, busy
 
 `ConversationThread` é burro. A página: mensagens, `busy`, frases de thinking, opening, erro, POST.
 
-## UX obrigatória (stockfy → nosso desenho)
+## UX obrigatória
 
 | Propriedade | Como |
 |-------------|------|
@@ -44,7 +44,7 @@ frontend/<app>/src/pages/      # dona do fetch, i18n, opening, busy
 | Thinking | frases rotativas a cada 2.5s, passadas pela página (i18n) |
 | Erro | `role="alert"`; some quando o usuário volta a digitar |
 | Pós-envio | refocus no textarea quando `busy` volta a false |
-| Tokens | `--chat-*` alias de `--action/--surface/--ink`. Sem `#2563eb` |
+| Tokens | `--chat-*` alias de `--action/--surface/--ink`. Sem hex próprio |
 
 ## O que NÃO entra no `ui/`
 
@@ -74,8 +74,8 @@ ConversationThread({
 - Input `type="text"` de uma linha
 - Anel de foco no textarea **e** no form
 - `fetch` / `/api/v1` dentro de `ui/src/chat`
-- Copiar `Chat.tsx` do stockfy (HITL + SSE + markdown)
-- Paleta `--sc-accent: #2563eb`
+- God-file de chat com HITL + SSE + markdown no primitivo
+- Paleta de chat com hex próprio (use `--chat-accent`)
 - Busy sem bolha de thinking
 - Strings de UI hardcoded em PT no primitivo (i18n na página)
 - God-file de chat com API + bolha + sidebar

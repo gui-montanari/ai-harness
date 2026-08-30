@@ -15,7 +15,7 @@ Dois OAuth distintos. Não misture.
 | API de produto M2M | `client_credentials` | serviço→serviço | `http-apis` |
 | Conector no Grok/ChatGPT | **Authorization Code + PKCE S256** | humano autoriza o host | este |
 
-O conector Stockfy no Grok funciona porque o host completa OAuth **uma vez** e depois chama tools com Bearer. Esse é o norte.
+O host completa OAuth **uma vez** e depois chama tools com Bearer. Esse é o norte.
 
 ## O que o host (Grok) espera
 
@@ -40,7 +40,7 @@ Dynamic Client Registration (RFC 7591) só se o host exigir. Senão, `client_id`
 
 ## Auth da API de produto (não é isto)
 
-`client_credentials` + JWT interno, rate-limit de falhas, tenant no contexto: já está em `http-apis`. Widget/visitor token é outro principal. Não use o IdP do Grok para o colaborador da Tenda.
+`client_credentials` + JWT interno, rate-limit de falhas, tenant no contexto: já está em `http-apis`. Token de visitante/widget é outro principal. Não use o IdP do host LLM como identidade do usuário de negócio.
 
 ## Red flags
 

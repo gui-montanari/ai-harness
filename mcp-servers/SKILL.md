@@ -41,7 +41,7 @@ Allowlist no manifest. Tool nova = contrato versionado. Host que pede `allowed_t
 2. Borda MCP em `/mcp` (Streamable HTTP) no **mesmo** composition root.
 3. Se o host mandar request sem token: `401` + metadata OAuth (`oauth-connectors`).
 4. Admin cola a URL em grok.com/connectors → Custom.
-5. Tools aparecem no chat do Grok como o conector Stockfy: OAuth uma vez, depois chamada sob demanda.
+5. Tools aparecem no host: OAuth uma vez, depois chamada sob demanda.
 
 ## Red flags
 

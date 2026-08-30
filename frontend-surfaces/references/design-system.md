@@ -1,26 +1,26 @@
-# Design system — gosto de desenhar
+# Design system
 
 Referência da skill `frontend-surfaces`. Propriedades, não HTML. Paleta e voz vêm do tenant; a gramática é estável.
 
 ## Assinatura
 
-Uma coisa memorável por produto. Na Tenda: **fita zebrada de obra + grid de prancheta**. Não é o roxo/ciano do Autodin nem o azul ChatGPT do Stockfy.
+Uma coisa memorável por produto, definida em `tenants/<id>.css`. Não reutilizar paleta, tipo ou marca de outro produto.
 
-| Eixo | Escolha |
-|------|---------|
-| Display | `Archivo` — titulação de canteiro, tracking negativo |
-| Corpo | `IBM Plex Sans` |
-| Eyebrow / índice | `IBM Plex Mono`, uppercase, letter-spacing `.1em` |
-| Acento itálico no H1 | `Source Serif 4` na cor `--action` |
-| Ação | laranja de obra `--action` (`#e4572e` no tenant Tenda) |
-| Fundo público | concreto/creme `--bg` |
-| Fundo interno | cockpit escuro |
+| Eixo | Papel |
+|------|-------|
+| Display | titulação, tracking negativo |
+| Corpo | texto corrido |
+| Eyebrow / índice | mono, uppercase, letter-spacing `.1em` |
+| Acento itálico no H1 | serif na cor `--action` |
+| Ação | `--action` do tenant |
+| Fundo público | `--bg` claro do tenant |
+| Fundo interno | cockpit (`data-surface="internal"`) |
 
 Número 01/02/03 só quando a ordem carrega informação (jornada). Hover com `translateY` pequeno; `prefers-reduced-motion` zera animação.
 
 ## Tokens
 
-`html[data-tenant][data-surface]` define `--bg --surface --surface-soft --ink --muted --border --grid --action --ok --danger --tape-a --tape-b`.
+`html[data-tenant][data-surface]` define `--bg --surface --surface-soft --ink --muted --border --grid --action --ok --danger`.
 
 Chat **não** tem paleta própria. Alias:
 
@@ -37,11 +37,11 @@ Chat **não** tem paleta própria. Alias:
 
 Tenant novo = arquivo em `tenants/<id>.css`. Sem hex na página.
 
-## Home pública (propriedades do Autodin)
+## Home pública
 
-Header sticky com blur, brand-mark + wordmark, nav muted, idioma, CTA primário, fita no topo.
+Header sticky com blur, brand-mark + wordmark, nav muted, idioma, CTA primário.
 
-Hero full-bleed, min-height ~680px, grid de prancheta, glow da `--action`, duas colunas: tese + visual do produto. Eyebrow com traço. H1 grande com *uma* palavra em itálico. Lead ~60ch. Dois botões (primário + ghost). Nota com pulso honesto.
+Hero full-bleed, min-height ~680px, grid de fundo, glow da `--action`, duas colunas: tese + visual do produto. Eyebrow com traço. H1 grande com *uma* palavra em itálico. Lead ~60ch. Dois botões (primário + ghost). Nota com pulso honesto.
 
 Faixa de métricas full-bleed, 3 colunas, valor grande na `--action`, hairline entre elas.
 
@@ -52,7 +52,6 @@ CTA-band com gradient suave da `--action`, h2 grande, botão à direita.
 Footer curto: legal + links. Páginas internas: `page-main` com título editorial, sem card genérico envolvendo o H1.
 
 ```
-[ fita ]
 [ brand | nav | lang | CTA ]
 [ hero 2-col + visual ]
 [ métrica | métrica | métrica ]
@@ -62,11 +61,11 @@ Footer curto: legal + links. Páginas internas: `page-main` com título editoria
 [ footer ]
 ```
 
-Não copiar: paleta roxa, órbitas de carreira, planos, signup, LinkedIn, `Manrope`/`Inter` como voz do produto.
+Não copiar paleta, órbitas, planos ou typeface de outro produto como voz deste.
 
 ## Chat
 
-Tokens `--chat-*` neste arquivo. Casca, thinking, composer e o que não copiar do stockfy: skill `frontend-chat`.
+Tokens `--chat-*` neste arquivo. Casca, thinking e composer: skill `frontend-chat`.
 
 ## Mobile
 
@@ -76,6 +75,6 @@ Hero vira 1 coluna. Métricas empilham. Cards 1 coluna <640px. Nav do header env
 
 - Hero dentro de `site-shell` ou de um card escuro
 - Chat verde / input `type=text` de uma linha
-- Hex de Autodin (`#6c4df6`) ou Stockfy (`#2563eb`) na Tenda
+- Hex de outro produto nas páginas
 - `ConversationThread` chamando `/api/v1`
 - Segunda paleta de chat além dos aliases `--chat-*`

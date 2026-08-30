@@ -10,6 +10,6 @@ description: >
 
 **REQUIRED SUB-SKILL:** `agent-orchestration`.
 
-LangGraph compila `GraphSpec` em `infrastructure/adapters/langgraph`. Não desenhe o produto em `StateGraph`. Make.com (candidato Tenda, ADR-005) é outro adapter da mesma porta.
+LangGraph compila `GraphSpec` em `infrastructure/adapters/langgraph`. Não desenhe o produto em `StateGraph`. Make.com ou outro orquestrador conhecido é outro adapter da mesma porta.
 
 Proibido: `from langgraph.graph import StateGraph` em `core/` ou `application/`.

@@ -11,23 +11,23 @@ description: >
 
 O fluxo é **declarativo e neutro** (`GraphSpec` / `WorkflowSpec`). Make.com, LangGraph ou outro runtime **compilam** isso no adapter. O domínio não importa SDK de Make nem `StateGraph`.
 
-Tenda: Make.com é o **candidato** (ADR-005), não decisão automática e não segundo runtime “por se acaso”. Stockfy: LangGraph no adapter. A pasta do agente é a mesma nos dois.
+O runtime conhecido da empresa é o **primeiro candidato**, avaliado por capability matrix — não é decisão automática e não autoriza segundo runtime “por se acaso”. A pasta do agente é a mesma, qualquer que seja o adapter.
 
 **REQUIRED BACKGROUND:** `AGENTS.md` hexagonal + `persistence-ports`. Banco e LLM são portas.
 
-## Um agente no v1 (Tenda)
+## Um agente no primeiro lançamento
 
-O primeiro lançamento tem **um** agente: `conversational.complaint_intake`. Coleta no canal, confirma, publica `intake.completed`. Não existe `conversational/general` + `specialists/support`.
+Comece com **um** agente conversacional, identificado pela capacidade (`conversational.<job>`). Ele conduz a jornada, confirma e publica o fato. Não existe `conversational/general` + `specialists/support` para o mesmo trabalho.
 
 | Tentação | Por que não |
 |----------|-------------|
-| `general` roteando para `support` | um só trabalho cognitivo: conduzir a coleta. ADR-004 rejeitou “agente geral para tudo” |
-| `specialist/support` como primeiro agente | em stockfy, specialist = pipeline operacional (onda, NF), não conversa. Suporte/escala humana **não** é outro LLM |
-| Agente de escalonamento | HITL na **mesma** conversa (operador de canal) ou fila em `cases` depois do caso. Determinístico |
+| `general` roteando para `support` | um só trabalho cognitivo. “Agente geral para tudo” infla prompt, tools e risco |
+| `specialist/support` como primeiro agente | specialist = pipeline operacional (documento, lote, job), não conversa. Escala humana **não** é outro LLM |
+| Agente de escalonamento | HITL na **mesma** conversa ou fila de operação depois do fato de negócio. Determinístico |
 
-Escalonar para humano: `PendingInteraction` / atribuição de operador, não um segundo manifest. Depois do caso: triagem institucional, não agente.
+Escalonar para humano: `PendingInteraction` / atribuição de operador, não um segundo manifest. Depois do fato oficial: fila institucional, não agente.
 
-Segundo agente só com bounded context próprio (ex.: copiloto do backoffice) + ADR + porta de invocação com allowlist. Sem pasta `specialists/` vazia.
+Segundo agente só com bounded context próprio (ex.: copiloto autenticado interno) + ADR + porta de invocação com allowlist. Sem pasta `specialists/` vazia.
 
 ## Dois gêneros (quando houver o segundo caso)
 
@@ -36,9 +36,9 @@ Segundo agente só com bounded context próprio (ex.: copiloto do backoffice) + 
 | Turnos | vários, pausa/retoma, HITL | pipeline com início e fim |
 | Estado | sessão + histórico | documento / lote / job |
 | LLM | conduz a conversa | um node; o resto determinístico |
-| Stockfy | `chatops/general` | `dataops/waves_analyst` |
+| Exemplo de pasta | `agents/intake/` | `agents/document_extract/` |
 
-Não copie a árvore `specialists/` do stockfy para ter “cara de multi-agent”.
+Não invente árvore `specialists/` só para ter “cara de multi-agent”.
 
 ## Pasta de um agente (agnóstica)
 
@@ -53,23 +53,23 @@ Não copie a árvore `specialists/` do stockfy para ter “cara de multi-agent�
   tools/          # schema, timeout, idempotency, allowlist
 ```
 
-`register.py` devolve o spec. O **adapter** (`make` ou `langgraph`) compila e executa turno. Checkpointer do provider não é SSOT: o banco do serviço é.
+`register.py` devolve o spec. O **adapter** (`make`, `langgraph`, …) compila e executa turno. Checkpointer do provider não é SSOT: o banco do serviço é.
 
 ## Runtime
 
 ```
 application  →  OrchestrationRuntimePort.execute_turn / pause / resume
 core         →  spec + estado + guardas
-infrastructure/adapters/<runtime>  →  Make scenario / StateGraph.compile
+infrastructure/adapters/<runtime>  →  scenario / StateGraph.compile
 ```
 
-Capability matrix **antes** de aprovar o runtime (idempotência, pausa, callback autenticado, retomada). Sem fallback silencioso entre Make e LangGraph.
+Capability matrix **antes** de aprovar o runtime (idempotência, pausa, callback autenticado, retomada). Sem fallback silencioso entre runtimes.
 
 ## Red flags
 
-- `import langgraph` ou API Make no `core/` / `application/`
+- SDK de runtime no `core/` / `application/`
 - SQL no `graph.py`
-- Dois agentes conversacionais para o mesmo colaborador no v1
+- Dois agentes conversacionais para o mesmo usuário no primeiro lançamento
 - Pasta `specialists/support` sem segundo domínio
-- LLM decidindo escalonamento crítico, criação de caso ou confirmação
-- Cenário Make como dono da regra
+- LLM decidindo escalonamento crítico, criação de registro oficial ou confirmação
+- Cenário do orquestrador como dono da regra

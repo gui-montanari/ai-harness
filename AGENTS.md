@@ -45,7 +45,7 @@ Uma regra de negócio, um contrato, um número, um nome de campo, um limite, uma
 | Falha | Exemplo |
 |-------|---------|
 | A mesma fórmula em dois arquivos | desconto no frontend e de novo no serviço |
-| Dois campos para o mesmo conceito | `accountId` e `stockfyClienteId` sem anti-corruption no adaptador |
+| Dois campos para o mesmo conceito | `accountId` no domínio lendo `externalCustomerId` cru, sem anti-corruption |
 | Constante repetida | `MAX_PAGE = 50` em três módulos |
 | Doc que compete com o código | comentário que restata o `if` |
 
