@@ -61,7 +61,7 @@ shared/                    # scanner/PDF dos audits
 
 | Skill | Quando |
 |-------|--------|
-| [`frontend-surfaces`](./frontend/frontend-surfaces/) | Tokens, área pública (hero reativo), i18n, `ui/`. `/frontend-surfaces` |
+| [`frontend-surfaces`](./frontend/frontend-surfaces/) | Tokens, tema claro/escuro, PT/EN, viewport, home. `/frontend-surfaces` |
 | [`frontend-login`](./frontend/frontend-login/) | Página e campos de acesso. `/frontend-login` |
 | [`frontend-shell`](./frontend/frontend-shell/) | Sidebar esquerda, nav, dropdown do usuário. `/frontend-shell` |
 | [`frontend-chat`](./frontend/frontend-chat/) | Thread: bolha, composer, thinking. `/frontend-chat` |

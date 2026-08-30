@@ -46,7 +46,7 @@ Reset de senha e “conta criada” reutilizam o **mesmo** layout e os mesmos to
 ## Comportamento
 
 - CSRF se a sessão for cookie (`auth`).
-- i18n PT/EN desde o primeiro commit.
+- i18n PT/EN desde o primeiro commit. Tema herda do `html[data-theme]` — o header público já tem o ícone; o card não ganha um segundo toggle.
 - Cookie/audience da área interna **não** atravessa a home pública.
 - Rate-limit e lockout são servidor; a UI só mostra a mensagem canônica.
 - Após sucesso: navega para o shell autenticado (`frontend-shell`). Nunca deixa token em `localStorage` se o produto usa cookie httpOnly.

@@ -34,7 +34,7 @@ Vista mental (indústria, sem diagrama obrigatório): contexto → limites (cont
 | Persistência | `persistence-ports` + `sql-migrations` + `sql-dialects` |
 | Eventos / outbox | `reliable-messaging` |
 | Worker / job | `background-workers` |
-| Área pública / home | `frontend-surfaces` |
+| Área pública / tema / i18n / viewport | `frontend-surfaces` |
 | Login | `frontend-login` |
 | Área logada | `frontend-shell` |
 | Chat | `frontend-chat` |

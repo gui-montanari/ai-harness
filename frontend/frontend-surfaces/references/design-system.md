@@ -15,14 +15,14 @@ Uma coisa memorável por produto, definida em `tenants/<id>.css`. Não reutiliza
 | Eyebrow / índice | mono, uppercase, letter-spacing `.1em` |
 | Acento itálico no H1 | serif na cor `--action` |
 | Ação | `--action` do tenant |
-| Fundo público | `--bg` claro do tenant |
-| Fundo interno | cockpit (`data-surface="internal"`) |
+| Fundo público | `--bg` do tenant no tema vigente |
+| Fundo interno | cockpit (`data-surface="internal"`) no **mesmo** tema |
 
 Número 01/02/03 só quando a ordem carrega informação (jornada).
 
 ## Tokens
 
-`html[data-tenant][data-surface]` define `--bg --surface --surface-soft --ink --muted --border --grid --action --ok --danger`.
+`html[data-tenant][data-surface][data-theme]` define `--bg --surface --surface-soft --ink --muted --border --grid --action --ok --danger`. Superfície (`public`/`internal`) e tema (`light`/`dark`) são eixos independentes: **os quatro cruzamentos existem** no arquivo do tenant. Componente nenhum escolhe paleta — só `var(--token)`.
 
 Chat **não** tem paleta própria. Alias:
 
@@ -37,9 +37,41 @@ Chat **não** tem paleta própria. Alias:
 --chat-font: var(--font-body);
 ```
 
-Tenant novo = arquivo em `tenants/<id>.css`. Sem hex na página.
+Tenant novo = arquivo em `tenants/<id>.css` com **light e dark**. Sem hex na página. `color-scheme: light` / `dark` no `html` acompanha `data-theme` (scrollbar, input nativo, date picker).
 
 `site-shell`: `width: min(1180px, calc(100% - 3rem))`. Envolve o miolo, nunca o bleed do hero nem da faixa de métricas.
+
+## Tema claro / escuro
+
+Nativo, desde o primeiro commit de UI. Tudo herda: home, legal, login, canal, chat, shell, dropdown, empty/error. Um `background: #fff` ou `color: #000` em componente é achado — quebra o dark.
+
+**Onde o controle vive**
+
+| Superfície | Controle |
+|------------|----------|
+| Não autenticada | ícone no `PublicHeader` (sol/lua ou ◐), ao lado do idioma. `aria-pressed`, `aria-label` i18n |
+| Autenticada | item do `UserMenu` (skill `frontend-shell`). Sem segundo botão no topbar |
+
+**Como funciona de verdade**
+
+1. Script bloqueante no `index.html` **antes do CSS**: lê `localStorage` (`ui:theme`) ou `prefers-color-scheme`; seta `dataset.theme`. Sem isso há flash do tema errado.
+2. `ThemeProvider` no `ui/` sincroniza `data-theme`, `color-scheme` e o storage. Ouve `storage` (aba irmã) e `matchMedia` até o usuário escolher.
+3. Depois da primeira escolha, a escolha **vence** o SO.
+4. `--chat-*` são alias: o thread muda sozinho. Sem `[data-theme] .sc-bubble { background: #1f1f1f }`.
+
+Não esconda o ícone no mobile “para caber”. Ele envolve com o idioma e o CTA.
+
+## Idioma PT / EN
+
+Nativo, desde o primeiro commit. Dicionário `pt-BR` e `en` com as **mesmas** chaves (`MessageKey`). Texto canônico de produto continua em `docs/requisitos.md`; chrome, empty, erro, thinking, aria-label e tema vivem no dicionário.
+
+O `LanguageSwitch` **funciona**: `onChange` atualiza o provider, `document.documentElement.lang`, `localStorage` (`ui:locale`) e **re-renderiza** toda string. Select que só muda `lang` e deixa o PT na tela é achado.
+
+- Nenhuma literal de UI em JSX. `t("chave")`.
+- Chave ausente em um idioma = erro de tipo, não fallback silencioso.
+- Datas/números: `toLocaleDateString(locale)`.
+- Chat: `thinkingPhrases`, hint, empty, erro — todos `t()`.
+- Público e interno podem compartilhar a preferência de idioma/tema (UX). Sessão/cookie de auth **não**.
 
 ## Área não autenticada
 
@@ -49,8 +81,10 @@ Primitivos em `ui/src/components/`, zero fetch, hrefs por props:
 
 | Peça | Papel |
 |------|-------|
-| `PublicHeader` | sticky, skip-link, brand, nav, idioma, CTA |
+| `PublicHeader` | sticky, skip-link, brand, nav, idioma, **tema**, CTA |
 | `PublicFooter` | legal curto + links |
+| `LanguageSwitch` | PT/EN real; persiste; `html.lang` |
+| `ThemeToggle` | ícone sol/lua; persiste; `data-theme` |
 | botão | `.btn` primário / `.ghost` em `shell.css` |
 
 Header: sticky `top: 0`, fundo `--bg` a 82% + `backdrop-filter: blur(20px)`, hairline `--border`, `nav-shell` min-height 72px. Brand-mark 34px, radius 11, sombra da `--action`. Nav muted; hover e `is-active` na `--action`. CTA do header compacto (min-height 38px). Nav envolve abaixo de 900px — não some, não overflow hidden.
@@ -64,7 +98,7 @@ Páginas internas (`page-main`): título editorial, lead ~68ch, glow radial disc
 Página-bandeira da área pública. Full-bleed.
 
 ```
-[ PublicHeader: brand | nav | lang | CTA ]
+[ PublicHeader: brand | nav | lang | tema | CTA ]
 [ hero 2-col: tese + visual reativo ]
 [ métrica | métrica | métrica ]
 [ eyebrow / h2 / lead ]
@@ -135,16 +169,19 @@ Pulso e status só quando o fato é honesto. “Ao vivo” mentiroso é pior que
 
 ## Chat
 
-Tokens `--chat-*` neste arquivo. Casca, thinking e composer: skill `frontend-chat`.
+Tokens `--chat-*` neste arquivo. Casca, thinking, composer e **host responsivo**: skill `frontend-chat`.
 
-## Mobile
+## Viewport — mobile / tablet / desktop
 
-| Largura | O que muda |
-|---------|------------|
-| <900px | hero 1 coluna, visual max 430px, features 2 colunas, nav do header envolve, form-intro deixa de ser sticky |
-| <640px | métricas empilham (hairline vira bottom), features 1 coluna, botões do hero 100%, seção `padding-block: 5rem`, CTA empilha |
+Nasce nos três. `viewport` = `width=device-width, initial-scale=1`. Altura usa `dvh`, não `vh` (barra e teclado do telefone). `env(safe-area-inset-*)` no header/composer. Alvo de toque ≥ 44px abaixo de 900px. Hover é extra: a ação existe no toque.
 
-Chat ocupa a largura. Header nunca esconde o CTA atrás de overflow.
+| | Largura | O que muda |
+|--|---------|------------|
+| Mobile | <640px | 1 coluna; métricas empilham; features 1; botões 100%; nav envolve; chat 100dvh |
+| Tablet | 640–900px | hero 1 coluna; features 2; form-intro estático; sidebar autenticada vira drawer; chat **não** full-bleed |
+| Desktop | >900px | hero 2 col; features 3; sidebar 260; chat preenche o host |
+
+`site-shell` 1180. Header nunca esconde idioma, tema ou CTA atrás de `overflow: hidden`. Verificar 375, 768 e 1280 antes de declarar pronto.
 
 ## Red flags
 
@@ -161,3 +198,9 @@ Chat ocupa a largura. Header nunca esconde o CTA atrás de overflow.
 - Segunda paleta de chat além dos aliases `--chat-*`
 - Header/footer copiados em cada página em vez do primitivo
 - Sessão da área logada vazando para a home
+- Hex ou `background: #fff` no componente (quebra o dark)
+- Tema só na home; login/chat/shell em claro eterno
+- `LanguageSwitch` que não re-renderiza as strings
+- Dicionário só em PT, ou chave só em um idioma
+- Layout só desktop; tablet tratado como “mobile quebrado”
+- Chat com `100vh` (teclado cobre o composer)

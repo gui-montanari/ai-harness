@@ -2,8 +2,10 @@
 name: frontend-chat
 description: >
   Use when creating or refactoring a product chat, conversation thread,
-  ChatGPT-style composer, thinking/busy indicator, or when the user mentions
-  MessageBubble, ChatInput, ConversationThread, or /frontend-chat.
+  ChatGPT-style composer, thinking/busy indicator, a chat that must work on
+  mobile/tablet/desktop, a widget panel vs page vs shell host, or when the
+  user mentions MessageBubble, ChatInput, ConversationThread, 100dvh, or
+  /frontend-chat.
 ---
 
 # Chat de produto
@@ -44,7 +46,8 @@ frontend/<app>/src/pages/      # dona do fetch, i18n, opening, busy
 | Thinking | frases rotativas a cada 2.5s, passadas pela página (i18n) |
 | Erro | `role="alert"`; some quando o usuário volta a digitar |
 | Pós-envio | refocus no textarea quando `busy` volta a false |
-| Tokens | `--chat-*` alias de `--action/--surface/--ink`. Sem hex próprio |
+| Tokens | `--chat-*` alias de `--action/--surface/--ink`. Herda `data-theme`. Sem hex |
+| Idioma | strings pela página (`t()`), inclusive thinking/hint/empty/erro |
 
 ## O que NÃO entra no `ui/`
 
@@ -69,6 +72,25 @@ ConversationThread({
 
 `ChatMessage`: `{ id, role: "user" | "assistant", body, at?, streaming? }`.
 
+## Host e viewport
+
+O primitivo **preenche o pai** (`height: 100%; min-height: 0`). O host define o retângulo — página, painel flutuante ou coluna do shell.
+
+| Host | Desktop (>900) | Tablet (640–900) | Mobile (<640 / painel <700) |
+|------|----------------|------------------|-----------------------------|
+| Página / canal | coluna max 820, altura do card | mesma coluna | `100dvh`, sem radius, composer no fundo |
+| Widget / painel | ~640×680, `max 100vw-32` / `100dvh-48` | encolhe no viewport | `100dvh × 100vw`, radius 0 |
+| Shell autenticado | o que sobra ao lado da sidebar | drawer + chat 100% | chat `100dvh`, nav overlay |
+
+Nasce sem estes bugs:
+
+- Coluna flex: header / mensagens (`flex: 1; overflow-y: auto; min-height: 0`) / composer. Sem `min-height: 0` o histórico não rola.
+- `100dvh`, nunca `100vh` (barra e teclado cobrem o composer).
+- Teclado: se o composer sumir, `visualViewport` ajusta a altura do root.
+- Bolha 78% desktop, 86% mobile. Send ≥ 44px no toque.
+- `overflow-x: hidden` no root. Sem scroll horizontal.
+- Lista de conversas (se a **página** tiver): drawer <900px, não um segundo thread no primitivo.
+
 ## Red flags
 
 - Input `type="text"` de uma linha
@@ -79,5 +101,9 @@ ConversationThread({
 - Busy sem bolha de thinking
 - Strings de UI hardcoded em PT no primitivo (i18n na página)
 - God-file de chat com API + bolha + sidebar
+- `height: 100vh` no root (teclado iOS)
+- Histórico que não rola (`min-height` ausente no flex child)
+- Chat claro eterno no `data-theme=dark`
+- Painel 640px que vaza da viewport no tablet
 
 Detalhe de casca: `references/ux.md`.

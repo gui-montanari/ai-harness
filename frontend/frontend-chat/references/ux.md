@@ -31,9 +31,17 @@ Não inventar fase `reviewing` sem requisito. Uma lista de frases basta.
 
 Usuário `row-reverse`. `max-width: 78%` (86% no mobile). `white-space: pre-wrap`. Sem justify forçado se o texto for curto. Streaming: `::after` com `▋`. Coleta estruturada: texto plano, sem GFM.
 
+## Host (não quebrar no telefone)
+
+`.sc-root` é `display: flex; flex-direction: column; height: 100%; min-height: 0`. `.sc-messages` leva `flex: 1; min-height: 0; overflow-y: auto`. Composer não cresce. No host página, o pai tem altura explícita; no host tela cheia, o pai é `100dvh` (não `100vh`). Painel flutuante: `max-width: calc(100vw - 32px); max-height: calc(100dvh - 48px)`; abaixo de ~700px vira `100dvh × 100vw`.
+
+Teclado virtual: se `window.visualViewport` existir e o composer ficar coberto, o host alinha a altura ao `visualViewport.height`. Safe area: padding inferior `env(safe-area-inset-bottom)`.
+
+Scrollbar do histórico usa `scrollbar-color: var(--chat-border) transparent` — segue o tema.
+
 ## Acessibilidade
 
-Lista `aria-live="polite"` + `aria-busy`. Erro `role="alert"`. Thinking `role="status"`. Hint no `title` do send e visível abaixo. `prefers-reduced-motion` já zera animação no shell.
+Lista `aria-live="polite"` + `aria-busy`. Erro `role="alert"`. Thinking `role="status"`. Hint no `title` do send e visível abaixo. `prefers-reduced-motion` já zera animação no shell. Send ≥ 44px de toque em viewport estreita.
 
 ## Página dona
 
