@@ -69,7 +69,7 @@ cancel(conversation_id)
 
 Checkpointer do provider (thread id, memory saver) **não** é SSOT. O banco do serviço de agentes é. Crash: retoma pelo estado persistido, não pela memória do grafo.
 
-LLM é `LlmPort` (gerar texto / structured). O runtime **chama** a porta nos nodes que o spec marcar; não substitui a guarda determinística.
+LLM é `LlmPort` (gerar texto / structured). O runtime **chama** a porta nos **turnos de modelo** com o prompt versionado (`agent-orchestration`). Não substitui a guarda determinística nem redige texto canônico (privacidade, recap, recusa).
 
 ## Adapters (quando escolhidos)
 
