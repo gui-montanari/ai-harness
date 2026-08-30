@@ -116,6 +116,7 @@ Cada par tem de dizer, dos dois lados, o que **não** é desta skill. Ausência 
 | `agent-orchestration` | `orchestration-runtime` | ConversationalEngine + specs/<job> ≠ adapter de processo |
 | `orchestration-runtime` | `background-workers` | execute_turn ≠ supervisor de processo |
 | `orchestration-runtime` | `langgraph-agents` | porta/capabilities ≠ StateGraph no adapter |
+| `channel-evolution` | `agent-orchestration` | envelope de canal ≠ turno do agente |
 | `cicd` | `sql-migrations` | job de CI ≠ regra de filename |
 | `observability` | `http-apis` | log/trace ≠ `/health`/`/ready` |
 | `cicd` | `principles-audit` / `security-audit` | pipeline ≠ varredura humana do diff |

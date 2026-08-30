@@ -38,6 +38,7 @@ Vista mental (indústria, sem diagrama obrigatório): contexto → limites (cont
 | Cache | `cache-ports` |
 | Object storage | `object-storage` |
 | Logs / traces / métricas | `observability` |
+| Canal WhatsApp sessão (Evolution) | `channel-evolution` |
 | Worker / job | `background-workers` |
 | Área pública / tema / i18n / viewport | `frontend-surfaces` |
 | Login | `frontend-login` |
