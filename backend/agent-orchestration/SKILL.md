@@ -5,7 +5,8 @@ description: >
   GraphSpec, WorkflowSpec, conversational vs operational flow, graph.py,
   config.py, prompts folder, prompts/guardrails.md, prompts/reflection.md,
   canonical copy vs prompt, LLM-driven turn, specialist/sub-agent, agent
-  guards, guardrails, output guard, state guard, or reflection. Activating
+  config.py, LLM_API_KEY, LLM_BASE_URL, getenv, guards, guardrails, output
+  guard, state guard, or reflection. Activating
   Make/LangGraph/in-process: orchestration-runtime. LangGraph mention:
   langgraph-agents.
 ---
@@ -43,8 +44,9 @@ Mesmo commit. Ordem abaixo. Conferência vazia = não pronto.
 3. **Duas casas.** Semântica nos `.md`. Legal / recusa / recap no domínio. Schema/enum no domínio. `PromptCatalog` é porta; core não lê disco; versão no trace.
 4. **Guardas no caminho.** Estado (schema) + `inspect_outbound` / `approve_outbound` no texto **gerado**. Recusa canônica no domínio. Sem a chamada de saída, o agente não ativa.
 5. **Sensibilizar.** A jornada chama `active("guardrails")` e `active("reflection")`. Vazio = no-op. Ausente = não sobe. Reflection nunca substitui a saída; revisão **reentra** em `inspect_outbound`.
-6. **Runtime.** Um adapter (`orchestration-runtime`). Capabilities exigidas ⊂ oferecidas. Mesmo builder na API e no worker.
-7. **Testes de nascimento** (senão é teatro): catálogo falha sem cada slot; heading-only → `active` é `None`; bloqueia reivindicação e permite abertura canônica; recap intacto; registro rejeita segundo agente no v1 e rejeita conversacional sem guarda de saída; composição: `execute_turn` chama a guarda no gerado.
+6. **Config de LLM.** `config.py` do agente é SSOT por node (`llm_turn`, `reflection` se o slot tiver corpo): modelo, provider, temperatura, max_tokens. Sem `getenv`, sem segredo, sem marca do produto. Segredo e URL vivem em settings do composition root, com nome de **capacidade** (`LLM_API_KEY` / `LLM_BASE_URL`) ou o nome padrão do provider (`OPENAI_API_KEY`). Adapter recebe a conexão injetada — `os.environ` no adapter é defeito. Sem provider escolhido: não invente `model_name` e **não** construa o adapter.
+7. **Runtime.** Um adapter (`orchestration-runtime`). Capabilities exigidas ⊂ oferecidas. Mesmo builder na API e no worker.
+8. **Testes de nascimento** (senão é teatro): catálogo falha sem cada slot; heading-only → `active` é `None`; bloqueia reivindicação e permite abertura canônica; recap intacto; registro rejeita segundo agente no v1 e rejeita conversacional sem guarda de saída; composição: `execute_turn` chama a guarda no gerado; `config.py` existe; adapter de LLM sem `getenv` e sem prefixo da marca.
 
 Não abra PR / não declare pronto com item da conferência vazio.
 
@@ -70,7 +72,7 @@ Não invente árvore `specialists/` só para ter “cara de multi-agent”.
     reflection.md      # slot sempre (passo 2)
     understand_turn.md # conversacional
     ask_*.md           # próxima lacuna (por fase)
-  config.py            # modelo/temperatura por node — se houver node
+  config.py            # SSOT de LLM por node (modelo, provider, temperatura) — sem getenv
   graph.py             # spec; só se o runtime compilador existir
   state.py
   register.py          # composition; recebe OrchestrationRuntimePort, LLM, repos
@@ -110,6 +112,36 @@ Turno de modelo:
 `PromptCatalog` é porta. Os `.md` carregam-se no composition root / adapter de arquivos. Domínio não lê disco. Versão (hash ou tag) registra-se em cada `AgentRun`. Sem I/O no `core/`.
 
 Não coloque enum de categoria ou regra de confirmação no prompt. Política de nunca-prometer mora em `prompts/guardrails.md`; o matcher 100% mora em `inspect_outbound`. Não coloque “como perguntar a regional em linguagem natural” em constante Python.
+
+## Config de LLM — três casas
+
+Marca do produto no nome da variável (`ACME_LLM_TOKEN`) acopla o código ao tenant. Adapter que lê `os.environ` fura o composition root. `config.py` com a chave da API mistura segredo com política do node.
+
+| Casa | Mora | Não mora |
+|------|------|----------|
+| `config.py` do agente | modelo, provider, temperatura, max_tokens **por node** | `getenv`, URL, token, prefixo da marca |
+| Settings (composition root) | conexão: `LLM_API_KEY` / `LLM_BASE_URL` **ou** o nome padrão do provider | qual node usa qual modelo |
+| Adapter (`LlmPort`) | HTTP/SDK com URL e token **injetados** | `os.environ`, fallback silencioso (`complete` vazio se faltar URL) |
+
+`LlmNodeConfig` é value object de domínio (dataclass fria). Sem Pydantic no core. Sem `api_key` no config do node — o DI passa a conexão.
+
+```
+NODE_CONFIGS = {
+    "llm_turn": LlmNodeConfig(temperature=0.2, max_tokens=4096, model_name=..., provider=...),
+    "reflection": LlmNodeConfig(temperature=0.2, max_tokens=2048, model_name=..., provider=...),
+}
+```
+
+Não declare node LLM chamado `guardrails`: a guarda de saída é determinística. Juiz-LLM, se existir, é rede extra **depois** de `inspect_outbound`, com outro nome.
+
+Env: capacidade ou contrato de mercado, nunca marca.
+
+| Ok | Defeito |
+|----|---------|
+| `LLM_API_KEY`, `LLM_BASE_URL` | `TENDA_LLM_TOKEN`, `ACME_GPT_KEY` |
+| `OPENAI_API_KEY` (se o provider for esse) | `PRODUTO_OPENAI_KEY` |
+
+Sem provider escolhido, `model_name`/`provider` ficam `None` e o composition **não** instancia o adapter. Completar o config com um modelo inventado é teatro.
 
 ## Guardas — montagem e uso
 
@@ -254,6 +286,11 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 - `guardrails.md` vazio usado para pular `inspect_outbound`
 - `get("reflection")` concatenado sem `active` (injeta H1 vazio)
 - `guardrails.md` como única enforcement (sem `inspect_outbound`)
+- Prefixo da marca em variável de LLM (`*_LLM_URL`, `*_LLM_TOKEN`)
+- Adapter de LLM lendo `os.environ` / `getenv`
+- `api_key` ou URL no `config.py` do agente
+- Node LLM chamado `guardrails` no lugar de `inspect_outbound`
+- `complete()` devolvendo vazio quando falta URL (fallback silencioso)
 
 ## Conferência
 
@@ -264,8 +301,9 @@ Antes de declarar pronto, copie e marque. Caixa vazia = o agente **não nasceu**
 - [ ] Duas casas: semântica nos `.md`; legal/recusa/recap e schema no domínio
 - [ ] Guardas de estado e de saída no caminho do turno; LLM não cria o fato oficial
 - [ ] `active("guardrails")` e `active("reflection")` sensibilizados; vazio = no-op; reflection nunca substitui a saída
+- [ ] `config.py` SSOT por node; settings com nome de capacidade; adapter sem `getenv` e sem prefixo da marca
 - [ ] Runtime: um adapter (`orchestration-runtime`); capabilities no startup; mesmo builder API/worker
-- [ ] Testes de nascimento verdes (slots, `active`, bloqueio, abertura, recap, registro, composição)
+- [ ] Testes de nascimento verdes (slots, `active`, bloqueio, abertura, recap, registro, composição, config LLM)
 - [ ] Título de conversa (se houver lista): use case após a 1ª resposta, ≤6 palavras
 - [ ] Roteamento determinístico vs modelo explícito; opção “parecida” não vira clique
 - [ ] Checkpointer do runtime ≠ SSOT (banco do serviço)
