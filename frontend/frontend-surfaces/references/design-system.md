@@ -167,6 +167,19 @@ Botão: min-height 46px, radius ~12, gap 0.55rem, primário `--action` / texto b
 
 Pulso e status só quando o fato é honesto. “Ao vivo” mentiroso é pior que estático.
 
+## Estados (empty / loading / erro)
+
+Toda lista e toda página nasce com os três, i18n, tokens. Sem “tela branca”.
+
+| Estado | Forma |
+|--------|--------|
+| Empty | borda dashed, texto muted, **uma** ação (CTA). Não um illustration pack. |
+| Loading | skeleton no bloco que carrega; chrome (header/sidebar) permanece. Spinner só em ação pontual. |
+| Erro | `role="alert"`; mensagem uniforme; retry só se o pedido for idempotente |
+| 403 / 404 | página própria, tom editorial, sem stack trace |
+
+Cor não é o único sinal (`--ok` / `--danger` + texto). Verificar empty e erro nos dois temas e nos três viewports.
+
 ## Chat
 
 Tokens `--chat-*` neste arquivo. Casca, thinking, composer e **host responsivo**: skill `frontend-chat`.

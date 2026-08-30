@@ -79,4 +79,5 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Home: hero 2 col + visual reativo; `site-shell` não envolve o bleed
 - [ ] Viewport 375 / 768 / 1280; `dvh`; header não esconde idioma/tema/CTA
 - [ ] Público e interno sem sessão/cookie/CSP cruzados
+- [ ] Empty / loading / erro / 403 existem e estão traduzidos
 - [ ] `ui/` sem `fetch` nem domínio

@@ -34,6 +34,8 @@ Vista mental (indústria, sem diagrama obrigatório): contexto → limites (cont
 | Persistência | `persistence-ports` + `sql-migrations` + `sql-dialects` |
 | Eventos / outbox | `reliable-messaging` |
 | Cache | `cache-ports` |
+| Object storage | `object-storage` |
+| Logs / traces / métricas | `observability` |
 | Worker / job | `background-workers` |
 | Área pública / tema / i18n / viewport | `frontend-surfaces` |
 | Login | `frontend-login` |

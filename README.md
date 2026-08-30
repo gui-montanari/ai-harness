@@ -20,6 +20,8 @@ backend/
   sql-dialects/
   reliable-messaging/
   cache-ports/
+  object-storage/
+  observability/
   background-workers/
   agent-orchestration/
   langgraph-agents/        # ponte → agent-orchestration
@@ -58,6 +60,8 @@ shared/                    # scanner/PDF dos audits
 | [`sql-dialects`](./backend/sql-dialects/) | Postgres/SQL Server pela DSN; tipos portáteis. `/sql-dialects` |
 | [`reliable-messaging`](./backend/reliable-messaging/) | Outbox; RabbitMQ / Redis Streams / Service Bus. `/reliable-messaging` |
 | [`cache-ports`](./backend/cache-ports/) | Cache derivado; Redis por porta; TTL. `/cache-ports` |
+| [`object-storage`](./backend/object-storage/) | Upload, bucket privado, URL assinada. `/object-storage` |
+| [`observability`](./backend/observability/) | Log, trace, métrica, sem PII. `/observability` |
 | [`background-workers`](./backend/background-workers/) | API ≠ worker; drain; job single-flight. `/background-workers` |
 | [`agent-orchestration`](./backend/agent-orchestration/) | Spec neutro; Make/LangGraph são adapters. `/agent-orchestration` |
 | [`ops-backoffice`](./backend/ops-backoffice/) | Fila, atribuição, SLA, protocolo. `/ops-backoffice` |

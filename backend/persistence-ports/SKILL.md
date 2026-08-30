@@ -1,9 +1,10 @@
 ---
 name: persistence-ports
 description: >
-  Use when adding a database, repository, ORM, Redis, blob storage, RLS,
-  tenant isolation in SQL, or when a graph/route/use case would import
-  SQLAlchemy, Prisma, asyncpg, or a provider SDK.
+  Use when adding a database, repository, ORM, RLS, tenant isolation in
+  SQL, or when a graph/route/use case would import SQLAlchemy, Prisma,
+  asyncpg, or a provider SDK. Redis cache: cache-ports. Blob: object-storage.
+  Event bus: reliable-messaging.
 ---
 
 # Persistência por porta
@@ -31,7 +32,7 @@ Dois bounded contexts = dois schemas/roles. Mesmo cluster Postgres **não** auto
 - Tenant: sessão já nasce no tenant (`SET` / RLS `FORCE`). Esquecer `WHERE tenant_id` não pode vazar — o backstop é RLS + teste negativo.
 - Role de app: sem `BYPASSRLS`, sem owner.
 - Grafo / tool / MCP: recebem o porto já autenticado no tenant. Nunca `get_engine()`.
-- Blob: a mesma ideia — porto pequeno, adapter, secret fora. Fila/eventos: `reliable-messaging`. Cache: `cache-ports`.
+- Blob: skill `object-storage`. Fila/eventos: `reliable-messaging`. Cache: `cache-ports`.
 - Trocar SGBD sem tocar `core/`/`application/`: skill `sql-dialects`.
 
 ## Red flags
@@ -50,4 +51,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Use case e grafo sem SQLAlchemy/SDK
 - [ ] I/O async; sessão já no tenant; RLS + teste negativo
 - [ ] Role de app sem `BYPASSRLS` / owner
-- [ ] Dialeto pela DSN (`sql-dialects`); blob/Redis também por porto
+- [ ] Dialeto pela DSN (`sql-dialects`); blob = `object-storage`; cache = `cache-ports`
