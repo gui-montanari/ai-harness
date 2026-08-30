@@ -36,9 +36,10 @@ Entregue achados verificados no código, inventário de cobertura, PDF em pt-BR 
 - [ ] 7. Código morto — unused, flags mortas, trechos comentados
 - [ ] 8. YAGNI / KISS — abstração sem segundo cliente; overengineering
 - [ ] 9. Segurança arquitetural — falha fechada, tenant, authz, timeout, segredo (exploits profundos: /security-audit)
-- [ ] 10. Escala / desacoplamento — worker vs microsserviço, estado, backpressure, dados
-- [ ] 11. Resiliência — restart, ACK, DLQ, drain, probes
+- [ ] 10. Escala / desacoplamento — worker vs microsserviço, estado, backpressure, dados, cache derivado
+- [ ] 11. Resiliência — restart, ACK, DLQ **real**, backoff+jitter no adapter de fila, drain, probes
 - [ ] 12. Runtime — async-only; tenant/retry/semáforo/idempotência **globais** (o resto herda)
+- [ ] 12b. Mensageria e cache — porto vs BC dono; REDIS_URL/RABBITMQ_URL injetadas; sem SQL/evento de BC no pacote de plataforma
 - [ ] 13. Consistência — nomes; schema HTTP ≠ entity ≠ record ≠ Command; Pydantic em `presentation/schemas/`; Command em `application/commands/`; `/api/v1`; `backend/`/`frontend/`; migrations `YYYYMMDD_VV`; env de capacidade (não marca); `getenv` só na composição; **zero hardcode de config** (tenant, URL, token, CORS, timeout, lote)
 - [ ] 14. Registrar o que está CORRETO (cobertura por camada)
 - [ ] 15. findings.json + PDF + rasterizar páginas
@@ -92,6 +93,10 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 | “LangGraph agora, Make depois” | Um runtime. Throwaway não é stepping stone. Skill `orchestration-runtime`. |
 | “Evolution agora, Twilio depois” | Canal não oficial não substitui o provider do requisito. Fake/sandbox na mesma porta. |
 | “stub de fala / presentation sem consumidor, a gente liga depois” | Código morto. Se não corre, não entra. |
+| “platform faz INSERT na tabela do serviço, é infra” | Adapter SQL da inbox é do BC dono da tabela. Platform sem schema de BC. |
+| “requeue=True incrementa x-death, o teto vale” | Não incrementa. Header de retry ou fila de atraso; no teto nack → DLQ. |
+| “fábrica do evento no envelope genérico é SSOT” | Envelope genérico ≠ fato do produtor. A fábrica mora no serviço que publica. |
+| “Redis não precisa de URL, o client descobre” | `REDIS_URL` injetada, adapter recusa vazio. Host ≠ DNS do compose. |
 
 ## Passo 0 — Constituição e stack
 

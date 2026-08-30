@@ -39,8 +39,10 @@ TTL **obrigatório**. Sem TTL = cresce até matar o Redis. Invalidação no mesm
 
 ## Redis (quando escolhido)
 
+- **URL obrigatória**, injetada: `RedisCache(url, timeout=…)`. Adapter **recusa vazio** no construtor. `getenv` só na composition (`REDIS_URL`). Host `127.0.0.1` ≠ DNS do compose (`redis`); o yaml do container **não** reusa o URL do `.env` do host.
 - Cliente **async**, pool com teto, timeout, retry só em timeout/conexão (política global).
 - Factory no composition root. API e worker **herdam** o mesmo client (ou o mesmo builder).
+- No monorepo: porto + Memory + Redis em `packages/platform/cache/` (ou `backend/packages/platform/…`). Use case não importa `redis`.
 - Standalone vs cluster pela config — não os dois no código do use case.
 - Prefixo de ambiente na chave (`env:`) para não colidir dev/prod no mesmo cluster.
 - Não use `KEYS *`. `SCAN` ou chave conhecida.
@@ -61,6 +63,8 @@ Streams (`XADD`) **não** passam por este porto. Pub/sub de SSE, se existir, é 
 - Um `RedisService` que faz cache **e** stream **e** lock
 - Três clientes Redis no mesmo processo com configs diferentes
 - Liveness dependente do Redis
+- Adapter Redis lendo `os.environ`; URL vazia que sobe “sem cache” em silêncio
+- `REDIS_URL` do host interpolado no compose (hostname errado dentro do container)
 
 ## Conferência
 
@@ -68,7 +72,7 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
 - [ ] Precisa de cache de verdade (ou a resposta foi “nenhum”)
 - [ ] Provider perguntado; **um** adapter
-- [ ] `CachePort` no core; Redis só no adapter; I/O async
+- [ ] `CachePort` no core/platform; Redis só no adapter; URL injetada e fail-closed; I/O async
 - [ ] Chave com tenant + namespace; TTL; invalidação no writer
 - [ ] Sem PII no valor; miss reconstrói o SSOT
 - [ ] Streams/filas não usam este porto (`reliable-messaging`)

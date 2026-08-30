@@ -23,6 +23,8 @@ description: >
 
 Vista mental (indústria, sem diagrama obrigatório): contexto → limites (containers) → módulos (hexagonais) → adapters. Não comece pelo controller nem pela tela.
 
+Pacote `packages/platform` (no monorepo com UI: `backend/packages/platform`): mecânica **sem domínio**. Porto + Memory fake + adapter do provider. Árvore por capacidade (`cache/`, `events/`, `inbox/`). **Não** mora aí: `INSERT INTO <bc>.…`, fábrica de evento de um produtor (`order.created`, `message.received`), SQL de inbox do dono da tabela. Adapter Postgres da inbox fica no bounded context que **possui** a tabela. Fábrica do fato fica no serviço produtor. Contrato do tipo de evento, se compartilhado, fica em `packages/contracts`.
+
 ## Onde mora cada coisa
 
 | Capacidade | Skill |
@@ -69,6 +71,8 @@ Sem `|| true`, sem achar ignorado por nome. Exceção só por ADR com prazo.
 - Runtime ou canal throwaway (“LangGraph agora, Make depois”; “Evolution agora, provider oficial depois”)
 - Porta/stub/`node.py` sem caminho de execução
 - Pular o loop de auditoria
+- SQL ou evento de um bounded context no pacote de plataforma
+- `reject(requeue=True)` como se incrementasse `x-death` (não incrementa; teto de retry nunca dispara)
 
 ## Conferência
 
@@ -76,6 +80,7 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
 - [ ] Invariante e dono do dado escritos
 - [ ] Camada certa; porto pequeno; composition root único
+- [ ] Pacote de plataforma sem SQL nem fábrica de evento de bounded context
 - [ ] Skill do recorte lida e conferência dela marcada
 - [ ] Sem microsserviço/segundo agente sem o critério da constituição
 - [ ] `/principles-audit` e `/security-audit` em zero achados

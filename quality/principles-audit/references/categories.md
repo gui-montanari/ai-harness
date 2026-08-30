@@ -68,6 +68,8 @@ Fila extra: `runtime_smells` com esses kinds. Composition (`di/`, `settings`, `a
 
 **Protegido (ponto forte):** import-linter / dependency-cruiser no CI; porto em `core/ports`; adaptador em `infrastructure`; teste de contrato do adaptador.
 
+Pacote de plataforma (`packages/platform` / `backend/packages/platform`): só mecânica. Achado hexagonal quando o pacote contém `INSERT INTO <bc>.…`, fábrica `*.created` / `message.received` com producer de um serviço, ou SDK de Redis/Rabbit **fora** da pasta `cache/` / `events/` do adapter. Inbox SQL → BC dono da tabela. Fábrica do fato → serviço produtor.
+
 ## 5. TDD
 
 Não dá para provar que o autor viu o vermelho no passado. Dá para provar o estado:
@@ -139,6 +141,8 @@ Achado quando:
 - Microsserviço extra **sem** fechar o critério §8.2 (ou worker idempotente ainda inexistente)
 - Fila / buffer sem teto; `gather` sem limite
 - Cache como fonte da verdade (sem TTL, sem invalidação)
+- `redis` / `aio_pika` importado fora do adapter de plataforma
+- `REDIS_URL` ausente no adapter Redis (sobe sem fail-closed) ou getenv no adapter
 
 **Protegido:** API e worker, mesma imagem, `command` diferente, réplicas do worker, contrato versionado, um escritor por agregado.
 
@@ -152,6 +156,8 @@ Achado quando:
 - Um container, vários processos (`supervisord` escondendo falha; `nohup`)
 - ACK/commit da mensagem **antes** do efeito persistido
 - Sem DLQ / retry infinito sem jitter
+- Fila com DLX declarada mas `reject(requeue=True)` como único caminho de erro (x-death não sobe; teto morto)
+- ACK antes do inbox / do efeito; consumer sem unique `(consumer, event_id)`
 - Sem handler de SIGTERM (deploy mata no meio e some a mensagem, ou duplica)
 - Liveness = ping no Redis/DB (blip derruba o cluster)
 - Side-effect (cobrança, e-mail, WMS) sem chave de idempotência
@@ -170,7 +176,7 @@ Achado quando a política **não tem dono global** ou o local **copia** em vez d
 | Async-only | `requests`, `time.sleep`, `readFileSync`, `execSync`, `psycopg2`/`subprocess.run` no path HTTP/worker |
 | Tenant | `if order.tenant_id !=` em cada handler, cada um um pouco diferente; worker que roda sem restaurar contexto; job/export sem tenant |
 | Semáforo | `asyncio.gather(*lista)` sem limite; `Semaphore(n)` solto no módulo; prefetch > budget |
-| Retry | `for _ in range(3): try` no use case; retry de 4xx de negócio; sem jitter; `time.sleep` de verdade no teste |
+| Retry | `for _ in range(3): try` no use case; retry de 4xx de negócio; sem jitter; `time.sleep` de verdade no teste; requeue imediato no broker sem header de tentativa nem backoff |
 | Idempotência | `processed = set()` em RAM; chave sem tenant; 2ª entrega duplica side-effect; store por use case em vez de um `IdempotencyStore` |
 
 **Protegido:** um `RetryPolicy` + um `IdempotencyStore` + um contexto de tenant + semáforos no DI; adapters e consumers só recebem. Teste da 2ª entrega e teste de outro tenant no adapter.

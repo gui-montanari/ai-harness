@@ -89,6 +89,13 @@ Segredo de cliente público (ex.: chave Stripe *publishable*, anon key Supabase)
 
 Service role, JWT secret, webhook secret, private key, senha de banco → `critica` ou `alta` conforme produção vs. placeholder óbvio (`changeme` em compose de dev = `media`/`baixa` se o README manda trocar **e** o startup recusa o default; se o default sobe em prod, `alta`/`critica`).
 
+Também nesta categoria (e em banco_sem_tranca quando o valor cruza tenant):
+
+- `REDIS_URL` / `RABBITMQ_URL` vazias que sobem o processo; adapter tem de recusar no construtor.
+- Valor de cache ou payload de evento com PII, token, relato, telefone.
+- Chave de cache sem tenant (`t:{tenant}:…`).
+- URL do host interpolada no compose de forma que o container aponte para `127.0.0.1` (não é segredo, mas é config que fura o isolamento do ambiente).
+
 ## 5. INPUTS SEM TRATAMENTO (XSS)
 
 **Frontend**

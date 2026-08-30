@@ -20,7 +20,7 @@ Audite o repositório atual em cinco categorias, **adaptadas à stack real**. Re
 - [ ] 1. BANCO SEM TRANCA — isolamento de inquilino/dono
 - [ ] 2. PERMISSÃO DEFINIDA NO NAVEGADOR — gate de papel só no frontend
 - [ ] 3. IDOR — TODOS os handlers de rota (não amostras)
-- [ ] 4. CHAVES EXPOSTAS — código, configs, git history, bundle frontend
+- [ ] 4. CHAVES EXPOSTAS — código, configs, git history, bundle frontend; REDIS_URL/RABBITMQ_URL fail-closed; cache/evento sem PII
 - [ ] 5. INPUTS SEM TRATAMENTO (XSS) — frontend e backend
 - [ ] 6. Registrar o que está CORRETO (cobertura)
 - [ ] 7. Gerar findings.json + PDF + verificar páginas

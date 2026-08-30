@@ -47,8 +47,12 @@ Envelope versionado: `event_id`, `event_type`, `event_version`, `occurred_at` UT
 - **Outbox:** insert na **mesma** transação da mutação.
 - **Relay:** processo à parte. Crash entre publicar e marcar = redelivery.
 - **Inbox:** unique `(consumer, event_id)`. ACK **depois** do efeito.
-- Retry + jitter + teto; depois **DLQ** + replay.
+- Retry + jitter + teto; depois **DLQ** + replay. A política vive no **adapter**, não no use case.
 - Ordem só por agregado quando o requisito pede.
+
+Inbox: o **porto** (`remember`) pode viver na plataforma. O adapter SQL da inbox mora no bounded context **dono da tabela**. Pacote de plataforma **não** faz `INSERT INTO agents.inbox` (nem o schema de outro BC).
+
+Fábrica do fato (`order.created`, `message.received`, producer default) mora no **serviço produtor**. Envelope genérico (campos, bloqueio de PII) mora na plataforma. Nome estável do tipo, se compartilhado, em `packages/contracts`.
 
 ## Porto
 
@@ -79,7 +83,9 @@ I/O **async**. Segredo na URL/connection string: env, não git. Startup falha se
 
 - Exchange **fanout durable** por stream lógico. Queue durable `{stream}.{group}`, bind, `prefetch`.
 - Publish **persistent**. ACK manual depois do inbox. Reject+requeue se o worker cair no meio.
-- DLQ: exchange/queue `{stream}:dlq` (ou policy nativa) + ACK da original.
+- DLQ: exchange/queue `{stream}.dlq` + `x-dead-letter-exchange` na fila de trabalho. `reject(requeue=False)` **é** o caminho para a DLQ.
+- **`reject(requeue=True)` não incrementa `x-death`.** Contar tentativas em header (`x-retry-count`) ou republicar numa fila de atraso (`expiration` / TTL + DLX de volta à fila de trabalho). No teto: nack sem requeue → DLQ. Backoff exponencial **com jitter** no adapter.
+- URL do broker injetada; adapter recusa vazio. `getenv` só na composition (`RABBITMQ_URL`).
 - Conexão `connect_robust`. Um channel com lock; não compartilhe channel entre tasks sem proteção.
 - Nomes físicos no adapter; o domínio fala `stream` / `group`.
 
@@ -99,6 +105,8 @@ I/O **async**. Segredo na URL/connection string: env, não git. Startup falha se
 - Consumer sem inbox; ACK antes de persistir
 - Evento com PII; `subject_id` = pessoa
 - Exchange/queue não durable; prefetch ilimitado
+- SQL de inbox / fábrica de evento de BC no pacote de plataforma
+- Retry por `requeue=True` confiando em `x-death` (teto nunca dispara; sem jitter vira tempestade)
 
 ## Conferência
 
@@ -106,7 +114,8 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
 - [ ] Provider perguntado (ou já decidido); **um** adapter
 - [ ] Outbox na mesma transação; relay à parte; inbox unique
-- [ ] ACK depois do efeito; DLQ; prefetch limitado
+- [ ] ACK depois do efeito; DLQ real no teto; backoff+jitter no adapter; prefetch limitado
+- [ ] Inbox SQL no BC dono da tabela; fábrica do fato no produtor; envelope genérico na plataforma
 - [ ] Envelope versionado; sem PII; `subject_id` = agregado
 - [ ] Porto estável; factory no composition root; I/O async
 - [ ] Contract test do adapter escolhido; Memory* no use case
