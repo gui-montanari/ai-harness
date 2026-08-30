@@ -31,7 +31,9 @@ Vista mental (indústria, sem diagrama obrigatório): contexto → limites (cont
 | Identidade | `auth` |
 | MCP | `mcp-servers` |
 | Agente / Make / LangGraph | `agent-orchestration` |
-| Persistência | `persistence-ports` + `sql-migrations` |
+| Persistência | `persistence-ports` + `sql-migrations` + `sql-dialects` |
+| Eventos / outbox | `reliable-messaging` |
+| Worker / job | `background-workers` |
 | Área pública / home | `frontend-surfaces` |
 | Login | `frontend-login` |
 | Área logada | `frontend-shell` |

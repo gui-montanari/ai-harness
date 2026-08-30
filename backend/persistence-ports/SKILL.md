@@ -20,6 +20,7 @@ O banco é um **adapter**. Grafo LangGraph, rota HTTP e MCP **não** importam o 
 | Record | `infrastructure/adapters/` — ORM/row |
 | Mapper | adapter (mecânico) |
 | Migration | skill `sql-migrations` |
+| Dialeto (Postgres ↔ SQL Server) | skill `sql-dialects` — a DSN escolhe o engine |
 | Conexão, pool, RLS | composition root + sessão da request/worker |
 
 Dois bounded contexts = dois schemas/roles. Mesmo cluster Postgres **não** autoriza JOIN cross-service.
@@ -31,6 +32,7 @@ Dois bounded contexts = dois schemas/roles. Mesmo cluster Postgres **não** auto
 - Role de app: sem `BYPASSRLS`, sem owner.
 - Grafo / tool / MCP: recebem o porto já autenticado no tenant. Nunca `get_engine()`.
 - Redis, blob, fila: a mesma ideia — porto pequeno, adapter, secret fora.
+- Trocar SGBD sem tocar `core/`/`application/`: skill `sql-dialects`.
 
 ## Red flags
 

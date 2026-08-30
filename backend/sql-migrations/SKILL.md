@@ -36,7 +36,7 @@ Não crie `_02`, `_03`, `_04` no mesmo PR porque “cada ALTER merece um arquivo
 
 ## Conteúdo
 
-- Idempotente na medida do dialeto (`IF NOT EXISTS`, ledger no-op).
+- Idempotente na medida do dialeto (`IF NOT EXISTS`, ledger no-op). DDL específico de Postgres/SQL Server no **mesmo** arquivo, com `dialect.name` — skill `sql-dialects`.
 - Sem senha, token, PII.
 - RLS + `tenant_id` nascem com a tabela tenant-scoped.
 - Role de app não é owner; sem `BYPASSRLS` em request/worker.
