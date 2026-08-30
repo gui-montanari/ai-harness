@@ -1,12 +1,13 @@
 ---
 name: agent-orchestration
 description: >
-  Use when creating or changing a product agent, GraphSpec, WorkflowSpec,
-  conversational vs operational flow, graph.py, config.py, prompts folder,
-  prompts/guardrails.md, prompts/reflection.md, canonical copy vs prompt,
-  LLM-driven turn, specialist/sub-agent, agent guards, guardrails, output
-  guard, state guard, or reflection. Activating Make/LangGraph/in-process:
-  orchestration-runtime. LangGraph mention: langgraph-agents.
+  Use when creating, scaffolding, or birthing a product agent, changing
+  GraphSpec, WorkflowSpec, conversational vs operational flow, graph.py,
+  config.py, prompts folder, prompts/guardrails.md, prompts/reflection.md,
+  canonical copy vs prompt, LLM-driven turn, specialist/sub-agent, agent
+  guards, guardrails, output guard, state guard, or reflection. Activating
+  Make/LangGraph/in-process: orchestration-runtime. LangGraph mention:
+  langgraph-agents.
 ---
 
 # Orquestração de agentes
@@ -16,6 +17,8 @@ O fluxo é **declarativo e neutro** (`GraphSpec` / `WorkflowSpec`). Make.com, La
 Como o motor é escolhido e ligado no startup: skill `orchestration-runtime`. A pasta do agente é a mesma, qualquer que seja o adapter.
 
 **REQUIRED BACKGROUND:** `AGENTS.md` hexagonal + `persistence-ports`. Banco e LLM são portas.
+
+Nascer um agente — neste produto ou em qualquer outro — é a **receita abaixo**, no mesmo commit. Pular um passo = o agente **não nasceu**. Não existe “ligo a guarda depois” nem “reflection numa fase 2”.
 
 ## Um agente no primeiro lançamento
 
@@ -31,6 +34,20 @@ Escalonar para humano: `PendingInteraction` / atribuição de operador, não um 
 
 Segundo agente só com bounded context próprio (ex.: copiloto autenticado interno) + ADR + porta de invocação com allowlist. Sem pasta `specialists/` vazia.
 
+## Receita de nascimento
+
+Mesmo commit. Ordem abaixo. Conferência vazia = não pronto.
+
+1. **Identidade.** `conversational.<job>` (v1: exatamente um) ou operacional com bounded context + ADR. `AgentRegistry.explicit`. Sem auto-discovery. Manifest conversacional nasce com `requires_output_guard` (ou equivalente); `False` não registra.
+2. **Slots de prompt.** Criar `prompts/guardrails.md` e `prompts/reflection.md` (H1 mínimo). Conversacional: `understand_turn.md` + `ask_*.md` por fase. Catálogo **não carrega** se faltar `guardrails` ou `reflection`.
+3. **Duas casas.** Semântica nos `.md`. Legal / recusa / recap no domínio. Schema/enum no domínio. `PromptCatalog` é porta; core não lê disco; versão no trace.
+4. **Guardas no caminho.** Estado (schema) + `inspect_outbound` / `approve_outbound` no texto **gerado**. Recusa canônica no domínio. Sem a chamada de saída, o agente não ativa.
+5. **Sensibilizar.** A jornada chama `active("guardrails")` e `active("reflection")`. Vazio = no-op. Ausente = não sobe. Reflection nunca substitui a saída; revisão **reentra** em `inspect_outbound`.
+6. **Runtime.** Um adapter (`orchestration-runtime`). Capabilities exigidas ⊂ oferecidas. Mesmo builder na API e no worker.
+7. **Testes de nascimento** (senão é teatro): catálogo falha sem cada slot; heading-only → `active` é `None`; bloqueia reivindicação e permite abertura canônica; recap intacto; registro rejeita segundo agente no v1 e rejeita conversacional sem guarda de saída; composição: `execute_turn` chama a guarda no gerado.
+
+Não abra PR / não declare pronto com item da conferência vazio.
+
 ## Dois gêneros (quando houver o segundo caso)
 
 | | Conversacional | Operacional |
@@ -44,24 +61,26 @@ Não invente árvore `specialists/` só para ter “cara de multi-agent”.
 
 ## Pasta de um agente (agnóstica)
 
+Árvore **lógica**. In-process hexagonal (primeiro lançamento) = `prompts/` + use case + domínio. **Não** invente `graph.py` / `nodes/` só para parecer runtime de grafo. Quando um adapter compilador existir, `graph.py` monta o spec — sem SDK.
+
 ```
-<agente>/
-  config.py       # modelo/temperatura por node — SSOT; sem SDK de runtime
-  graph.py        # monta GraphSpec/WorkflowSpec; injeta ports
-  state.py
-  register.py     # composition; recebe OrchestrationRuntimePort, LLM, repos
+<agente>/                          # lógica; pode viver no serviço hexagonal
   prompts/
-    guardrails.md      # slot sempre: política ao modelo
-    reflection.md      # slot sempre: qualidade; nunca segurança
-    understand_turn.md # conversacional: como compreender o turno
+    guardrails.md      # slot sempre (passo 2)
+    reflection.md      # slot sempre (passo 2)
+    understand_turn.md # conversacional
     ask_*.md           # próxima lacuna (por fase)
-  nodes/          # só pipeline operacional
-  tools/          # internas do grafo: schema, timeout, idempotency, allowlist
+  config.py            # modelo/temperatura por node — se houver node
+  graph.py             # spec; só se o runtime compilador existir
+  state.py
+  register.py          # composition; recebe OrchestrationRuntimePort, LLM, repos
+  nodes/               # só pipeline operacional
+  tools/               # internas do grafo: schema, timeout, idempotency, allowlist
 ```
 
 `tools/` do grafo **não** entram em `tools/list` do MCP. Publicar capacidade ou jornada: skill `mcp-tools`.
 
-`register.py` devolve o spec. Quem **compila e executa** o turno é `orchestration-runtime` (um adapter, capabilities no startup, mesmo builder na API e no worker).
+Quem **compila e executa** o turno é `orchestration-runtime` (um adapter, capabilities no startup, mesmo builder na API e no worker).
 
 ## LLM-driven — duas casas de texto
 
@@ -102,7 +121,7 @@ Três peças. Não são sinônimos. Biblioteca `guardrails` (SDK) é **adapter o
 | Guarda de **saída** | decide o que **pode ser entregue** ao humano | qualidade, tom, “atendeu o pedido” | application, 100% determinística **antes** de qualquer juiz-LLM |
 | Reflection | qualidade: idioma, aderência, coerência | bloquear segurança; liberar o que a saída bloqueou | segundo passe se o slot tiver conteúdo |
 
-Agente **nasce** com as duas guardas no caminho do turno **e** com `prompts/guardrails.md` + `prompts/reflection.md`. Um só desenho de jornada. Manifest/registro declara a guarda de saída (`requires_output_guard` / equivalente). Sem o nó **ou** sem qualquer um dos dois arquivos, o agente **não ativa**.
+Passos 2, 4 e 5 da receita: as duas guardas no caminho **e** os dois arquivos. Um só desenho de jornada. Sem o nó de saída **ou** sem qualquer um dos dois arquivos, o agente **não ativa**.
 
 ### Slots sempre ligados
 
@@ -117,16 +136,9 @@ Arquivo **ausente** ≠ arquivo **vazio**. Ausente é defeito (slot apagado; cat
 
 Jornada usa `catalog.active(nome)` → texto ou `None` (sem corpo além de título). `get` só prova que o arquivo existe. Concatenar `get` de slot vazio injeta um H1 inútil.
 
-### Como criar
+### Templates dos slots (passo 2)
 
-No mesmo commit que o agente, criar os dois arquivos (podem nascer só com o H1):
-
-1. `prompts/guardrails.md` — política ao modelo; quatro seções se houver conteúdo
-2. `prompts/reflection.md` — qualidade; seções idioma / aderência / coerência se houver conteúdo
-3. Catálogo falha fechado se faltar `guardrails` **ou** `reflection`
-4. `active("guardrails")` prefixa o turno de modelo **só** se houver corpo
-5. `active("reflection")` dispara o passe de qualidade **só** se houver corpo; revisão, se houver, **reentra** em `inspect_outbound`
-6. Matchers 100% em `inspect_outbound` (independente do md estar vazio). Recusa canônica no domínio — nenhum dos dois arquivos a redige
+Podem nascer só com o H1. Corpo depois, sem mudar o grafo.
 
 ```markdown
 # Guardrails
@@ -232,7 +244,10 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 - Recap ou cópia legal reescritos pela guarda
 - Retry de modelo após bloqueio de segurança
 - SDK `guardrails` no `core/` / `application/`
+- Agente declarado pronto sem a receita de nascimento completa
+- Inventar `graph.py` / `nodes/` no in-process só para cumprir a árvore
 - Agente conversacional registrado sem guarda de saída no caminho do turno
+- Manifest conversacional com `requires_output_guard=False`
 - Agente sem `prompts/guardrails.md` ou sem `prompts/reflection.md`
 - Dois grafos (com/sem reflection) em vez de slot vazio
 - Política de nunca-prometer só em `understand_turn.md`
@@ -242,15 +257,15 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 
 ## Conferência
 
-Antes de declarar pronto, copie e marque. Caixa vazia = falta.
+Antes de declarar pronto, copie e marque. Caixa vazia = o agente **não nasceu**.
 
-- [ ] Spec neutro (`GraphSpec`/`WorkflowSpec`); motor em `orchestration-runtime`
-- [ ] Um agente conversacional no primeiro lançamento, se for o caso
-- [ ] Registro explícito no startup; sem auto-discovery
+- [ ] Identidade: um conversacional no v1 (ou operacional + ADR); registro explícito; `requires_output_guard`
+- [ ] `prompts/guardrails.md` e `prompts/reflection.md` no mesmo commit; catálogo falha sem qualquer um
+- [ ] Duas casas: semântica nos `.md`; legal/recusa/recap e schema no domínio
+- [ ] Guardas de estado e de saída no caminho do turno; LLM não cria o fato oficial
+- [ ] `active("guardrails")` e `active("reflection")` sensibilizados; vazio = no-op; reflection nunca substitui a saída
+- [ ] Runtime: um adapter (`orchestration-runtime`); capabilities no startup; mesmo builder API/worker
+- [ ] Testes de nascimento verdes (slots, `active`, bloqueio, abertura, recap, registro, composição)
 - [ ] Título de conversa (se houver lista): use case após a 1ª resposta, ≤6 palavras
-- [ ] Guardas de estado e de saída determinísticas no caminho do turno; LLM não cria o fato oficial
-- [ ] `prompts/guardrails.md` e `prompts/reflection.md` existem; catálogo falha sem qualquer um; `active` no-op se vazio; reflection nunca substitui a guarda de saída
-- [ ] Saída: recusa canônica; recap/legal intactos; sem retry que contorna; testes de bloqueio e de permissão
-- [ ] Turno de modelo usa `prompts/*.md` versionados; cópia legal/recap/recusa fica canônica no domínio
 - [ ] Roteamento determinístico vs modelo explícito; opção “parecida” não vira clique
 - [ ] Checkpointer do runtime ≠ SSOT (banco do serviço)
