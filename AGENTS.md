@@ -212,7 +212,7 @@ Proibido no mesmo idioma: `getOrder` em Python, `get_order` em TS, `HTTPClient` 
 | Command / Result do caso de uso | `application/commands/` | `CreateOrderCommand`, `TurnResult` | entrada/saída tipada, sem `execute`. Não é schema HTTP |
 | Adapter | `infrastructure/adapters/` | `PostgresOrderRepository`, `MemoryOrderRepository` | implementação do porto. Nunca em `application/` |
 | Motor conversacional | `conversational/` | `ConversationalEngine` | interpreta spec; não conhece o job nem copy canônica |
-| Spec de agente | `specs/<job>/` | pasta = um job | fases, prompts, config LLM, labels de recap. Skill `agent-orchestration` |
+| Spec de agente | `specs/<job>/` | `graph.py` + `node.py` + `edge.py` | grafo, nós, arestas, prompts, config. Skill `agent-orchestration` |
 
 Um `Order` que é entidade **e** tabela SQLAlchemy **e** payload FastAPI é violação de SRP e de hexagonal. O mapper vive no adapter (mecânico; DRY não exige “utils”).
 

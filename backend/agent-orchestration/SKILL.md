@@ -3,8 +3,8 @@ name: agent-orchestration
 description: >
   Use when creating, scaffolding, or birthing a product agent, changing
   ConversationalSpec, GraphSpec, WorkflowSpec, conversational vs operational
-  flow, conversational/engine, specs/<job>, graph.py, config.py, prompts
-  folder, prompts/guardrails.md, prompts/reflection.md, canonical copy vs
+  flow, conversational/engine, specs/<job>, graph.py, node.py, edge.py,
+  config.py, prompts folder, prompts/guardrails.md, prompts/reflection.md, canonical copy vs
   prompt, LLM-driven turn, specialist/sub-agent, agent config.py,
   LLM_API_KEY, LLM_BASE_URL, getenv, guards, guardrails, output guard,
   state guard, or reflection. Activating Make/LangGraph/in-process:
@@ -39,7 +39,7 @@ Segundo agente só com bounded context próprio (ex.: copiloto autenticado inter
 
 Mesmo commit. Ordem abaixo. Conferência vazia = não pronto.
 
-1. **Identidade.** `conversational.<job>` (v1: exatamente um) + pasta `specs/<job>/`. Operacional: bounded context + ADR. `AgentRegistry.explicit`. Sem auto-discovery. Manifest conversacional nasce com `requires_output_guard` (ou equivalente); `False` não registra.
+1. **Identidade.** `conversational.<job>` (v1: exatamente um) + pasta `specs/<job>/` com `graph.py`, `node.py`, `edge.py`. Operacional: bounded context + ADR. `AgentRegistry.explicit`. Sem auto-discovery. Manifest conversacional nasce com `requires_output_guard` (ou equivalente); `False` não registra.
 2. **Slots de prompt.** Em `specs/<job>/prompts/`: `guardrails.md` e `reflection.md` (H1 mínimo). Conversacional: `understand_turn.md` + `ask_*.md` por fase. Catálogo **não carrega** se faltar `guardrails` ou `reflection`. O catálogo **não** tem pasta default de um job — `register.py` passa o diretório.
 3. **Duas casas.** Semântica nos `.md`. Legal / recusa / recap no domínio. Schema/enum no domínio. `PromptCatalog` é porta; core não lê disco; versão no trace.
 4. **Guardas no caminho.** Estado (schema) + `inspect_outbound` / `approve_outbound` no texto **gerado**. Recusa canônica no domínio. Sem a chamada de saída, o agente não ativa.
@@ -67,63 +67,57 @@ Dois papéis, duas pastas. O motor **não** conhece o job. O job **não** reimpl
 
 ```
 agents/
-  conversational/            # motor; recebe ConversationalSpec
-    engine.py
-  specs/
-    <job>/                   # um job = uma pasta
-      spec.py                # ConversationalSpec: fases, tokens, labels de recap, copy
-      config.py              # SSOT de LLM por node — sem getenv
-      register.py            # composition: build_catalog() + exporta SPEC
-      prompts/
-        guardrails.md        # slot sempre (passo 2)
-        reflection.md        # slot sempre (passo 2)
-        understand_turn.md
-        ask_*.md
-  core/domain/spec.py        # tipos: AgentManifest, CollectField, ConversationalSpec
+  conversational/engine.py   # motor; percorre o grafo; não conhece o job
+  core/domain/
+    graph.py                 # ConversationalSpec + AgentManifest
+    node.py                  # NodeSpec
+    edge.py                  # EdgeSpec
+  specs/<job>/               # um job = uma pasta
+    graph.py                 # monta SPEC (nós + arestas + copy)
+    node.py                  # NODES + normalize
+    edge.py                  # EDGES (token ou incondicional)
+    config.py                # SSOT de LLM por node — sem getenv
+    register.py              # composition: build_catalog() + exporta SPEC
+    prompts/
+      guardrails.md
+      reflection.md
+      understand_turn.md
+      ask_*.md
 ```
 
-In-process hexagonal (primeiro lançamento): esta árvore **é** o spec. Arquivo só existe quando **tem corpo que corre**. `graph.py`, `nodes/`, `edge.py`, `specialists/`, porta de fala, `presentation/http.py` sem consumidor = código morto.
+SRP do job: **nó** muda quando o passo muda; **aresta** muda quando a transição muda; **grafo** monta o spec e a copy. Um `spec.py` único mistura os três motivos.
 
-`ConversationalEngine` interpreta o spec (entrada, coleta, recap, confirmação). Labels de recap, tokens, opening e completed **vivem no spec**. O engine não importa `canonical_texts` nem `specs.<job>`.
+Arquivo só existe com corpo. `node.py` / `edge.py` / `graph.py` **vazios**, `specialists/`, porta de fala, `presentation/` sem consumidor = código morto.
+
+`ConversationalEngine` segue arestas (`token` ou incondicional). Labels, opening e completed **vivem no spec**. O engine não importa `canonical_texts` nem `specs.<job>`.
 
 `tools/` do grafo **não** entram em `tools/list` do MCP. Publicar capacidade ou jornada: skill `mcp-tools`.
 
-Quem **liga o processo** (in-process / Make / LangGraph) é `orchestration-runtime`. O motor conversacional é outra camada: interpreta o spec no turno.
+Quem **liga o processo** (in-process / Make / LangGraph) é `orchestration-runtime`. O motor conversacional interpreta o grafo no turno.
 
 ### Node e edge (vocabulário da indústria)
 
-Grafo (LangGraph, StateGraph, cenário Make): **node** = unidade de trabalho; **edge** = transição. Isso é o padrão. **Não** se materializa como `node.py` / `edge.py` vazios dentro do agente.
+Grafo (LangGraph, StateGraph, cenário Make): **node** = unidade de trabalho; **edge** = transição. No in-process isso **é** dado, não função LangGraph:
 
-No in-process conversacional o spec **é** o grafo, em dados:
+| Grafo | Arquivo do job | Tipo de domínio |
+|-------|----------------|-----------------|
+| node | `specs/<job>/node.py` (`NODES`) | `NodeSpec` (`name`, `field`, `ask`, `label`) |
+| edge | `specs/<job>/edge.py` (`EDGES`) | `EdgeSpec` (`source`, `target`, `token`) |
+| wiring + copy | `specs/<job>/graph.py` (`SPEC`) | `ConversationalSpec` |
+| checkpointer | banco do serviço | `ConversationStore` |
+| interrupt / HITL | use case | atribuição / `human_pending` |
 
-| Grafo | Onde vive agora |
-|-------|-----------------|
-| node (passo) | `CollectField`, `entry`, `confirm_step` |
-| edge linear | `next_step`, `first_ask` |
-| edge condicional | `continue_token`, `confirm_token`, `commands` |
-| `graph.py` | `specs/<job>/spec.py` |
-| checkpointer | `ConversationStore` (banco do serviço) |
-| interrupt / HITL | atribuição de operador / status `human_pending` |
+`token=None` = aresta linear (depois de coletar o campo). `token="continuar"` / `"sim"` = aresta condicional. Nó sem `field` e sem aresta de saída = terminal.
 
-Quando um runtime **compilador** for o escolhido (ADR, **um** adapter — skill `orchestration-runtime`):
+Quando um runtime **compilador** for o escolhido (ADR, **um** adapter): o adapter lê o **mesmo** `ConversationalSpec` e faz `GraphSpec → StateGraph`. Não copie o grafo para um segundo `graph.py` com SDK. `from langgraph.graph import StateGraph` no spec, no engine ou no use case é defeito. Ponte: `langgraph-agents`.
 
-```
-specs/<job>/
-  spec.py       # continua o dono do job
-  graph.py      # monta GraphSpec (NodeSpec + EdgeSpec) SEM SDK
-  nodes/        # só funções de node que existem (LLM, tool, determinístico)
-  prompts/      # inalterado
-```
-
-`GraphSpec` / `NodeSpec` / `EdgeSpec` são tipos de domínio. `edge.py` só se houver router real. O adapter (`infrastructure/adapters/langgraph/`) faz `GraphSpec → StateGraph`. `from langgraph.graph import StateGraph` no spec, no engine ou no use case é defeito. Ponte: `langgraph-agents`.
-
-Não crie `nodes/` / `graph.py` / `edge.py` “para quando o LangGraph chegar”. O compilador nasce com o adapter.
+Não crie `nodes/` extra “para quando o LangGraph chegar”. Função de node LLM só nasce com o adapter e o `LlmPort` ligados.
 
 ### Acrescentar um spec
 
 v1 registra exatamente um. A árvore já admite o segundo; o registro é que trava.
 
-1. Pasta `specs/<job>/` com a receita de nascimento (slots, config, register).
+1. Pasta `specs/<job>/` com `graph.py`, `node.py`, `edge.py`, slots, config, register.
 2. ADR se for o **segundo** conversacional (bounded context próprio).
 3. Append na tuple de `AgentRegistry.explicit`.
 4. Composition escolhe o spec. Sem auto-discovery.
@@ -332,7 +326,8 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 - Retry de modelo após bloqueio de segurança
 - SDK `guardrails` no `core/` / `application/`
 - Agente declarado pronto sem a receita de nascimento completa
-- Inventar `graph.py` / `nodes/` / `edge.py` / `specialists/` no in-process só para cumprir a árvore
+- `graph.py` / `node.py` / `edge.py` **vazios**, ou um `spec.py` único misturando nó+aresta+copy
+- Pasta `nodes/` / `specialists/` sem função que corre
 - Stub de fala / porta / `presentation/` sem caminho de execução
 - LangGraph (ou segundo runtime) como ensaio do Make
 - Canal não oficial (Evolution, Baileys) como ensaio do provider do requisito
@@ -360,7 +355,7 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 Antes de declarar pronto, copie e marque. Caixa vazia = o agente **não nasceu**.
 
 - [ ] Identidade: um conversacional no v1 (ou operacional + ADR); pasta `specs/<job>/`; registro explícito; `requires_output_guard`
-- [ ] Motor em `conversational/` recebe spec; engine sem import de job nem de copy canônica; sem `node.py`/`edge.py`/`graph.py` vazios
+- [ ] Motor em `conversational/` recebe spec; job com `graph.py` + `node.py` + `edge.py` **com corpo**; engine sem import de job nem de copy canônica
 - [ ] Sem stub, porta ou presentation sem consumidor; sem segundo runtime/canal throwaway
 - [ ] `specs/<job>/prompts/guardrails.md` e `reflection.md` no mesmo commit; catálogo falha sem qualquer um; catálogo sem pasta default de um job
 - [ ] Duas casas: semântica nos `.md`; legal/recusa/recap e schema no domínio

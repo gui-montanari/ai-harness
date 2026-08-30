@@ -37,7 +37,7 @@ Se o runtime **ainda não** está no ADR/`AGENTS.md`:
 
 Implemente **um**. Segundo runtime só com capability **obrigatória** ausente no primeiro + ADR. Airflow, Celery beat ou “composite” extra não nascem para ter simetria de pasta.
 
-LangGraph **agora** para “depois trocar por Make” é o mesmo defeito: dois adapters, um deles lixo. Se a ADR escolher LangGraph, ele **é** o runtime. Se escolher Make, compile o spec no adapter Make. In-process **é** runtime: o `ConversationalEngine` já percorre o grafo do spec (passos = nodes, `next_step` = edges). Não puxe LangGraph para “completar a arquitetura” nem crie `node.py`/`edge.py` vazios.
+LangGraph **agora** para “depois trocar por Make” é o mesmo defeito: dois adapters, um deles lixo. Se a ADR escolher LangGraph, ele **é** o runtime. Se escolher Make, compile o spec no adapter Make. In-process **é** runtime: o `ConversationalEngine` percorre `NodeSpec` / `EdgeSpec` do spec (`agent-orchestration`). Não puxe LangGraph para “completar a arquitetura”. `node.py`/`edge.py`/`graph.py` **com corpo** são o spec; vazios são mortos.
 
 In-process já cumpre o primeiro lançamento com guardas, HITL e persistência no banco do serviço.
 
