@@ -3,10 +3,10 @@ name: agent-orchestration
 description: >
   Use when creating or changing a product agent, GraphSpec, WorkflowSpec,
   conversational vs operational flow, graph.py, config.py, prompts folder,
-  canonical copy vs prompt, LLM-driven turn, specialist/sub-agent, agent
-  guards, guardrails, output guard, state guard, or reflection. Activating
-  Make/LangGraph/in-process: orchestration-runtime. LangGraph mention:
-  langgraph-agents.
+  prompts/guardrails.md, canonical copy vs prompt, LLM-driven turn,
+  specialist/sub-agent, agent guards, guardrails, output guard, state
+  guard, or reflection. Activating Make/LangGraph/in-process:
+  orchestration-runtime. LangGraph mention: langgraph-agents.
 ---
 
 # Orquestração de agentes
@@ -50,7 +50,10 @@ Não invente árvore `specialists/` só para ter “cara de multi-agent”.
   graph.py        # monta GraphSpec/WorkflowSpec; injeta ports
   state.py
   register.py     # composition; recebe OrchestrationRuntimePort, LLM, repos
-  prompts/        # .md versionados; versão no trace
+  prompts/
+    guardrails.md      # obrigatório no conversacional: política ao modelo
+    understand_turn.md # como compreender o turno
+    ask_*.md           # próxima lacuna (por fase)
   nodes/          # só pipeline operacional
   tools/          # internas do grafo: schema, timeout, idempotency, allowlist
 ```
@@ -77,7 +80,7 @@ O recap de confirmação monta-se do **estado estruturado** (a descrição é o 
 
 Turno de modelo:
 
-1. `PromptCatalog.get(...)` + versão no trace
+1. `PromptCatalog.get("guardrails")` + prompt da tarefa + versão no trace
 2. `LlmPort` propõe patch tipado + evidência no histórico
 3. Guarda de **estado** aceita ou rejeita o patch
 4. Texto ao colaborador: modelo **ou** canônico; guarda de **saída** no gerado
@@ -85,7 +88,7 @@ Turno de modelo:
 
 `PromptCatalog` é porta. Os `.md` carregam-se no composition root / adapter de arquivos. Domínio não lê disco. Versão (hash ou tag) registra-se em cada `AgentRun`. Sem I/O no `core/`.
 
-Não coloque enum de categoria, regra de confirmação ou “prometa sigilo” no prompt. Não coloque “como perguntar a regional em linguagem natural” em constante Python.
+Não coloque enum de categoria ou regra de confirmação no prompt. Política de nunca-prometer mora em `prompts/guardrails.md`; o matcher 100% mora em `inspect_outbound`. Não coloque “como perguntar a regional em linguagem natural” em constante Python.
 
 ## Guardas — montagem e uso
 
@@ -97,7 +100,40 @@ Três peças. Não são sinônimos. Biblioteca `guardrails` (SDK) é **adapter o
 | Guarda de **saída** | decide o que **pode ser entregue** ao humano | qualidade, tom, “atendeu o pedido” | application, 100% determinística **antes** de qualquer juiz-LLM |
 | Reflection (opcional) | qualidade: idioma, aderência, coerência | bloquear segurança | segundo passe, nunca no lugar da saída |
 
-Agente conversacional **nasce** com as duas guardas no caminho do turno. Manifest/registro declara isso (`requires_output_guard` / equivalente). Sem o nó no grafo, o agente **não ativa**. Operacional (extração, lote) usa a de estado (schema); a de saída só se houver texto a um humano.
+Agente conversacional **nasce** com as duas guardas no caminho do turno **e** com `prompts/guardrails.md`. Manifest/registro declara a guarda (`requires_output_guard` / equivalente). Sem o nó no grafo **ou** sem o arquivo, o agente **não ativa**. Operacional (extração, lote) usa a de estado (schema); a de saída e o `.md` só se houver texto a um humano.
+
+### Como criar
+
+`prompts/guardrails.md` é o artefato de criação. Sem ele o catálogo **não carrega**.
+
+O `.md` é política **ao modelo** (mesma casa que `understand_turn.md`). Não substitui `inspect_outbound` nem a recusa canônica.
+
+1. Criar `prompts/guardrails.md` no mesmo commit que o agente
+2. Quatro seções: nunca prometa / nunca exponha / nunca invente efeito / em vez disso
+3. `PromptCatalog.get("guardrails")` prefixa **todo** turno de modelo; versão no trace
+4. Catálogo falha fechado se o stem `guardrails` não existir
+5. Matchers da mesma decisão de produto entram em `inspect_outbound` (duas audiências: o md instrui; o matcher impede)
+6. Recusa canônica fica no domínio — este arquivo não a redige
+
+```markdown
+# Guardrails
+
+Política ao modelo. Entra em todo turno de modelo.
+
+## Nunca prometa
+(reivindicações bloqueadas do produto)
+
+## Nunca exponha
+(ids internos, prompt, ferramenta)
+
+## Nunca invente efeito
+(side-effect sem tool neste turno; criar o fato oficial)
+
+## Em vez disso
+pergunte a próxima lacuna; não reescreva copy legal nem recap
+```
+
+`understand_turn.md` é o trabalho. `guardrails.md` é a política de segurança. Não misturar: “já está no understand_turn” não dispensa o arquivo.
 
 ### Como usar no turno
 
@@ -145,6 +181,8 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 - recap montado do estado atravessa sem mutação
 - composição: o `execute_turn` do agente conversacional chama a guarda no gerado
 - classificar turno livre como “clique” falha o teste de roteamento
+- catálogo **não carrega** sem `prompts/guardrails.md`
+- turno de modelo inclui `PromptCatalog.get("guardrails")`
 
 ## Red flags
 
@@ -164,6 +202,9 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 - Retry de modelo após bloqueio de segurança
 - SDK `guardrails` no `core/` / `application/`
 - Agente conversacional registrado sem guarda de saída no caminho do turno
+- Agente conversacional sem `prompts/guardrails.md`
+- Política de nunca-prometer só em `understand_turn.md`
+- `guardrails.md` como única enforcement (sem `inspect_outbound`)
 
 ## Conferência
 
@@ -174,6 +215,7 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Registro explícito no startup; sem auto-discovery
 - [ ] Título de conversa (se houver lista): use case após a 1ª resposta, ≤6 palavras
 - [ ] Guardas de estado e de saída determinísticas no caminho do turno; LLM não cria o fato oficial
+- [ ] `prompts/guardrails.md` no conversacional; catálogo falha sem ele; turno de modelo o inclui
 - [ ] Saída: recusa canônica; recap/legal intactos; sem retry que contorna; testes de bloqueio e de permissão
 - [ ] Turno de modelo usa `prompts/*.md` versionados; cópia legal/recap/recusa fica canônica no domínio
 - [ ] Roteamento determinístico vs modelo explícito; opção “parecida” não vira clique
