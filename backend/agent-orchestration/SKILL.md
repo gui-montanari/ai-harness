@@ -3,15 +3,15 @@ name: agent-orchestration
 description: >
   Use when creating or changing a product agent, GraphSpec, WorkflowSpec,
   conversational vs operational flow, graph.py, config.py, prompts folder,
-  Make.com scenario, LangGraph adapter, specialist/sub-agent, or runtime of
-  agents. LangGraph and Make are adapters, not the domain.
+  specialist/sub-agent, or agent guards. Activating Make/LangGraph/in-process:
+  orchestration-runtime. LangGraph mention: langgraph-agents.
 ---
 
 # Orquestração de agentes
 
 O fluxo é **declarativo e neutro** (`GraphSpec` / `WorkflowSpec`). Make.com, LangGraph ou outro runtime **compilam** isso no adapter. O domínio não importa SDK de Make nem `StateGraph`.
 
-O runtime conhecido da empresa é o **primeiro candidato**, avaliado por capability matrix — não é decisão automática e não autoriza segundo runtime “por se acaso”. A pasta do agente é a mesma, qualquer que seja o adapter.
+Como o motor é escolhido e ligado no startup: skill `orchestration-runtime`. A pasta do agente é a mesma, qualquer que seja o adapter.
 
 **REQUIRED BACKGROUND:** `AGENTS.md` hexagonal + `persistence-ports`. Banco e LLM são portas.
 
@@ -55,21 +55,11 @@ Não invente árvore `specialists/` só para ter “cara de multi-agent”.
 
 `tools/` do grafo **não** entram em `tools/list` do MCP. Publicar capacidade ou jornada: skill `mcp-tools`.
 
-`register.py` devolve o spec. O **adapter** (`make`, `langgraph`, …) compila e executa turno. Checkpointer do provider não é SSOT: o banco do serviço é.
-
-## Runtime
-
-```
-application  →  OrchestrationRuntimePort.execute_turn / pause / resume
-core         →  spec + estado + guardas
-infrastructure/adapters/<runtime>  →  scenario / StateGraph.compile
-```
-
-Capability matrix **antes** de aprovar o runtime (idempotência, pausa, callback autenticado, retomada). Sem fallback silencioso entre runtimes.
+`register.py` devolve o spec. Quem **compila e executa** o turno é `orchestration-runtime` (um adapter, capabilities no startup, mesmo builder na API e no worker).
 
 ## Red flags
 
-- SDK de runtime no `core/` / `application/`
+- SDK de runtime no `core/` / `application/` (ativação: `orchestration-runtime`)
 - SQL no `graph.py`
 - Dois agentes conversacionais para o mesmo usuário no primeiro lançamento
 - Pasta `specialists/support` sem segundo domínio
@@ -80,7 +70,7 @@ Capability matrix **antes** de aprovar o runtime (idempotência, pausa, callback
 
 Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
-- [ ] Spec neutro (`GraphSpec`/`WorkflowSpec`); SDK só no adapter
+- [ ] Spec neutro (`GraphSpec`/`WorkflowSpec`); motor em `orchestration-runtime`
 - [ ] Um agente conversacional no primeiro lançamento, se for o caso
 - [ ] Registro explícito no startup; sem auto-discovery
 - [ ] Título de conversa (se houver lista): use case após a 1ª resposta, ≤6 palavras

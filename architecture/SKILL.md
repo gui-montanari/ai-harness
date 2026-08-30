@@ -31,7 +31,8 @@ Vista mental (indústria, sem diagrama obrigatório): contexto → limites (cont
 | Identidade | `auth` |
 | MCP (servidor / transporte) | `mcp-servers` |
 | MCP (tool / jornada / perfil) | `mcp-tools` |
-| Agente / Make / LangGraph | `agent-orchestration` |
+| Agente (spec, um conversacional, guardas) | `agent-orchestration` |
+| Runtime de orquestração (ativação) | `orchestration-runtime` |
 | Persistência | `persistence-ports` + `sql-migrations` + `sql-dialects` |
 | Eventos / outbox | `reliable-messaging` |
 | Cache | `cache-ports` |

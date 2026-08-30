@@ -8,9 +8,9 @@ description: >
 
 # LangGraph é adapter
 
-**REQUIRED SUB-SKILL:** `agent-orchestration`.
+**REQUIRED SUB-SKILL:** `agent-orchestration` (spec) e `orchestration-runtime` (ativação).
 
-LangGraph compila `GraphSpec` em `infrastructure/adapters/langgraph`. Não desenhe o produto em `StateGraph`. Make.com ou outro orquestrador conhecido é outro adapter da mesma porta.
+LangGraph compila `GraphSpec` em `infrastructure/adapters/<runtime>`. Não desenhe o produto em `StateGraph`. Make.com ou in-process é outro adapter da **mesma** porta — skill `orchestration-runtime` pergunta qual, e implementa um.
 
 Proibido: `from langgraph.graph import StateGraph` em `core/` ou `application/`.
 

@@ -80,7 +80,7 @@ pasta  name(yaml)  ponte?  conferência?  no README árvore?  no README tabela? 
 
 `name` no YAML **é** o basename da pasta. Agrupador `backend/` / `frontend/` / `quality/` não entra no `name`.
 
-**Ponte** (hoje): `oauth-connectors` → `auth`; `langgraph-agents` → `agent-orchestration`. Ponte: SKILL.md curto, redireciona na primeira tela, `REQUIRED SUB-SKILL` da canônica. Não compete na tabela «Quando».
+**Ponte** (hoje): `oauth-connectors` → `auth`; `langgraph-agents` → `orchestration-runtime` (+ spec em `agent-orchestration`). Ponte: SKILL.md curto, redireciona na primeira tela, `REQUIRED SUB-SKILL` da canônica. Não compete na tabela «Quando».
 
 `shared/` não é skill.
 
@@ -113,7 +113,9 @@ Cada par tem de dizer, dos dois lados, o que **não** é desta skill. Ausência 
 | `mcp-servers` | `mcp-tools` | processo/transporte ≠ o que entra em `tools/list` |
 | `mcp-tools` | `agent-orchestration` | publicação MCP ≠ `tools/` interno do grafo |
 | `auth` | `oauth-connectors` | um catálogo; ponte só dispara OAuth de host |
-| `agent-orchestration` | `langgraph-agents` | spec ≠ StateGraph |
+| `agent-orchestration` | `orchestration-runtime` | spec/guardas ≠ ativação do motor |
+| `orchestration-runtime` | `background-workers` | execute_turn ≠ supervisor de processo |
+| `orchestration-runtime` | `langgraph-agents` | porta/capabilities ≠ StateGraph no adapter |
 | `cicd` | `sql-migrations` | job de CI ≠ regra de filename |
 | `observability` | `http-apis` | log/trace ≠ `/health`/`/ready` |
 | `cicd` | `principles-audit` / `security-audit` | pipeline ≠ varredura humana do diff |
