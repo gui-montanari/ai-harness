@@ -3,13 +3,16 @@ name: frontend-surfaces
 description: >
   Use when scaffolding or refactoring a React frontend, splitting public vs
   authenticated shells, adding i18n PT/EN, tenant visual tokens, shared UI
-  primitives, or when the user mentions home, backoffice, design system,
-  Autodin visual language, stockfy-ai-web layout, or /frontend-surfaces.
+  primitives, designing a public home (hero, metric strip, sections, CTA),
+  building a ChatGPT-style conversation thread, or when the user mentions
+  design system, Autodin visual language, stockfy-ai-web chat, or /frontend-surfaces.
 ---
 
 # Superfícies frontend
 
 SSOT das regras: constituição `AGENTS.md` §3 e ADR-015 do produto. Este skill é o **lugar** dos arquivos. Não copie HTML, CSS, rotas, auth ou domínio de Autodin/Stockfy.
+
+Gramática visual, tokens e chat: `references/design-system.md`.
 
 ## Árvore canônica
 
@@ -17,10 +20,13 @@ SSOT das regras: constituição `AGENTS.md` §3 e ADR-015 do produto. Este skill
 frontend/
   ui/                         # só com 2+ consumidores reais
     src/
-      tokens.css              # tokens semânticos
+      tokens.css              # tokens semânticos + aliases --chat-*
+      public.css              # home pública (hero, seções, CTA)
+      chat.css                # thread estilo ChatGPT (só var(--chat-*))
+      shell.css               # primitives + shell autenticado
       tenants/<id>.css        # um arquivo por tenant
       i18n/                   # pt-BR + en nativos
-      components/             # Button, Shell, EmptyState — zero fetch, zero domínio
+      components/             # zero fetch, zero domínio
       theme/TenantProvider.tsx
   <app>/                      # web-public | backoffice
     src/
@@ -37,7 +43,10 @@ frontend/
 - Sem diretório `portal-user` no v1.
 - Tenant visual: `data-tenant` + arquivo em `tenants/`. O front **não** envia `tenant_id` para autorizar.
 - Idioma: dicionário `pt-BR` e `en` desde o primeiro commit de UI. Textos canônicos de produto continuam em `docs/requisitos.md`.
-- Autodin/Stockfy: copiar **propriedades** (home pública, shell autenticado, cockpit, estados vazios/erro, mobile, i18n). Não copiar implementação.
+- Autodin/Stockfy: copiar **propriedades** (home pública, shell autenticado, chat ChatGPT, estados vazios/erro, mobile, i18n). Não copiar implementação, paleta, rotas, HITL, SSE ou domínio.
+- Hex só em `tokens.css` / `tenants/<id>.css`. Página e componente usam `var(--token)`.
+- Home pública é full-bleed. `site-shell` envolve o conteúdo interno, não o hero nem a faixa de métricas.
+- Chat é primitivo apresentacional (`ConversationThread`). A página dona o fetch.
 
 ## Achados
 
@@ -47,3 +56,6 @@ frontend/
 - uma SPA para público e interno
 - i18n só em um idioma
 - pasta `models/`/`services/` no frontend com domínio de caso
+- hero em card escuro no lugar da gramática de seções
+- chat com input de uma linha, sem header, avatar, auto-resize ou Enter/Shift+Enter
+- copiar HTML/CSS do Autodin (roxo, órbitas, planos) ou do Stockfy (`--sc-accent: #2563eb`, SSE, markdown)
