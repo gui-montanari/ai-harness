@@ -1,53 +1,42 @@
 # skills
 
-Coleção pública de [Agent Skills](https://agentskills.io) para Claude Code, Grok, Codex, Cursor e outros agentes compatíveis.
+Coleção pública de [Agent Skills](https://agentskills.io).
 
 Cada skill é uma pasta com um `SKILL.md` (metadados + instruções) e, quando necessário, scripts e referências.
 
-**Constituição de desenvolvimento:** [`AGENTS.md`](./AGENTS.md) — SSOT, DRY, KISS, YAGNI, SRP, SOLID, hexagonal, TDD, Docker/CI, limites de tamanho, processo de análise. Copie para a raiz de um produto novo (ou estenda no `AGENTS.md` local).
+**Constituição:** [`AGENTS.md`](./AGENTS.md) — SSOT de princípios. Copie para a raiz do produto. Skills são o **como** (árvore, receita, red flags) e não reescrevem o princípio.
 
 ## Skills
 
 | Skill | Quando usar |
 |-------|-------------|
-| [`security-audit`](./security-audit/) | Auditoria de segurança em cinco categorias (isolamento de tenant, autorização só no frontend, IDOR, segredos hardcoded, XSS), com relatório PDF em pt-BR e issues prontas para o GitHub. Comando: `/security-audit` |
-| [`principles-audit`](./principles-audit/) | Varredura contra o `AGENTS.md`: hexagonal, TDD, runtime, schema HTTP ≠ Command ≠ entity ≠ record, `backend/`/`frontend/`, `/api/v1`, migrations `YYYYMMDD_VV`. Comando: `/principles-audit` |
-| [`frontend-surfaces`](./frontend-surfaces/) | Organização de React: `ui/` compartilhado, pages, i18n PT/EN, tokens por tenant, shells público vs autenticado, design system (home tipo Autodin, chat tipo ChatGPT/stockfy-ai). Comando: `/frontend-surfaces` |
+| [`security-audit`](./security-audit/) | Auditoria: tenant, authz só no frontend, IDOR, segredos, XSS. `/security-audit` |
+| [`principles-audit`](./principles-audit/) | Varredura contra o `AGENTS.md` (hexagonal, TDD, `/api/v1`, migrations). `/principles-audit` |
+| [`http-apis`](./http-apis/) | REST `/api/v1`, schemas ≠ Command, OpenAPI. `/http-apis` |
+| [`mcp-servers`](./mcp-servers/) | Borda MCP para Grok/Cursor: tools = use cases, Streamable HTTP. `/mcp-servers` |
+| [`oauth-connectors`](./oauth-connectors/) | OAuth Authorization Code + PKCE para conector de LLM (Grok). `/oauth-connectors` |
+| [`sql-migrations`](./sql-migrations/) | `YYYYMMDD_VV`; no mesmo dia **acrescentar** no arquivo, não multiplicar. `/sql-migrations` |
+| [`langgraph-agents`](./langgraph-agents/) | GraphSpec, `graph.py`/`config.py`/`prompts/`, conversacional vs operacional. `/langgraph-agents` |
+| [`persistence-ports`](./persistence-ports/) | DB/Redis/blob só via porto; RLS; grafo e rota sem driver. `/persistence-ports` |
+| [`frontend-surfaces`](./frontend-surfaces/) | React, `ui/`, i18n PT/EN, tokens por tenant, home tipo Autodin. `/frontend-surfaces` |
+| [`frontend-chat`](./frontend-chat/) | Thread ChatGPT: bolha, composer, thinking; casca do stockfy-ai sem SSE/HITL. `/frontend-chat` |
 
 ## Como usar
 
-Clone o repositório e aponte o agente para a pasta da skill (symlink ou cópia):
+Clone o repositório e aponte **todas** as skills para o runtime do agente (symlink):
 
 ```bash
 git clone https://github.com/gui-montanari/skills.git
 cd skills
+mkdir -p ~/.agents/skills ~/.grok/skills
+for s in security-audit principles-audit http-apis mcp-servers oauth-connectors \
+         sql-migrations langgraph-agents persistence-ports frontend-surfaces frontend-chat; do
+  ln -sfn "$(pwd)/$s" ~/.agents/skills/$s
+  ln -sfn "$(pwd)/$s" ~/.grok/skills/$s
+done
 ```
 
-### Claude Code
-
-```bash
-mkdir -p ~/.claude/skills
-ln -s "$(pwd)/security-audit" ~/.claude/skills/security-audit
-ln -s "$(pwd)/principles-audit" ~/.claude/skills/principles-audit
-```
-
-### Grok
-
-```bash
-mkdir -p ~/.grok/skills
-ln -s "$(pwd)/security-audit" ~/.grok/skills/security-audit
-ln -s "$(pwd)/principles-audit" ~/.grok/skills/principles-audit
-```
-
-### Codex / outros runtimes Agent Skills
-
-```bash
-mkdir -p ~/.agents/skills
-ln -s "$(pwd)/security-audit" ~/.agents/skills/security-audit
-ln -s "$(pwd)/principles-audit" ~/.agents/skills/principles-audit
-```
-
-Depois, no chat: `/security-audit`, `/principles-audit` ou `/hexagonal-audit`.
+Copie `AGENTS.md` para a raiz de cada produto novo (ou estenda o local, sem enfraquecer). No chat: `/http-apis`, `/langgraph-agents`, `/sql-migrations`, …
 
 ## Convenção
 

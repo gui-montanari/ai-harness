@@ -173,7 +173,7 @@ Produto com API **e** UI — backend e frontend **não** ficam soltos na raiz. C
   .github/workflows/
 ```
 
-Frontend (quando existir UI) — skill `frontend-surfaces`. Com dois consumidores reais, primitives vivem em `frontend/ui/` (tokens, i18n PT/EN, shells). Páginas e `lib/api.ts` ficam no app. `ui/` sem fetch e sem domínio. Identidade visual por tenant: `data-tenant` + `tenants/<id>.css`. Sem portal autenticado do colaborador no v1.
+Frontend (quando existir UI) — skill `frontend-surfaces`. Chat — skill `frontend-chat`. Persistência — skill `persistence-ports`. Agentes LangGraph — skill `langgraph-agents`. Com dois consumidores reais, primitives vivem em `frontend/ui/` (tokens, i18n PT/EN, shells). Páginas e `lib/api.ts` ficam no app. `ui/` sem fetch e sem domínio. Identidade visual por tenant: `data-tenant` + `tenants/<id>.css`. Sem portal autenticado do colaborador no v1.
 
 Repo só de API: `backend/` (ou `src/` hexagonal) sem inventar `frontend/` vazio. Repo só de UI: o inverso. **Misturar `services/` e `apps/` na raiz de um repo que tem os dois é achado.**
 
@@ -253,13 +253,15 @@ Regras:
 
 - ordem de aplicação = ordem lexicográfica do **filename**, não da pasta
 - prefixo `YYYYMMDD_VV` é único no repositório inteiro
-- próximo número do dia: `max(VV)+1`; dia novo começa em `01`
+- **mesmo dia, mesmo PR, ainda não aplicada em ambiente compartilhado:** acrescente no arquivo do dia. Não abra `YYYYMMDD_02` para o segundo `ALTER` da manhã.
+- arquivo já no ledger (main, staging, prod) é imutável: aí sim `YYYYMMDD_(VV+1)`. Dia novo começa em `01`
 - forward-only; destrutiva não no mesmo deploy que remove o último leitor
 - ledger (`schema_migrations` ou a tabela da ferramenta) registra o filename; reaplicar é no-op
 - senha, token e segredo **não** moram no SQL; role recebe senha por env no runner
 - ferramenta (SQL cru, Alembic, Prisma) é **uma**; dois runners no mesmo schema é SSOT furado
+- volume baixo: um arquivo por dia de trabalho é o alvo; dezenas de arquivos no mesmo dia é achado
 
-**Teste:** `ls` nos diretórios de migration. Sem olhar o runner, a ordem de apply é óbvia?
+**Teste:** `ls` nos diretórios de migration. Sem olhar o runner, a ordem de apply é óbvia? Procedimento: skill `sql-migrations`.
 
 ### 3.3 Borda HTTP
 
@@ -277,7 +279,7 @@ Probes `/health` e `/ready` não entram em `/api/v1`. Webhook de provider entra 
 
 Frontend chama `/api/v1/...`. Proxy de dev **não** apaga o prefixo.
 
-**Teste:** OpenAPI da app — toda rota de negócio começa com `/api/v1`? Todo `import pydantic` está em `presentation/schemas/`?
+**Teste:** OpenAPI da app — toda rota de negócio começa com `/api/v1`? Todo `import pydantic` está em `presentation/schemas/`? Procedimento: skill `http-apis`. MCP: `mcp-servers`. Conector OAuth de host LLM: `oauth-connectors`.
 
 ---
 
