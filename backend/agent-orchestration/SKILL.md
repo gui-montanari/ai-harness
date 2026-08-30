@@ -5,7 +5,7 @@ description: >
   ConversationalSpec, GraphSpec, WorkflowSpec, conversational vs operational
   flow, conversational/engine, specs/<job>, graph.py, node.py, edge.py,
   config.py, prompts folder, prompts/guardrails.md, prompts/reflection.md, canonical copy vs
-  prompt, LLM protocol, provider, model, openai_chat_completions, ChatCompletionsLlm,
+  prompt, LLM protocol, provider, model, tencent, openai, deepseek,
   LLM-driven turn, specialist/sub-agent, agent config.py,
   LLM_API_KEY, LLM_BASE_URL, getenv, guards, guardrails, output guard,
   state guard, or reflection. Activating Make/LangGraph/in-process:
@@ -45,7 +45,7 @@ Mesmo commit. Ordem abaixo. Conferência vazia = não pronto.
 3. **Duas casas.** Semântica nos `.md`. Legal / recusa / recap no domínio. Schema/enum no domínio. `PromptCatalog` é porta; core não lê disco; versão no trace.
 4. **Guardas no caminho.** Estado (schema) + `inspect_outbound` / `approve_outbound` no texto **gerado**. Recusa canônica no domínio. Sem a chamada de saída, o agente não ativa.
 5. **Sensibilizar.** A jornada chama `active("guardrails")` e `active("reflection")`. Vazio = no-op. Ausente = não sobe. Reflection nunca substitui a saída; revisão **reentra** em `inspect_outbound`.
-6. **Config de LLM — protocolo, provider, modelo.** Três camadas distintas no `config.py` do spec, por node: `protocol` (envelope HTTP, ex. `openai_chat_completions`), `provider` (quem hospeda: `openai`, `deepseek`, `tencent`), `model_name` (id do deployment). Temperatura e max_tokens no mesmo config. Sem `getenv`, sem segredo. URL e chave injetadas no composition (`LLM_API_KEY` / `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` / `TENCENT_API_KEY` conforme o provider). O adapter implementa **um protocolo**; o catálogo de providers mapeia provider → protocolo + URL default. Trocar Tencent por DeepSeek nativo muda provider e chave, não o domínio. `complete()` vazio é falha, não fallback.
+6. **Config de LLM — protocolo, provider, modelo.** Três camadas. `protocol` é o **nome do dialeto** (`openai`, `tencent`, `deepseek`) — não um apelido genérico (`openai_chat_completions`) nem um `Callable`. Cada dialeto tem adapter próprio; Tencent não reusa a classe OpenAI. `provider` é quem hospeda (catálogo → URL default + protocolo esperado). `model_name` é o deployment. Protocolo incompatível com o provider **falha fechado**. Chave injetada no composition. `complete()` vazio é falha.
 7. **Runtime.** Um adapter (`orchestration-runtime`). Capabilities exigidas ⊂ oferecidas. Mesmo builder na API e no worker.
 8. **Testes de nascimento** (senão é teatro): catálogo falha sem cada slot; heading-only → `active` é `None`; bloqueia reivindicação e permite abertura canônica; recap intacto **e** montado das labels do spec; registro rejeita segundo agente no v1 e rejeita conversacional sem guarda de saída; engine não importa spec concreto nem copy canônica; composição: `execute_turn` chama a guarda no gerado; `config.py` existe no spec; adapter de LLM sem `getenv` e sem prefixo da marca.
 
@@ -167,13 +167,13 @@ Não coloque enum de categoria ou regra de confirmação no prompt. Política de
 
 Marca do produto no nome da variável (`ACME_LLM_TOKEN`) acopla o código ao tenant. Adapter que lê `os.environ` fura o composition root. `config.py` com a chave da API mistura segredo com política do node.
 
-| Camada | É | Não é |
-|--------|---|--------|
-| **Protocolo** | envelope HTTP (`openai_chat_completions`) | o vendor comercial |
-| **Provider** | quem hospeda (`openai`, `deepseek`, `tencent`) | o id do modelo |
-| **Modelo** | deployment (`deepseek-v4-flash-202605`, `gpt-4.1-mini`) | a URL |
+| Camada | Valor | Não é |
+|--------|-------|--------|
+| **Protocolo** | `openai` / `tencent` / `deepseek` (dialeto, um adapter cada) | `openai_chat_completions` genérico; `Callable`; classe OpenAI usada pela Tencent |
+| **Provider** | quem hospeda; catálogo aponta o protocolo **esperado** | o id do modelo |
+| **Modelo** | deployment nesse provider | a URL |
 
-O mesmo protocolo serve a vários providers (Tencent TokenHub e DeepSeek nativo falam Chat Completions). O adapter do protocolo não se chama `OpenAiLlm` se outros providers o usam — `ChatCompletionsLlm`.
+Hub agnóstico: o domain só vê `LlmPort.complete`. Trocar Tencent → DeepSeek nativo muda `protocol`+`provider`+chave no composition, não o use case. Envelope HTTP igual **hoje** não autoriza um protocolo só — se o dialeto divergir, muda um arquivo.
 
 | Casa | Mora | Não mora |
 |------|------|----------|
@@ -190,7 +190,7 @@ NODE_CONFIGS = {
         temperature=0.2, max_tokens=4096,
         model_name="deepseek-v4-flash-202605",
         provider="tencent",
-        protocol=LlmApiProtocol.OPENAI_CHAT_COMPLETIONS,
+        protocol=LlmApiProtocol.TENCENT,  # valor = nome do dialeto
     ),
 }
 ```
@@ -359,7 +359,9 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 - `guardrails.md` como única enforcement (sem `inspect_outbound`)
 - Prefixo da marca em variável de LLM (`*_LLM_URL`, `*_LLM_TOKEN`)
 - Adapter de LLM lendo `os.environ` / `getenv`
-- Provider misturado com protocolo (`OpenAiLlm` falando com Tencent)
+- Protocolo genérico (`openai_chat_completions`) para Tencent/DeepSeek
+- `OpenAiProtocolLlm` servindo provider `tencent` (dialetos colapsados)
+- Protocolo como `Callable` / função injetada no domínio
 - `api_key` ou URL no `config.py` do agente
 - Node LLM chamado `guardrails` no lugar de `inspect_outbound`
 - `complete()` devolvendo vazio quando falta URL (fallback silencioso)
