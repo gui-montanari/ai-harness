@@ -103,8 +103,8 @@ Obrigatório: `docs/security-audit/relatorio-auditoria-seguranca.pdf`.
 
 ```bash
 mkdir -p docs/security-audit
-cp <SKILL_DIR>/../shared/generate_report.py docs/security-audit/
-cp <SKILL_DIR>/../shared/requirements.txt docs/security-audit/
+cp <SKILL_DIR>/../../shared/generate_report.py docs/security-audit/
+cp <SKILL_DIR>/../../shared/requirements.txt docs/security-audit/
 ```
 
 `SKILL_DIR` é a pasta desta skill (onde está este `SKILL.md`). O gerador vive em `shared/` (SSOT das duas auditorias).

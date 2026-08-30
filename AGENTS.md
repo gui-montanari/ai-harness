@@ -173,7 +173,7 @@ Produto com API **e** UI — backend e frontend **não** ficam soltos na raiz. C
   .github/workflows/
 ```
 
-Frontend (quando existir UI) — skill `frontend-surfaces`. Chat — skill `frontend-chat`. Persistência — skill `persistence-ports`. Agentes — skill `agent-orchestration` (Make/LangGraph são adapters). Com dois consumidores reais, primitives vivem em `frontend/ui/` (tokens, i18n PT/EN, shells). Páginas e `lib/api.ts` ficam no app. `ui/` sem fetch e sem domínio. Identidade visual por tenant: `data-tenant` + `tenants/<id>.css`. Sem portal autenticado do colaborador no v1.
+Frontend (quando existir UI) — skills `frontend-surfaces`, `frontend-login`, `frontend-shell`, `frontend-chat`. Persistência — `persistence-ports`. Agentes — `agent-orchestration`. Desenho e gate — `architecture`. Com dois consumidores reais, primitives vivem em `frontend/ui/` (tokens, i18n PT/EN, shells). Páginas e `lib/api.ts` ficam no app. `ui/` sem fetch e sem domínio. Identidade visual por tenant: `data-tenant` + `tenants/<id>.css`. Sem portal autenticado do colaborador no v1.
 
 Repo só de API: `backend/` (ou `src/` hexagonal) sem inventar `frontend/` vazio. Repo só de UI: o inverso. **Misturar `services/` e `apps/` na raiz de um repo que tem os dois é achado.**
 
@@ -595,10 +595,13 @@ ler constituição → dimensões (§5)
         │
         ├─ make lint && make test
         │
+        ├─ /principles-audit e /security-audit
+        │     achado → corrigir no dono do fato → rodar de novo até **zero**
+        │
         └─ não abrir PR / não mergear / não documentar extra
 ```
 
-Não invente skill, pasta, ADR ou diagrama “para completar”. Skills de auditoria (`/principles-audit`, `/security-audit`) quando o humano pedir varredura — não a cada diff.
+Trabalho só está entregue com os dois audits em zero achados. “É frontend” não isenta. Skill `architecture` descreve o loop. Não invente pasta, ADR ou diagrama “para completar”.
 
 ---
 

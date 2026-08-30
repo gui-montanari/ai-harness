@@ -16,7 +16,7 @@ description: >
 
 # Auditoria de princípios (varredura completa)
 
-Audite o repositório **contra a constituição**. SSOT das regras: `AGENTS.md` do projeto; se não houver, o template desta coleção (`../AGENTS.md`). Este skill é o **procedimento**. Não reescreva os princípios aqui.
+Audite o repositório **contra a constituição**. SSOT das regras: `AGENTS.md` do projeto; se não houver, o template desta coleção (`../../AGENTS.md`). Este skill é o **procedimento**. Não reescreva os princípios aqui.
 
 Entregue achados verificados no código, inventário de cobertura, PDF em pt-BR e issues prontas.
 
@@ -81,7 +81,7 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 
 ## Passo 0 — Constituição e stack
 
-1. Leia `AGENTS.md` na raiz do projeto auditado. Se não existir, leia `<SKILL_DIR>/../AGENTS.md`.
+1. Leia `AGENTS.md` na raiz do projeto auditado. Se não existir, leia `<SKILL_DIR>/../../AGENTS.md`.
 2. Detecte: linguagem, framework, pastas de camada (`core`/`domain`, `application`, `infrastructure`/`adapters`, `presentation`/`api`, `tests`).
 3. Mapeie as 12 categorias para **esta** árvore (pastas, compose, workers, filas, políticas globais, nomes). Grave em `docs/principles-audit/stack.md`.
 4. Procedimento fino: [references/categories.md](references/categories.md).
@@ -89,7 +89,7 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 ## Passo 1 — Inventário (obrigatório)
 
 ```bash
-python3 <SKILL_DIR>/../shared/scan_inventory.py . > docs/principles-audit/inventory.json
+python3 <SKILL_DIR>/../../shared/scan_inventory.py . > docs/principles-audit/inventory.json
 ```
 
 O JSON lista todos os arquivos de código, camada inferida, linhas vs limite, funções/classes estouradas, imports de infra em `core`/`application`, clusters de duplicação textual, `deploy.signals` (restart, healthcheck, probes, API+worker no mesmo command) e `runtime_smells` (`time.sleep`, `requests`, `readFileSync`, `gather(*)`).
@@ -126,8 +126,8 @@ Obrigatório: `docs/principles-audit/relatorio-auditoria-principios.pdf`.
 
 ```bash
 mkdir -p docs/principles-audit
-cp <SKILL_DIR>/../shared/generate_report.py docs/principles-audit/
-cp <SKILL_DIR>/../shared/requirements.txt docs/principles-audit/
+cp <SKILL_DIR>/../../shared/generate_report.py docs/principles-audit/
+cp <SKILL_DIR>/../../shared/requirements.txt docs/principles-audit/
 cd docs/principles-audit
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt

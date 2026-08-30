@@ -2,56 +2,83 @@
 
 Coleção pública de [Agent Skills](https://agentskills.io).
 
-Cada skill é uma pasta com um `SKILL.md` (metadados + instruções) e, quando necessário, scripts e referências.
+Cada skill é uma pasta com `SKILL.md`. O `name` no YAML **é o nome da pasta da skill** (última segmento), não o agrupador `backend/` / `frontend/`.
 
-**Constituição:** [`AGENTS.md`](./AGENTS.md) — SSOT de princípios. Copie para a raiz do produto. Skills são o **como** (árvore, receita, red flags) e não reescrevem o princípio.
+**Constituição:** [`AGENTS.md`](./AGENTS.md) — SSOT de princípios. Skills são o **como**. Não reescrevem o princípio.
+
+## Árvore
+
+```
+architecture/              # desenho do sistema + gate de entrega
+backend/
+  auth/
+  http-apis/
+  mcp-servers/
+  oauth-connectors/        # ponte → auth
+  sql-migrations/
+  persistence-ports/
+  agent-orchestration/
+  langgraph-agents/        # ponte → agent-orchestration
+frontend/
+  frontend-surfaces/
+  frontend-login/
+  frontend-shell/
+  frontend-chat/
+quality/
+  principles-audit/
+  security-audit/
+shared/                    # scanner/PDF dos audits
+```
 
 ## Skills
 
-| Skill | Quando usar |
-|-------|-------------|
-| [`security-audit`](./security-audit/) | Auditoria: tenant, authz só no frontend, IDOR, segredos, XSS. `/security-audit` |
-| [`principles-audit`](./principles-audit/) | Varredura contra o `AGENTS.md` (hexagonal, TDD, `/api/v1`, migrations). `/principles-audit` |
-| [`http-apis`](./http-apis/) | REST `/api/v1`, schemas ≠ Command, OpenAPI. `/http-apis` |
-| [`mcp-servers`](./mcp-servers/) | Borda MCP para Grok/Cursor: tools = use cases, Streamable HTTP. `/mcp-servers` |
-| [`auth`](./auth/) | Login, JWT, M2M, sessão pública, webhook HMAC, OAuth de host MCP. Um principal, vários emissores. `/auth` |
-| [`oauth-connectors`](./oauth-connectors/) | Ponte: OAuth de host MCP vive em `auth`. |
-| [`sql-migrations`](./sql-migrations/) | `YYYYMMDD_VV`; no mesmo dia **acrescentar** no arquivo, não multiplicar. `/sql-migrations` |
-| [`agent-orchestration`](./agent-orchestration/) | Agente de produto: spec neutro, Make/LangGraph só adapter, um agente no v1. `/agent-orchestration` |
-| [`langgraph-agents`](./langgraph-agents/) | Ponte: LangGraph é adapter. Use `agent-orchestration`. |
-| [`persistence-ports`](./persistence-ports/) | DB/Redis/blob só via porto; RLS; grafo e rota sem driver. `/persistence-ports` |
-| [`frontend-surfaces`](./frontend-surfaces/) | React, `ui/`, i18n PT/EN, tokens por tenant, home pública com seções. `/frontend-surfaces` |
-| [`frontend-chat`](./frontend-chat/) | Thread de produto: bolha, composer, thinking; sem SSE/HITL no primitivo. `/frontend-chat` |
+### Arquitetura e qualidade
+
+| Skill | Quando |
+|-------|--------|
+| [`architecture`](./architecture/) | Desenhar limites, ADRs, onde mora cada capacidade. Gate: audits até zero. `/architecture` |
+| [`principles-audit`](./quality/principles-audit/) | Varredura hexagonal / TDD / `/api/v1`. `/principles-audit` |
+| [`security-audit`](./quality/security-audit/) | Tenant, IDOR, XSS, segredos. `/security-audit` |
+
+### Backend
+
+| Skill | Quando |
+|-------|--------|
+| [`http-apis`](./backend/http-apis/) | REST `/api/v1`, schemas ≠ Command. `/http-apis` |
+| [`auth`](./backend/auth/) | JWT, M2M, sessão, webhook HMAC, OAuth MCP. `/auth` |
+| [`mcp-servers`](./backend/mcp-servers/) | Borda MCP: tools = use cases. `/mcp-servers` |
+| [`sql-migrations`](./backend/sql-migrations/) | `YYYYMMDD_VV`; no mesmo dia acrescentar no arquivo. `/sql-migrations` |
+| [`persistence-ports`](./backend/persistence-ports/) | DB só via porto; RLS. `/persistence-ports` |
+| [`agent-orchestration`](./backend/agent-orchestration/) | Spec neutro; Make/LangGraph são adapters. `/agent-orchestration` |
+
+### Frontend
+
+| Skill | Quando |
+|-------|--------|
+| [`frontend-surfaces`](./frontend/frontend-surfaces/) | Tokens, home pública, i18n, `ui/`. `/frontend-surfaces` |
+| [`frontend-login`](./frontend/frontend-login/) | Página e campos de acesso. `/frontend-login` |
+| [`frontend-shell`](./frontend/frontend-shell/) | Sidebar esquerda, nav, dropdown do usuário. `/frontend-shell` |
+| [`frontend-chat`](./frontend/frontend-chat/) | Thread: bolha, composer, thinking. `/frontend-chat` |
 
 ## Como usar
-
-Clone o repositório e aponte **todas** as skills para o runtime do agente (symlink):
 
 ```bash
 git clone https://github.com/gui-montanari/skills.git
 cd skills
 mkdir -p ~/.agents/skills ~/.grok/skills
-for s in security-audit principles-audit http-apis mcp-servers auth oauth-connectors \
-         sql-migrations agent-orchestration langgraph-agents persistence-ports \
-         frontend-surfaces frontend-chat; do
-  ln -sfn "$(pwd)/$s" ~/.agents/skills/$s
-  ln -sfn "$(pwd)/$s" ~/.grok/skills/$s
+find architecture backend frontend quality -name SKILL.md | while read -r f; do
+  d=$(dirname "$f")
+  name=$(basename "$d")
+  ln -sfn "$(pwd)/$d" ~/.agents/skills/"$name"
+  ln -sfn "$(pwd)/$d" ~/.grok/skills/"$name"
 done
 ```
 
-Copie `AGENTS.md` para a raiz de cada produto novo (ou estenda o local, sem enfraquecer). No chat: `/http-apis`, `/langgraph-agents`, `/sql-migrations`, …
+Copie `AGENTS.md` para a raiz de cada produto. Depois de implementar: `/principles-audit` e `/security-audit` até **zero** achados (`architecture`).
 
 ## Convenção
 
-```
-AGENTS.md                 # constituição (copie para o produto)
-shared/                   # gerador de PDF + scanner (SSOT)
-<nome-da-skill>/
-  SKILL.md
-  references/
-```
-
-`name` no frontmatter YAML deve coincidir com o nome da pasta.
+`name` no frontmatter = nome da pasta da skill. Agrupadores `backend/` e `frontend/` não entram no `name`.
 
 ## Licença
 

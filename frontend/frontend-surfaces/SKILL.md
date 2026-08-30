@@ -12,7 +12,7 @@ description: >
 
 SSOT das regras: constituição `AGENTS.md` §3. Este skill é o **lugar** dos arquivos. Não copie HTML, CSS, rotas, auth ou domínio de outro produto.
 
-Gramática visual e tokens: `references/design-system.md`. Thread de chat: skill `frontend-chat`.
+Gramática visual e tokens: `references/design-system.md`. Login: `frontend-login`. Área logada: `frontend-shell`. Chat: `frontend-chat`.
 
 ## Árvore canônica
 
