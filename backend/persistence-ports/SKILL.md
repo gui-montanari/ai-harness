@@ -31,7 +31,7 @@ Dois bounded contexts = dois schemas/roles. Mesmo cluster Postgres **não** auto
 - Tenant: sessão já nasce no tenant (`SET` / RLS `FORCE`). Esquecer `WHERE tenant_id` não pode vazar — o backstop é RLS + teste negativo.
 - Role de app: sem `BYPASSRLS`, sem owner.
 - Grafo / tool / MCP: recebem o porto já autenticado no tenant. Nunca `get_engine()`.
-- Redis, blob, fila: a mesma ideia — porto pequeno, adapter, secret fora.
+- Blob: a mesma ideia — porto pequeno, adapter, secret fora. Fila/eventos: `reliable-messaging`. Cache: `cache-ports`.
 - Trocar SGBD sem tocar `core/`/`application/`: skill `sql-dialects`.
 
 ## Red flags

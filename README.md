@@ -19,6 +19,7 @@ backend/
   persistence-ports/
   sql-dialects/
   reliable-messaging/
+  cache-ports/
   background-workers/
   agent-orchestration/
   langgraph-agents/        # ponte → agent-orchestration
@@ -55,7 +56,8 @@ shared/                    # scanner/PDF dos audits
 | [`sql-migrations`](./backend/sql-migrations/) | `YYYYMMDD_VV`; no mesmo dia acrescentar no arquivo. `/sql-migrations` |
 | [`persistence-ports`](./backend/persistence-ports/) | DB só via porto; RLS. `/persistence-ports` |
 | [`sql-dialects`](./backend/sql-dialects/) | Postgres/SQL Server pela DSN; tipos portáteis. `/sql-dialects` |
-| [`reliable-messaging`](./backend/reliable-messaging/) | Outbox, inbox, envelope, at-least-once. `/reliable-messaging` |
+| [`reliable-messaging`](./backend/reliable-messaging/) | Outbox; RabbitMQ / Redis Streams / Service Bus. `/reliable-messaging` |
+| [`cache-ports`](./backend/cache-ports/) | Cache derivado; Redis por porta; TTL. `/cache-ports` |
 | [`background-workers`](./backend/background-workers/) | API ≠ worker; drain; job single-flight. `/background-workers` |
 | [`agent-orchestration`](./backend/agent-orchestration/) | Spec neutro; Make/LangGraph são adapters. `/agent-orchestration` |
 | [`ops-backoffice`](./backend/ops-backoffice/) | Fila, atribuição, SLA, protocolo. `/ops-backoffice` |

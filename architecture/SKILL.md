@@ -33,6 +33,7 @@ Vista mental (indústria, sem diagrama obrigatório): contexto → limites (cont
 | Agente / Make / LangGraph | `agent-orchestration` |
 | Persistência | `persistence-ports` + `sql-migrations` + `sql-dialects` |
 | Eventos / outbox | `reliable-messaging` |
+| Cache | `cache-ports` |
 | Worker / job | `background-workers` |
 | Área pública / tema / i18n / viewport | `frontend-surfaces` |
 | Login | `frontend-login` |
