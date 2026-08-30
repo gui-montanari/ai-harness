@@ -12,6 +12,7 @@ Cada skill é uma pasta com um `SKILL.md` (metadados + instruções) e, quando n
 |-------|-------------|
 | [`security-audit`](./security-audit/) | Auditoria de segurança em cinco categorias (isolamento de tenant, autorização só no frontend, IDOR, segredos hardcoded, XSS), com relatório PDF em pt-BR e issues prontas para o GitHub. Comando: `/security-audit` |
 | [`principles-audit`](./principles-audit/) | Varredura contra o `AGENTS.md`: hexagonal, TDD, runtime, schema HTTP ≠ Command ≠ entity ≠ record, `backend/`/`frontend/`, `/api/v1`, migrations `YYYYMMDD_VV`. Comando: `/principles-audit` |
+| [`frontend-surfaces`](./frontend-surfaces/) | Organização de React: `ui/` compartilhado, pages, i18n PT/EN, tokens por tenant, shells público vs autenticado. Comando: `/frontend-surfaces` |
 
 ## Como usar
 
