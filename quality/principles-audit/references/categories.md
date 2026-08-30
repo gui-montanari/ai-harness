@@ -97,6 +97,8 @@ Olhe `tests/` vs `src/`. Liste use cases/handlers **sem** par de teste. Cada um 
 - Microserviço extra no compose sem bounded context real
 - Flag “para o futuro”
 - `dict[str, Any]` / `any` atravessando o domínio (KISS + solidez)
+- Pasta `specialists/` vazia ou `prompts/` na raiz do serviço de agentes (o job mora em `specs/<job>/`; o motor em `conversational/` recebe o spec)
+- Engine conversacional importando um spec concreto, `canonical_texts`, ou labels de recap cravados no motor
 
 Não acuse de YAGNI um porto com um adaptador real + um fake de teste: isso é hexagonal.
 

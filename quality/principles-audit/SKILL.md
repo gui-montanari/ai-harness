@@ -86,6 +86,8 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 | “O adapter lê os.environ, é infra” | Infra ainda recebe valor injetado. `getenv` só em composition/settings/entrypoint/migrate. |
 | “É um tenant só, pode cravar no default” | Literal de produto no worker. `TENANT_ID` na borda ou `tenant_id` da mensagem. |
 | “É só o título do FastAPI / CORS de localhost” | Config operacional. `APP_TITLE` / `CORS_ORIGINS`. |
+| “prompts na raiz, depois a gente fatia” | Motor em `conversational/` + um spec por pasta. Sem isso o segundo job copia o primeiro. |
+| “specialists/ vazio para nascer multi-agent” | YAGNI. O segundo spec é pasta nova + ADR. Skill `agent-orchestration`. |
 
 ## Passo 0 — Constituição e stack
 

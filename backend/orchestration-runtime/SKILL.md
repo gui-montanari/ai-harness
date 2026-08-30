@@ -19,7 +19,7 @@ Três coisas distintas — não misture:
 
 | Peça | É | Não é |
 |------|---|--------|
-| Spec do agente | `GraphSpec` / `WorkflowSpec` | SDK |
+| Spec do agente | `ConversationalSpec` / `GraphSpec` / `WorkflowSpec` (`agent-orchestration`) | SDK |
 | Runtime de orquestração | executa turno / pausa / retoma | o worker do SO |
 | Processo | API ou worker (`background-workers`) | o grafo |
 
@@ -73,7 +73,7 @@ LLM é `LlmPort` (gerar texto / structured). O runtime **chama** a porta nos **t
 
 ## Adapters (quando escolhidos)
 
-**In-process:** o use case de turno **é** o motor. Sem pasta `adapters/langgraph`. Sem `StateGraph`. Persistência e HITL já no domínio. Ativação = registrar o use case no composition root + capabilities que ele de fato oferece (HITL sim, tool calling do modelo talvez não).
+**In-process:** o use case de turno chama o `ConversationalEngine` com o spec registrado (`agent-orchestration`). Sem pasta `adapters/langgraph`. Sem `StateGraph`. Persistência e HITL já no domínio. Ativação = registrar o use case no composition root + capabilities que ele de fato oferece (HITL sim, tool calling do modelo talvez não).
 
 **Make.com:** só depois da capability matrix. Cenário no adapter; regra canônica no serviço. Callback autenticado, idempotente, correlacionado. Make não escolhe tenant nem guarda saída.
 

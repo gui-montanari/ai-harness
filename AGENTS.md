@@ -211,10 +211,14 @@ Proibido no mesmo idioma: `getOrder` em Python, `get_order` em TS, `HTTPClient` 
 | Caso de uso | `application/` | `CreateOrder`, `ChargeOrder` | um verbo, um motivo. Sem dataclass/Command neste arquivo |
 | Command / Result do caso de uso | `application/commands/` | `CreateOrderCommand`, `TurnResult` | entrada/saída tipada, sem `execute`. Não é schema HTTP |
 | Adapter | `infrastructure/adapters/` | `PostgresOrderRepository`, `MemoryOrderRepository` | implementação do porto. Nunca em `application/` |
+| Motor conversacional | `conversational/` | `ConversationalEngine` | interpreta spec; não conhece o job nem copy canônica |
+| Spec de agente | `specs/<job>/` | pasta = um job | fases, prompts, config LLM, labels de recap. Skill `agent-orchestration` |
 
 Um `Order` que é entidade **e** tabela SQLAlchemy **e** payload FastAPI é violação de SRP e de hexagonal. O mapper vive no adapter (mecânico; DRY não exige “utils”).
 
 `http.py` com `BaseModel` **e** `@router.post` é o mesmo cheiro: dois motivos para mudar. Schema de borda na pasta `presentation/schemas/`; Command/Result em `application/commands/`; função em `application/`; endpoint em `http/v1/`. O arquivo da função **não declara tipo**.
+
+Agente conversacional: motor em `conversational/`; job em `specs/<job>/` (prompts+config+register). Prompts na raiz do serviço ou pasta `specialists/` vazia são o mesmo cheiro de `models/` god-file: o segundo job copia o primeiro. HOW: skill `agent-orchestration`.
 
 Não crie pastas MVC `models/` + `schemas/` + `services/` no bounded context. `models` vira ORM, `services` vira lixeira, `schemas` mistura HTTP com Command. O mapa é:
 

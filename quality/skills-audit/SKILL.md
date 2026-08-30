@@ -113,7 +113,7 @@ Cada par tem de dizer, dos dois lados, o que **não** é desta skill. Ausência 
 | `mcp-servers` | `mcp-tools` | processo/transporte ≠ o que entra em `tools/list` |
 | `mcp-tools` | `agent-orchestration` | publicação MCP ≠ `tools/` interno do grafo |
 | `auth` | `oauth-connectors` | um catálogo; ponte só dispara OAuth de host |
-| `agent-orchestration` | `orchestration-runtime` | spec/guardas ≠ ativação do motor |
+| `agent-orchestration` | `orchestration-runtime` | ConversationalEngine + specs/<job> ≠ adapter de processo |
 | `orchestration-runtime` | `background-workers` | execute_turn ≠ supervisor de processo |
 | `orchestration-runtime` | `langgraph-agents` | porta/capabilities ≠ StateGraph no adapter |
 | `cicd` | `sql-migrations` | job de CI ≠ regra de filename |
