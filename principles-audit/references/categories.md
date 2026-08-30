@@ -49,6 +49,7 @@ Achado quando:
 - não há composition root: concretos espalhados
 - nomes do provedor (Stripe Invoice, WMS EmpresaId) no domínio
 - `BaseModel` / Pydantic no use case, no domínio ou no mesmo arquivo que o `APIRouter`
+- `*Command` / `*Result` / `@dataclass` no mesmo arquivo que o `execute` do caso de uso
 - código de API e de UI misturados na raiz (`services/` + `apps/` sem `backend/` e `frontend/`)
 - rota de negócio fora de `/api/v1`
 

@@ -203,12 +203,13 @@ Proibido no mesmo idioma: `getOrder` em Python, `get_order` em TS, `HTTPClient` 
 | Endpoint HTTP | `presentation/http/v1/` | `orders.py` no router `/api/v1` | transporte. Sem BaseModel neste arquivo |
 | Record de persistência | `infrastructure/adapters/` | `OrderRecord` / `OrderRow` | mapeia tabela. ORM **aqui** |
 | Porto | `core/ports/` | `OrderRepository`, `Clock`, `HttpClient` | interface |
-| Caso de uso | `application/` | `CreateOrder`, `ChargeOrder` | um verbo, um motivo |
+| Caso de uso | `application/` | `CreateOrder`, `ChargeOrder` | um verbo, um motivo. Sem dataclass/Command neste arquivo |
+| Command / Result do caso de uso | `application/schemas/` | `CreateOrderCommand`, `TurnResult` | entrada/saída tipada, sem `execute` |
 | Adapter | `infrastructure/adapters/` | `PostgresOrderRepository`, `StripeGateway` | implementação do porto |
 
 Um `Order` que é entidade **e** tabela SQLAlchemy **e** payload FastAPI é violação de SRP e de hexagonal. O mapper vive no adapter (mecânico; DRY não exige “utils”).
 
-`http.py` com `BaseModel` **e** `@router.post` é o mesmo cheiro: dois motivos para mudar. Schema na pasta `schemas/`; função de caso de uso em `application/`; endpoint em `http/v1/`.
+`http.py` com `BaseModel` **e** `@router.post` é o mesmo cheiro: dois motivos para mudar. Schema de borda na pasta `presentation/schemas/`; Command/Result em `application/schemas/`; função em `application/`; endpoint em `http/v1/`. O arquivo da função **não declara tipo**.
 
 Use case **não** se chama `OrderService`. Handler **não** se chama `order_utils`. Pasta **não** mistura `models.py` god-file com entidade + schema + row.
 
@@ -255,7 +256,8 @@ Rotas de produto (não probes) vivem sob `/api/v1`. `/health` e `/ready` ficam n
 |-------|--------|------------|
 | `presentation/schemas/` | `BaseModel` / Zod de request e response | regra, SQL, `APIRouter` |
 | `presentation/http/v1/` | endpoints versionados | `BaseModel`, regra de domínio |
-| `application/` | um verbo por caso de uso | Pydantic, FastAPI |
+| `application/` | um verbo por caso de uso | Pydantic, FastAPI, `@dataclass` de Command/Result |
+| `application/schemas/` | Command e Result | `execute`, regra |
 
 Probes `/health` e `/ready` não entram em `/api/v1`. Webhook de provider entra em `/api/v1/webhooks/<adapter>` e autentica **antes** de normalizar.
 
@@ -613,6 +615,7 @@ Não invente skill, pasta, ADR ou diagrama “para completar”. Skills de audit
 - Entidade de domínio = modelo ORM = schema FastAPI/Zod no mesmo tipo
 - `models.py` god-file; segundo bounded context com pastas diferentes sem plano
 - Pydantic/`BaseModel` no mesmo arquivo que o endpoint, no use case ou no domínio
+- `*Command` / `*Result` / `@dataclass` no mesmo arquivo que `execute`
 - `services/` e `apps/` soltos na raiz de um repo que tem API e UI; falta `backend/` e `frontend/`
 - rota de negócio sem `/api/v1`
 - `001_init.sql`, dump em `docker-entrypoint-initdb.d`, ou `psql < dump.sql` no Makefile

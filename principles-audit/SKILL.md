@@ -70,6 +70,7 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 | “Pydantic no domínio é mais rápido” | Schema de borda ≠ entidade. ORM ≠ domínio. §3.1. |
 | “Neste módulo a gente usa camelCase em Python” | O repo tem um case. Indústria da linguagem. |
 | “Pydantic no http.py é só o request” | Schema e endpoint são dois motivos. `presentation/schemas/` + `http/v1/`. |
+| “Command no mesmo arquivo do execute é mais claro” | Tipo e função são dois motivos. `application/schemas/` + `application/`. |
 | “services/ na raiz é o padrão do monorepo” | Com UI no mesmo repo: `backend/` e `frontend/`. Constituição §3. |
 | “O init.sql do compose é só para o primeiro boot” | É segundo dono do schema. Migration versionada + runner. Constituição §3.2. |
 | “Alembic já ordena pelos revision ids” | O filename no git ainda precisa `YYYYMMDD_VV`. Ordem visível sem a ferramenta. |
