@@ -28,7 +28,8 @@ backend/
   orchestration-runtime/
   langgraph-agents/        # ponte → orchestration-runtime
   ops-backoffice/
-  channel-evolution/
+  whatsapp-channel/
+  channel-evolution/       # ponte → whatsapp-channel
 frontend/
   frontend-surfaces/
   frontend-login/
@@ -74,7 +75,7 @@ shared/                    # scanner/PDF dos audits
 | [`agent-orchestration`](./backend/agent-orchestration/) | Motor conversacional + specs/<job>, guardas. `/agent-orchestration` |
 | [`orchestration-runtime`](./backend/orchestration-runtime/) | Ativar o runtime de processo: in-process / Make / LangGraph. `/orchestration-runtime` |
 | [`ops-backoffice`](./backend/ops-backoffice/) | Fila, atribuição, SLA, protocolo. `/ops-backoffice` |
-| [`channel-evolution`](./backend/channel-evolution/) | Evolution: webhook, sendText, porta de canal. `/channel-evolution` |
+| [`whatsapp-channel`](./backend/whatsapp-channel/) | WhatsApp: porta de canal; Evolution e Twilio são adapters. `/whatsapp-channel` |
 
 ### Frontend
 

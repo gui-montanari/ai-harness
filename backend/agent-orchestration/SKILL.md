@@ -128,7 +128,7 @@ v1 registra exatamente um. A árvore já admite o segundo; o registro é que tra
 
 LangGraph **agora** para “depois trocar por Make” = dois adapters descartáveis. Escolha **um** (`orchestration-runtime`) e compile o spec nele. In-process já orquestra o grafo de coleta. LangGraph entra quando a ADR o escolhe como **o** runtime — não como ensaio.
 
-Canal de entrada **não** mora no serviço de agentes. Twilio, Evolution e qualquer outro webhook vivem em `messaging-gateway/infrastructure/adapters/<canal>/`, normalizam para o vocabulário neutro e **não** vazam `remoteJid` / `MessageSid` para casos. Evolution **não** substitui o provider oficial de template/janela; é adapter de envelope, não o canal de produção do requisito.
+Canal de entrada **não** mora no serviço de agentes. WhatsApp: skill `whatsapp-channel`. Twilio, Evolution e qualquer outro webhook vivem em `messaging-gateway/infrastructure/adapters/<provider>/`, mesma porta, vocabulário neutro.
 
 Cópia canônica (`canonical_texts` ou equivalente no domínio) **é** necessária: abertura legal, recusa da guarda, hold humano, enum de categoria. Não é obsoleto. Obsoleto é constante sem leitor (apaga).
 
