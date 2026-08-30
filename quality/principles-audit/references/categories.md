@@ -99,6 +99,8 @@ Olhe `tests/` vs `src/`. Liste use cases/handlers **sem** par de teste. Cada um 
 - `dict[str, Any]` / `any` atravessando o domínio (KISS + solidez)
 - Pasta `specialists/` vazia ou `prompts/` na raiz do serviço de agentes (o job mora em `specs/<job>/`; o motor em `conversational/` recebe o spec)
 - Engine conversacional importando um spec concreto, `canonical_texts`, ou labels de recap cravados no motor
+- `node.py` / `edge.py` / `graph.py` / adapter stub / porta de fala / `presentation/` sem caminho de execução
+- Segundo runtime ou canal não oficial “para depois trocar” (LangGraph→Make, Evolution→provider oficial)
 
 Não acuse de YAGNI um porto com um adaptador real + um fake de teste: isso é hexagonal.
 

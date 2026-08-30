@@ -37,7 +37,9 @@ Se o runtime **ainda não** está no ADR/`AGENTS.md`:
 
 Implemente **um**. Segundo runtime só com capability **obrigatória** ausente no primeiro + ADR. Airflow, Celery beat ou “composite” extra não nascem para ter simetria de pasta.
 
-In-process **é** runtime. Roteiro determinístico com guardas, HITL e persistência no banco do serviço já cumpre o primeiro lançamento. Não puxe LangGraph para “completar a arquitetura”.
+LangGraph **agora** para “depois trocar por Make” é o mesmo defeito: dois adapters, um deles lixo. Se a ADR escolher LangGraph, ele **é** o runtime. Se escolher Make, compile o spec no adapter Make. In-process **é** runtime: o `ConversationalEngine` já percorre o grafo do spec (passos = nodes, `next_step` = edges). Não puxe LangGraph para “completar a arquitetura” nem crie `node.py`/`edge.py` vazios.
+
+In-process já cumpre o primeiro lançamento com guardas, HITL e persistência no banco do serviço.
 
 ## Ativação (indústria)
 
@@ -88,7 +90,8 @@ O runtime de orquestração **não** é o supervisor de filas. Consumidor, drain
 ## Red flags
 
 - SDK de orquestração no use case ou no domínio
-- Segundo motor “para ter LangGraph e Make”
+- Segundo motor “para ter LangGraph e Make” / LangGraph como ensaio do Make
+- `node.py` / `edge.py` / `graph.py` vazios no in-process (o spec já é o grafo; HOW: `agent-orchestration`)
 - Capabilities declaradas e não verificadas no startup
 - Checkpointer do provider como única cópia do estado
 - LLM contornando guarda de estado ou de saída
