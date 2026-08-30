@@ -33,6 +33,8 @@ JSON, um evento por linha. Nível explícito. Mensagem **sem** relato, telefone,
 
 Filtro de redação no handler de logging (bearer, JWT-like, `password=`). Filtro é defesa extra — o código **não** loga o campo.
 
+No monorepo, redação e formatter JSON vivem em `packages/platform/logs/` (`redact` ≠ `json`). Não um `logs.py` na raiz do pacote.
+
 Proibido: `logger.info(request.body)`, `print(token)`, exception com query string de segredo.
 
 ## Métricas e traces

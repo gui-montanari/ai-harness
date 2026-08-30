@@ -68,7 +68,7 @@ Fila extra: `runtime_smells` com esses kinds. Composition (`di/`, `settings`, `a
 
 **Protegido (ponto forte):** import-linter / dependency-cruiser no CI; porto em `core/ports`; adaptador em `infrastructure`; teste de contrato do adaptador.
 
-Pacote de plataforma (`packages/platform` / `backend/packages/platform`): só mecânica. Achado hexagonal quando o pacote contém `INSERT INTO <bc>.…`, fábrica `*.created` / `message.received` com producer de um serviço, ou SDK de Redis/Rabbit **fora** da pasta `cache/` / `events/` do adapter. Inbox SQL → BC dono da tabela. Fábrica do fato → serviço produtor.
+Pacote de plataforma (`packages/platform` / `backend/packages/platform`): só mecânica. **Uma pasta por capacidade** (`cache/`, `events/`, `inbox/`, `postgres/`, `logs/`). Achado SRP se existir `.py` na raiz além de `__init__.py`. Achado hexagonal quando o pacote contém `INSERT INTO <bc>.…`, fábrica `*.created` / `message.received` com producer de um serviço, ou SDK de Redis/Rabbit **fora** da pasta do adapter. Inbox SQL → BC dono da tabela. Fábrica do fato → serviço produtor.
 
 ## 5. TDD
 

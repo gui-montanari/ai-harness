@@ -23,6 +23,7 @@ O banco é um **adapter**. Grafo LangGraph, rota HTTP e MCP **não** importam o 
 | Migration | skill `sql-migrations` |
 | Dialeto (Postgres ↔ SQL Server) | skill `sql-dialects` — a DSN escolhe o engine |
 | Conexão, pool, RLS | composition root + sessão da request/worker |
+| Pool + `SET` tenant reutilizável | `packages/platform/postgres/` (pasta; não `postgres.py` na raiz) |
 
 Dois bounded contexts = dois schemas/roles. Mesmo cluster Postgres **não** autoriza JOIN cross-service. Processo composto (vários módulos no mesmo artefato) **não** unifica schema: cada porta usa o pool da role do dono (`AGENTS_DATABASE_URL` → `agents.*`).
 

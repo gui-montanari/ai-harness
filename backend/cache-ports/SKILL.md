@@ -42,7 +42,7 @@ TTL **obrigatório**. Sem TTL = cresce até matar o Redis. Invalidação no mesm
 - **URL obrigatória**, injetada: `RedisCache(url, timeout=…)`. Adapter **recusa vazio** no construtor. `getenv` só na composition (`REDIS_URL`). Host `127.0.0.1` ≠ DNS do compose (`redis`); o yaml do container **não** reusa o URL do `.env` do host.
 - Cliente **async**, pool com teto, timeout, retry só em timeout/conexão (política global).
 - Factory no composition root. API e worker **herdam** o mesmo client (ou o mesmo builder).
-- No monorepo: porto + Memory + Redis em `packages/platform/cache/` (ou `backend/packages/platform/…`). Use case não importa `redis`.
+- No monorepo: porto + Memory + Redis em `packages/platform/cache/` (pasta da capacidade; nada na raiz). Use case não importa `redis`.
 - Standalone vs cluster pela config — não os dois no código do use case.
 - Prefixo de ambiente na chave (`env:`) para não colidir dev/prod no mesmo cluster.
 - Não use `KEYS *`. `SCAN` ou chave conhecida.

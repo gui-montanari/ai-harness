@@ -23,7 +23,18 @@ description: >
 
 Vista mental (indústria, sem diagrama obrigatório): contexto → limites (containers) → módulos (hexagonais) → adapters. Não comece pelo controller nem pela tela.
 
-Pacote `packages/platform` (no monorepo com UI: `backend/packages/platform`): mecânica **sem domínio**. Porto + Memory fake + adapter do provider. Árvore por capacidade (`cache/`, `events/`, `inbox/`). **Não** mora aí: `INSERT INTO <bc>.…`, fábrica de evento de um produtor (`order.created`, `message.received`), SQL de inbox do dono da tabela. Adapter Postgres da inbox fica no bounded context que **possui** a tabela. Fábrica do fato fica no serviço produtor. Contrato do tipo de evento, se compartilhado, fica em `packages/contracts`.
+Pacote `packages/platform` (no monorepo com UI: `backend/packages/platform`): mecânica **sem domínio**. Porto + Memory fake + adapter do provider. **SRP: uma pasta por capacidade**, nunca `.py` solto na raiz (só `__init__.py`):
+
+```
+platform/
+  cache/      port, memory, redis
+  events/     port, envelope, memory, rabbit|streams, retry
+  inbox/      port, memory
+  postgres/   connection (pool + SET tenant)
+  logs/       redact, json
+```
+
+**Não** mora aí: `INSERT INTO <bc>.…`, fábrica de evento de um produtor (`order.created`, `message.received`), SQL de inbox do dono da tabela. Adapter Postgres da inbox fica no bounded context que **possui** a tabela. Fábrica do fato fica no serviço produtor. Contrato do tipo de evento, se compartilhado, fica em `packages/contracts`. Arquivo na raiz do pacote = achado de SRP.
 
 ## Onde mora cada coisa
 
@@ -72,6 +83,7 @@ Sem `|| true`, sem achar ignorado por nome. Exceção só por ADR com prazo.
 - Porta/stub/`node.py` sem caminho de execução
 - Pular o loop de auditoria
 - SQL ou evento de um bounded context no pacote de plataforma
+- `logs.py` / `postgres.py` / `ports.py` na raiz do pacote de plataforma (a capacidade é pasta)
 - `reject(requeue=True)` como se incrementasse `x-death` (não incrementa; teto de retry nunca dispara)
 
 ## Conferência
@@ -80,7 +92,7 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
 - [ ] Invariante e dono do dado escritos
 - [ ] Camada certa; porto pequeno; composition root único
-- [ ] Pacote de plataforma sem SQL nem fábrica de evento de bounded context
+- [ ] Pacote de plataforma: pasta por capacidade; raiz só `__init__.py`; sem SQL/fábrica de BC
 - [ ] Skill do recorte lida e conferência dela marcada
 - [ ] Sem microsserviço/segundo agente sem o critério da constituição
 - [ ] `/principles-audit` e `/security-audit` em zero achados

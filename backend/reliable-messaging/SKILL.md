@@ -52,7 +52,7 @@ Envelope versionado: `event_id`, `event_type`, `event_version`, `occurred_at` UT
 
 Inbox: o **porto** (`remember`) pode viver na plataforma. O adapter SQL da inbox mora no bounded context **dono da tabela**. Pacote de plataforma **não** faz `INSERT INTO agents.inbox` (nem o schema de outro BC).
 
-Fábrica do fato (`order.created`, `message.received`, producer default) mora no **serviço produtor**. Envelope genérico (campos, bloqueio de PII) mora na plataforma. Nome estável do tipo, se compartilhado, em `packages/contracts`.
+Fábrica do fato (`order.created`, `message.received`, producer default) mora no **serviço produtor**. Envelope genérico (campos, bloqueio de PII) mora em `packages/platform/events/`. Inbox Memory+porto em `platform/inbox/`. Nome estável do tipo, se compartilhado, em `packages/contracts`. Nenhum `.py` de capacidade na raiz do pacote.
 
 ## Porto
 
@@ -106,6 +106,7 @@ I/O **async**. Segredo na URL/connection string: env, não git. Startup falha se
 - Evento com PII; `subject_id` = pessoa
 - Exchange/queue não durable; prefetch ilimitado
 - SQL de inbox / fábrica de evento de BC no pacote de plataforma
+- `envelope.py` / `ports.py` / `inbox.py` na raiz do platform (a capacidade é pasta)
 - Retry por `requeue=True` confiando em `x-death` (teto nunca dispara; sem jitter vira tempestade)
 
 ## Conferência

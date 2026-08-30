@@ -93,6 +93,7 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 | “LangGraph agora, Make depois” | Um runtime. Throwaway não é stepping stone. Skill `orchestration-runtime`. |
 | “Evolution agora, Twilio depois” | Canal não oficial não substitui o provider do requisito. Fake/sandbox na mesma porta. |
 | “stub de fala / presentation sem consumidor, a gente liga depois” | Código morto. Se não corre, não entra. |
+| “logs.py e postgres.py na raiz do platform, é pouco arquivo” | SRP: uma pasta por capacidade. Raiz do pacote só `__init__.py`. |
 | “platform faz INSERT na tabela do serviço, é infra” | Adapter SQL da inbox é do BC dono da tabela. Platform sem schema de BC. |
 | “requeue=True incrementa x-death, o teto vale” | Não incrementa. Header de retry ou fila de atraso; no teto nack → DLQ. |
 | “fábrica do evento no envelope genérico é SSOT” | Envelope genérico ≠ fato do produtor. A fábrica mora no serviço que publica. |
