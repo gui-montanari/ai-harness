@@ -59,3 +59,13 @@ Reset de senha e “conta criada” reutilizam o **mesmo** layout e os mesmos to
 - Login e home compartilhando cookie
 - `fetch` dentro de `ui/`
 - Mensagem “email não cadastrado”
+
+## Conferência
+
+Antes de declarar pronto, copie e marque. Caixa vazia = falta.
+
+- [ ] Duas colunas `0.85fr / 1.15fr`; &lt;900px uma coluna
+- [ ] Label acima; input min-height 48; um anel de foco `--action`
+- [ ] Erro de credencial `role="alert"` uniforme; esqueci a senha antes do submit
+- [ ] Seta `→` no CTA; i18n PT/EN; tema herdado do header
+- [ ] Cookie interno não atravessa a home; `fetch` só em `lib/api.ts`

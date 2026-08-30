@@ -50,3 +50,13 @@ O relay **não** contém regra. Make.com / worker genérico não é o dono do fa
 - `subject_id` = identidade da pessoa (correlaciona casos)
 - Dois publishers (outbox **e** publish direto “mais rápido”)
 - Fila sem teto, sem DLQ, sem métrica de profundidade/idade
+
+## Conferência
+
+Antes de declarar pronto, copie e marque. Caixa vazia = falta.
+
+- [ ] Outbox na mesma transação da mutação
+- [ ] Relay em processo à parte; inbox unique no consumidor
+- [ ] ACK depois do efeito; handler idempotente
+- [ ] Envelope versionado; `subject_id` = agregado; sem PII
+- [ ] Retry + jitter + teto + DLQ; porto de transporte no composition root

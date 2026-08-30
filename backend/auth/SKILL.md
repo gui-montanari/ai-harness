@@ -82,3 +82,14 @@ presentation/http/v1/auth/   # token + well-known; sem regra de caso
 - Policy só na UI
 - `jwt.decode` sem `algorithms`, `iss`, `aud`
 - Principal como dict solto entre camadas
+
+## Conferência
+
+Antes de declarar pronto, copie e marque. Caixa vazia = falta.
+
+- [ ] Um `Principal` de domínio; emissor no catálogo (não um sexto grant)
+- [ ] Tenant do token/sessão, nunca do body
+- [ ] JWT: `iss`/`aud`/`exp`/`algorithms` allowlist
+- [ ] Público e interno com cookie/audience distintos
+- [ ] Webhook assina o body cru; MCP usa PKCE S256 se o host exigir
+- [ ] Segredo fora de git, log e URL

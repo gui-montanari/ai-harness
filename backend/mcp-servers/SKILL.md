@@ -50,3 +50,13 @@ Allowlist no manifest. Tool nova = contrato versionado. Host que pede `allowed_t
 - stdio como único transporte para conector na nuvem
 - Segredo na query string `?token=`
 - Tool sem schema, sem timeout, sem tenant
+
+## Conferência
+
+Antes de declarar pronto, copie e marque. Caixa vazia = falta.
+
+- [ ] Tool = use case existente; sem SQL no handler MCP
+- [ ] Schema estreito; timeout e idempotência herdados
+- [ ] Streamable HTTP público; composition root o mesmo da API
+- [ ] Auth do conector pela skill `auth` (PKCE se o host exigir)
+- [ ] Retorno sem PII / token / relato integral

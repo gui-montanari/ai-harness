@@ -52,7 +52,7 @@ frontend/
 - Hex só em `tokens.css` / `tenants/<id>.css` (os dois temas). Página e componente usam `var(--token)`.
 - Home pública é full-bleed. `site-shell` envolve o conteúdo interno, não o hero nem a faixa de métricas.
 - Hero tem **um** visual reativo (órbita com nós que escalam no hover, **ou** quadro de jornada). CSS, 180ms. `prefers-reduced-motion` zera movimento.
-- Chat: skill `frontend-chat`. Primitivo em `ui/src/chat/`; a página dona o fetch.
+- Chat: skill `frontend-chat`. Lista à esquerda + thread; primitivos em `ui/src/chat/`; a página dona o fetch.
 
 ## Achados
 
@@ -68,3 +68,15 @@ frontend/
 - labels ou paleta de outro produto no diagrama em órbita
 - chat com input de uma linha, sem header, avatar, auto-resize ou Enter/Shift+Enter
 - copiar HTML/CSS de outro produto (paleta, typeface, hex de chat, SSE, markdown)
+
+## Conferência
+
+Antes de declarar pronto, copie e marque. Caixa vazia = falta.
+
+- [ ] Tokens só em `tokens.css` / `tenants/<id>.css`; páginas usam `var(--token)`
+- [ ] `data-theme` light **e** dark nas duas superfícies; ícone no header público
+- [ ] PT/EN com as mesmas chaves; `LanguageSwitch` re-renderiza de verdade
+- [ ] Home: hero 2 col + visual reativo; `site-shell` não envolve o bleed
+- [ ] Viewport 375 / 768 / 1280; `dvh`; header não esconde idioma/tema/CTA
+- [ ] Público e interno sem sessão/cookie/CSP cruzados
+- [ ] `ui/` sem `fetch` nem domínio

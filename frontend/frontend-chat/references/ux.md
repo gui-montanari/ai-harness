@@ -6,16 +6,24 @@ Propriedades do thread. Widget que mistura fetch, HITL e SSE no primitivo é def
 
 | Peça | Onde |
 |------|------|
-| Auto-resize, Enter/Shift+Enter | `ui/src/chat/ChatInput.tsx` |
+| Lista de conversas | `ConversationsSidebar.tsx` — burra; items/activeId/onSelect/onNew pela página |
+| Auto-resize, Enter/Shift+Enter | `ChatInput.tsx` |
 | Avatar + meta | `MessageBubble.tsx` |
 | Dots + “Pensando…” rotativo | `thinkingPhrases` no thread; frases na página |
-| Opening | página injeta bolha assistant |
-| Header + status | `ConversationThread` |
+| Opening | página injeta bolha assistant na conversa vazia |
+| Header + título da conversa | `ConversationThread` recebe `title` da página |
 | Auto-scroll rAF | thread |
 | Cursor de streaming | `message.streaming`; a página gera o delta |
+| Teto | `LimitReached` — copy pela página |
 | Cores | `--chat-*` do tenant |
 
-Não entra no primitivo: SSE, HITL, sidebar, launcher, markdown/GFM, typewriter (typewriter/markdown só na página se o produto for assistente de texto livre).
+## Lista (esquerda)
+
+Coluna flex: cabeça (Novo chat + busca) / lista (`flex: 1; min-height: 0; overflow-y`) / footer. Item uma linha, ellipsis, `title` nativo no hover. Ativo: `--action`. Scroll a &lt;120px do fundo → `onLoadMore`. Drawer &lt;900px.
+
+Footer: `UserMenu` (`frontend-shell`) **somente** quando esta lista é o chrome esquerdo da superfície. Dropdown abre **para cima** (`bottom: calc(100% + 8px)`).
+
+Não entra no primitivo: SSE, HITL, launcher, markdown/GFM, typewriter, fetch (typewriter/markdown só na página se o produto for assistente de texto livre).
 
 ## Composer
 

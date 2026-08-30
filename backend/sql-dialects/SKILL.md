@@ -65,3 +65,14 @@ RLS `FORCE` é backstop **Postgres**. Outro engine: equivalente de sessão (RLS 
 - Adapter `SqlServer*` vazio “para o futuro”
 - Trocar o dialeto exigindo diff em `application/` ou `core/`
 - Factory de engine copiada na API e no worker
+
+## Conferência
+
+Antes de declarar pronto, copie e marque. Caixa vazia = falta.
+
+- [ ] Uma factory; DSN escolhe o driver
+- [ ] Tipos portáteis (`UUID.with_variant`, `sa.JSON`); sem JSONB no metadata compartilhado
+- [ ] Upsert/`RETURNING` no adapter, não no use case
+- [ ] Segundo dialeto só com requisito real
+- [ ] Pool/timeout da factory herdados por API e worker
+- [ ] Isolamento: RLS ou equivalente de sessão + `assert_same_tenant`

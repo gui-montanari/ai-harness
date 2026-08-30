@@ -49,3 +49,13 @@ Não crie `_02`, `_03`, `_04` no mesmo PR porque “cada ALTER merece um arquivo
 - Dez arquivos `20260830_0N` no mesmo dia
 - Editar migration já aplicada
 - `CREATE TABLE` sem `tenant_id`/RLS em dado de negócio
+
+## Conferência
+
+Antes de declarar pronto, copie e marque. Caixa vazia = falta.
+
+- [ ] Filename `YYYYMMDD_VV__snake.sql`; um runner
+- [ ] Mesmo dia ainda não no ledger: acrescente no arquivo, não `_02`
+- [ ] `tenant_id` + RLS na tabela tenant-scoped
+- [ ] Sem senha/PII no SQL; sem dump no entrypoint
+- [ ] Dialeto extra no mesmo arquivo (`sql-dialects`), não segundo runner

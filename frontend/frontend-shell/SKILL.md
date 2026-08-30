@@ -31,16 +31,19 @@ Sidebar e topbar compartilham o **mesmo** fundo de chrome (`--surface` / `--bg` 
 - Brand: mark 40px radius 10px + wordmark. Recolhida: mark; hover no mark revela o toggle.
 - Nav: lista vertical. Item com ícone stroke 18px + label. Hover: fundo suave + cor `--action`. Ativo: `--action`, peso 600.
 - Seção com chevron: expande filhos; header da seção também pode ser ativo.
-- Footer da sidebar: `UserMenu`, não um botão solto no topbar (o topbar fica limpo).
-- Mobile (<900px): drawer off-canvas, overlay blur, botão menu no topbar.
+- Footer da sidebar (**sul**): `UserMenu`. `flex` na sidebar + `spacer` (`flex: 1`) empurra o usuário para baixo. Não um botão solto no topbar.
+- Recolhida: o footer mostra só o avatar 32px; o nome some. Clique no avatar ainda abre o menu.
+- Mobile (<900px): drawer off-canvas, overlay blur, botão menu no topbar. Escape fecha.
 
-## UserMenu / dropdown
+## UserMenu / dropdown (sul)
 
-- Botão: avatar circular (inicial) + nome. `aria-haspopup="menu"` / `aria-expanded`.
-- Dropdown: painel 200px+, radius 11px, borda `--border`, sombra, padding 6px. Fecha no clique fora.
-- Itens: ícone 16px + label, hover fundo `--surface-soft`, padding 8px, largura 100%.
-- Divisor 1px antes de Sair. Sair em tom `--danger`.
-- Tema claro/escuro **é** item do menu (ícone sol/lua + `t("themeLight")` / `t("themeDark")`). Não um segundo botão no topbar. O `html[data-theme]` já pintou a página; o item só troca a preferência.
+O mesmo componente na sidebar do app **e** na lista de conversas quando o chat é o shell. Um dono.
+
+- Botão largura 100%: avatar circular 32px (inicial, fundo `--action`, texto branco) + nome ellipsis peso 500. Hover: `--surface-soft`. `aria-haspopup="menu"` / `aria-expanded`.
+- Dropdown **abre para cima** (`bottom: calc(100% + 8px)`), inset 4px, radius 11–12, borda `--border`, sombra, padding 6px, animação curta 180ms. Fecha no clique fora e no Escape.
+- Ordem: tema (sol/lua + `t("themeLight")`/`t("themeDark")`) → itens (config, ajuda) → divisor 1px → Sair em `--danger`.
+- Itens: ícone stroke 16px muted + label, padding 8px, hover `--surface-soft`, largura 100%.
+- Sem segundo botão de tema no topbar. `html[data-theme]` já pintou; o item só troca a preferência.
 
 Selects e date pickers do conteúdo repetem o mesmo dropdown (mesma borda, mesmo hover). Um só vocabulário.
 
@@ -59,3 +62,16 @@ Idioma: o mesmo `LanguageSwitch` da área pública, no topbar (compacto). PT/EN 
 - Sessão do shell vazando para a home pública (`auth`)
 - Tema no topbar **e** no dropdown (dois donos)
 - Shell só em um tema; `background: #111` no aside
+- UserMenu no topo da sidebar ou dropdown abrindo para baixo e saindo da viewport
+
+## Conferência
+
+Antes de declarar pronto, copie e marque. Caixa vazia = falta.
+
+- [ ] Sidebar esquerda 260 / recolhida 52; nav com ícone stroke
+- [ ] UserMenu no **sul** (spacer + footer); dropdown abre para cima
+- [ ] Tema é item do menu; idioma no topbar; i18n PT/EN
+- [ ] Light **e** dark no cockpit; só `var(--token)`
+- [ ] Mobile &lt;900: drawer + overlay + Escape
+- [ ] Um UserMenu (não no topbar e na sidebar)
+- [ ] Zero `fetch` no `ui/`

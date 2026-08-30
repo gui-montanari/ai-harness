@@ -164,3 +164,7 @@ Não abra issues no GitHub a menos que o humano peça.
 - Categoria omitida em silêncio
 - PDF sem rasterizar
 - Sugerir reescrever o monorepo inteiro no lugar de achados priorizados
+
+## Conferência
+
+A checklist do topo **é** a conferência desta skill. Todas as caixas marcadas + PDF rasterizado antes de entregar.

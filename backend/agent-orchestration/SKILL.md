@@ -73,3 +73,14 @@ Capability matrix **antes** de aprovar o runtime (idempotência, pausa, callback
 - Pasta `specialists/support` sem segundo domínio
 - LLM decidindo escalonamento crítico, criação de registro oficial ou confirmação
 - Cenário do orquestrador como dono da regra
+
+## Conferência
+
+Antes de declarar pronto, copie e marque. Caixa vazia = falta.
+
+- [ ] Spec neutro (`GraphSpec`/`WorkflowSpec`); SDK só no adapter
+- [ ] Um agente conversacional no primeiro lançamento, se for o caso
+- [ ] Registro explícito no startup; sem auto-discovery
+- [ ] Título de conversa (se houver lista): use case após a 1ª resposta, ≤6 palavras
+- [ ] Guardas de estado e de saída determinísticas; LLM não cria o fato oficial
+- [ ] Checkpointer do runtime ≠ SSOT (banco do serviço)

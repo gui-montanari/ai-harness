@@ -1,109 +1,140 @@
 ---
 name: frontend-chat
 description: >
-  Use when creating or refactoring a product chat, conversation thread,
-  ChatGPT-style composer, thinking/busy indicator, a chat that must work on
-  mobile/tablet/desktop, a widget panel vs page vs shell host, or when the
-  user mentions MessageBubble, ChatInput, ConversationThread, 100dvh, or
-  /frontend-chat.
+  Use when creating or refactoring a product chat, conversation list,
+  conversation thread, ChatGPT-style composer, thinking/busy indicator, auto
+  title, conversation limits, a chat that must work on mobile/tablet/desktop,
+  a widget panel vs page vs shell host, or when the user mentions
+  MessageBubble, ChatInput, ConversationThread, ConversationsSidebar, 100dvh,
+  or /frontend-chat.
 ---
 
 # Chat de produto
 
-SSOT visual: tokens do tenant em `frontend-surfaces`. Este skill é **como montar o thread**. Não copie HTML, CSS, SSE, HITL, fetch ou paleta de outro produto.
+SSOT visual: tokens do tenant em `frontend-surfaces`. Este skill é **como montar o produto de chat**. Não copie HTML, CSS, SSE, HITL, fetch ou paleta de outro produto.
 
-Runtime (SSE, HITL, markdown, sidebar) fica na página só se o requisito pedir.
+Nasce com **lista à esquerda + thread à direita**. Cada conversa tem o próprio histórico. Runtime (SSE, HITL, markdown) fica na página só se o requisito pedir.
+
+Exceção: um único thread sem “novo chat” (ex.: acompanhamento por token). Aí a lista some. Dois ou mais chats = lista obrigatória.
 
 ## Árvore canônica
 
 ```
-frontend/ui/src/chat/          # primitivo, zero fetch
-  types.ts                     # ChatMessage, ChatRole
+frontend/ui/src/chat/                 # primitivos, zero fetch
+  types.ts                            # ChatMessage, ConversationSummary
   MessageBubble.tsx
   ChatInput.tsx
-  ConversationThread.tsx       # quadro: header + lista + thinking + composer
-  chat.css                     # só var(--chat-*)
+  ConversationThread.tsx              # header + lista + thinking + composer
+  ConversationsSidebar.tsx            # lista à esquerda; UserMenu no sul
+  LimitReached.tsx                    # modal de teto (copy pela página)
+  chat.css                            # só var(--chat-*)
   index.ts
-frontend/<app>/src/pages/      # dona do fetch, i18n, opening, busy
+frontend/<app>/src/pages/             # dona do fetch, i18n, opening, busy, título
   lib/api.ts
 ```
 
-`ConversationThread` é burro. A página: mensagens, `busy`, frases de thinking, opening, erro, POST.
+`ConversationThread` e `ConversationsSidebar` são burros. A página: lista, `activeId`, mensagens da conversa ativa, `busy`, thinking, opening, erro, POST, novo chat, teto.
 
-## UX obrigatória
+## Quadro
+
+```
+[ ConversationsSidebar ~260 | ConversationThread ]
+  Novo chat                     header (título da conversa ativa)
+  busca                         mensagens deste id
+  Recentes                      thinking
+    Nova conversa               composer
+    Título gerado
+  spacer
+  UserMenu (sul)                — só se o chat FOR o shell
+```
+
+Dois encaixes:
+
+| Onde o chat mora | Lista de conversas | UserMenu |
+|------------------|--------------------|----------|
+| Superfície inteira (assistente) | é a sidebar esquerda | **sul dessa lista** (`frontend-shell`) |
+| Página dentro de `AppShell` | segunda coluna, sem UserMenu | o shell já tem o usuário no sul |
+
+Dois UserMenu = achado.
+
+## Lista de conversas
+
+Primitivo `ConversationsSidebar`. Fetch na página.
+
+- Largura ~260; recolhida 52px (ícone “novo”). Desktop: toggle. &lt;900px: drawer + overlay, botão no header do thread.
+- Cabeça: botão **Novo chat** (primário da lista) + busca local pelo título.
+- Seção “Recentes” com chevron. Item: título, uma linha, ellipsis. Ativo: fundo `--surface-soft` + `--action`.
+- Empty: “Nenhuma conversa”. Paginação: scroll perto do fundo dispara `onLoadMore`.
+- Trocar de item: a página troca `activeId` e carrega **só** aquele histórico. Um `ConversationThread`. Estado de composer/busy é por conversa (não vaza thinking da anterior).
+- Tokens `--chat-*`. i18n na página.
+
+## Thread
+
+Uma conversa = um `id` + lista de `ChatMessage`. Abrir outra zera o quadro e pinta o histórico dela. Opening só na conversa vazia/nova.
 
 | Propriedade | Como |
 |-------------|------|
-| Quadro coluna | header / mensagens / composer |
-| Header | avatar + título + status (ponto verde pronto, ponto de ação + pulso se busy) |
+| Header | avatar + **título da conversa ativa** + status |
 | Bolhas | assistente esquerda, usuário direita, avatar 28px |
-| Opening | primeira bolha assistant, injetada pela página |
 | Composer | textarea auto-resize (teto 160px), Enter envia, Shift+Enter quebra |
 | Foco | um anel no **form** arredondado; textarea sem box-shadow retangular |
-| Hint | “Enter para enviar · Shift+Enter…” |
 | Auto-scroll | `requestAnimationFrame` no histórico |
-| Busy | input locked, placeholder de espera, bolha com dots + rótulo |
-| Thinking | frases rotativas a cada 2.5s, passadas pela página (i18n) |
-| Erro | `role="alert"`; some quando o usuário volta a digitar |
-| Pós-envio | refocus no textarea quando `busy` volta a false |
-| Tokens | `--chat-*` alias de `--action/--surface/--ink`. Herda `data-theme`. Sem hex |
-| Idioma | strings pela página (`t()`), inclusive thinking/hint/empty/erro |
+| Busy | input locked, bolha com dots + rótulo rotativo 2.5s (i18n) |
+| Erro | `role="alert"`; some ao digitar de novo |
+| Pós-envio | refocus quando `busy` volta a false |
 
-## O que NÃO entra no `ui/`
+## Título
 
-Fetch, bearer, SSE, HITL, sidebar, launcher, markdown/GFM, typewriter, modal de limite, segundo runtime, hex de provider.
+Começa `null` → a lista mostra “Nova conversa”. Depois da **primeira** resposta do assistente o **servidor** gera um título curto (3–6 palavras, ≤60 caracteres, idioma da UI, sem aspas/emoji/JSON). A página atualiza o item e o header. Falha de título não quebra o turno: permanece “Nova conversa”.
 
-Typewriter e markdown só na página, e só se o produto for assistente de texto livre. Canal confidencial / coleta estruturada: texto plano `pre-wrap`.
+Não gerar título no browser. Use case no serviço de conversas. Não reescrever se o usuário já renomeou.
 
-Streaming: a bolha aceita `message.streaming` (cursor `▋`). Quem gera o delta é a página. Sem SSE no primitivo.
+## Limites
 
-## Contrato do primitivo
-
-```ts
-ConversationThread({
-  title, statusLabel, busyStatusLabel,
-  assistantInitial, userInitial,
-  emptyTitle, emptyBody,
-  messages, value, onChange, onSend,
-  busy, placeholder, busyPlaceholder,
-  sendLabel, hint, thinkingPhrases, error,
-})
-```
-
-`ChatMessage`: `{ id, role: "user" | "assistant", body, at?, streaming? }`.
+Teto de conversas é **servidor**. Criar além do teto: erro tipado (`conversation_limit_reached`, `limit`, `scope`). A página abre `LimitReached` (título, mensagem com N, hint, fechar). As conversas já abertas continuam. Não esconda a lista. Copy i18n.
 
 ## Host e viewport
 
-O primitivo **preenche o pai** (`height: 100%; min-height: 0`). O host define o retângulo — página, painel flutuante ou coluna do shell.
+O primitivo **preenche o pai** (`height: 100%; min-height: 0`).
 
-| Host | Desktop (>900) | Tablet (640–900) | Mobile (<640 / painel <700) |
-|------|----------------|------------------|-----------------------------|
-| Página / canal | coluna max 820, altura do card | mesma coluna | `100dvh`, sem radius, composer no fundo |
-| Widget / painel | ~640×680, `max 100vw-32` / `100dvh-48` | encolhe no viewport | `100dvh × 100vw`, radius 0 |
-| Shell autenticado | o que sobra ao lado da sidebar | drawer + chat 100% | chat `100dvh`, nav overlay |
+| Host | Desktop (>900) | Tablet (640–900) | Mobile (&lt;640 / painel &lt;700) |
+|------|----------------|------------------|----------------------------------|
+| Página / canal | lista + thread | lista drawer | `100dvh`, lista overlay |
+| Widget / painel | ~640×680 | encolhe | `100dvh × 100vw` |
+| Shell autenticado | o que sobra | drawer | `100dvh` |
 
-Nasce sem estes bugs:
+- Flex: header / mensagens (`flex: 1; overflow-y: auto; min-height: 0`) / composer.
+- `100dvh`, nunca `100vh`. Teclado: `visualViewport`. Bolha 78% / 86%. Send ≥ 44px no toque.
 
-- Coluna flex: header / mensagens (`flex: 1; overflow-y: auto; min-height: 0`) / composer. Sem `min-height: 0` o histórico não rola.
-- `100dvh`, nunca `100vh` (barra e teclado cobrem o composer).
-- Teclado: se o composer sumir, `visualViewport` ajusta a altura do root.
-- Bolha 78% desktop, 86% mobile. Send ≥ 44px no toque.
-- `overflow-x: hidden` no root. Sem scroll horizontal.
-- Lista de conversas (se a **página** tiver): drawer <900px, não um segundo thread no primitivo.
+## O que NÃO entra no `ui/`
+
+Fetch, bearer, SSE, HITL, markdown/GFM, typewriter, segundo runtime, hex, regra de teto, geração de título.
 
 ## Red flags
 
-- Input `type="text"` de uma linha
-- Anel de foco no textarea **e** no form
-- `fetch` / `/api/v1` dentro de `ui/src/chat`
-- God-file de chat com HITL + SSE + markdown no primitivo
-- Paleta de chat com hex próprio (use `--chat-accent`)
-- Busy sem bolha de thinking
-- Strings de UI hardcoded em PT no primitivo (i18n na página)
-- God-file de chat com API + bolha + sidebar
-- `height: 100vh` no root (teclado iOS)
-- Histórico que não rola (`min-height` ausente no flex child)
+- Chat sem lista quando o produto tem “novo chat”
+- Um único array de mensagens para todas as conversas
+- Título gerado no cliente ou eternamente “Chat”
+- Teto só na UI; 201 ainda cria
+- UserMenu na lista **e** no `AppShell`
+- Input `type="text"` de uma linha; dois anéis de foco
+- `fetch` em `ui/src/chat`; `100vh`; histórico que não rola
 - Chat claro eterno no `data-theme=dark`
-- Painel 640px que vaza da viewport no tablet
 
 Detalhe de casca: `references/ux.md`.
+
+## Conferência
+
+Antes de declarar pronto, copie e marque. Caixa vazia = falta. Corrija e volte.
+
+- [ ] Lista à esquerda + thread à direita (ou drawer &lt;900px)
+- [ ] Cada `id` tem o próprio histórico; trocar de item não mistura mensagens
+- [ ] “Novo chat” cria conversa no servidor e abre thread vazio + opening
+- [ ] Título: “Nova conversa” → assunto curto após a 1ª resposta do assistente
+- [ ] Teto de conversas: erro do servidor + modal; lista antiga usável
+- [ ] UserMenu no sul da lista **ou** no shell — um dono
+- [ ] Composer: auto-resize, Enter/Shift+Enter, um anel, refocus
+- [ ] Thinking, auto-scroll, `role="alert"` no erro
+- [ ] `--chat-*` herda tema; i18n PT/EN em chrome/empty/hint/thinking/modal
+- [ ] `100dvh` + `min-height: 0`; 375 / 768 / 1280 conferidos
+- [ ] Zero `fetch` no `ui/src/chat`

@@ -153,3 +153,7 @@ Não abra as issues no GitHub a menos que o usuário peça.
 - pip / npm / cargo install global para gerar o PDF
 - PDF sem gráficos, sem issues, ou sem página de capa
 - PDF não rasterizado
+
+## Conferência
+
+A checklist do topo **é** a conferência desta skill. Todas as caixas marcadas + PDF rasterizado antes de entregar.

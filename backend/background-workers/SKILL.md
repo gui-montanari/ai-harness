@@ -51,3 +51,13 @@ Um container = um processo visível. Supervisor interno só se o orquestrador n�
 - ACK antes do efeito; restart sem idempotência
 - Liveness que pinga o banco
 - Dois consumidores do mesmo agregado sem exclusividade
+
+## Conferência
+
+Antes de declarar pronto, copie e marque. Caixa vazia = falta.
+
+- [ ] Trabalho durável fora do request; API ≠ worker; mesma imagem
+- [ ] Composition root compartilhado
+- [ ] SIGTERM: para de puxar, drena, NACK, dispose
+- [ ] Job com lock durável; exclusividade por agregado no banco
+- [ ] Liveness ≠ readiness; restart no orquestrador; idempotência no reprocessamento

@@ -595,13 +595,16 @@ ler constituição → dimensões (§5)
         │
         ├─ make lint && make test
         │
+        ├─ conferência da skill do recorte (caixas no SKILL.md)
+        │     caixa vazia → corrige o dono do fato → marca de novo
+        │
         ├─ /principles-audit e /security-audit
         │     achado → corrigir no dono do fato → rodar de novo até **zero**
         │
         └─ não abrir PR / não mergear / não documentar extra
 ```
 
-Trabalho só está entregue com os dois audits em zero achados. “É frontend” não isenta. Skill `architecture` descreve o loop. Não invente pasta, ADR ou diagrama “para completar”.
+A skill do recorte termina em **Conferência**. O agente copia as caixas e marca. Caixa vazia = a entrega não fechou. Trabalho só está entregue com a conferência completa **e** os dois audits em zero achados. “É frontend” não isenta. Skill `architecture` descreve o loop. Não invente pasta, ADR ou diagrama “para completar”.
 
 ---
 

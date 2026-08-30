@@ -43,6 +43,7 @@ Vista mental (indústria, sem diagrama obrigatório): contexto → limites (cont
 
 Não declare pronto no `make test` verde. Loop **obrigatório**:
 
+0. Conferência da skill do recorte — caixas marcadas.
 1. `/principles-audit` no diff.
 2. `/security-audit` no diff.
 3. Cada achado: corrige no dono do fato (não no relatório).
@@ -57,3 +58,13 @@ Sem `|| true`, sem achar ignorado por nome. Exceção só por ADR com prazo.
 - Segundo runtime ou segundo agente sem capability matrix / ADR
 - Começar pelo provider (Make, LangGraph, Auth SaaS) e encaixar o domínio depois
 - Pular o loop de auditoria
+
+## Conferência
+
+Antes de declarar pronto, copie e marque. Caixa vazia = falta.
+
+- [ ] Invariante e dono do dado escritos
+- [ ] Camada certa; porto pequeno; composition root único
+- [ ] Skill do recorte lida e conferência dela marcada
+- [ ] Sem microsserviço/segundo agente sem o critério da constituição
+- [ ] `/principles-audit` e `/security-audit` em zero achados

@@ -52,3 +52,13 @@ Skill `auth`. Borda HTTP autentica, converte para `Principal`, chama o use case.
 - regra no webhook, no MCP ou no Make.com
 - proxy de dev que apaga `/api/v1`
 - OpenAPI gerado e ninguém consome
+
+## Conferência
+
+Antes de declarar pronto, copie e marque. Caixa vazia = falta.
+
+- [ ] Schema em `presentation/schemas/`; Command em `application/commands/`
+- [ ] Use case um verbo, com teste RED primeiro
+- [ ] Rota de negócio em `/api/v1`; `/health` `/ready` na raiz
+- [ ] Handler só traduz; authz no use case; tenant do contexto
+- [ ] OpenAPI do schema; cliente gerado ou nenhum cliente artesanal

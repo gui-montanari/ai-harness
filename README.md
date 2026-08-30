@@ -80,7 +80,7 @@ find architecture backend frontend quality -name SKILL.md | while read -r f; do
 done
 ```
 
-Copie `AGENTS.md` para a raiz de cada produto. Depois de implementar: `/principles-audit` e `/security-audit` até **zero** achados (`architecture`).
+Copie `AGENTS.md` para a raiz de cada produto. Cada skill termina em **Conferência** — o agente marca as caixas antes de declarar pronto. Depois: `/principles-audit` e `/security-audit` até **zero** achados (`architecture`).
 
 ## Convenção
 

@@ -13,3 +13,10 @@ description: >
 LangGraph compila `GraphSpec` em `infrastructure/adapters/langgraph`. Não desenhe o produto em `StateGraph`. Make.com ou outro orquestrador conhecido é outro adapter da mesma porta.
 
 Proibido: `from langgraph.graph import StateGraph` em `core/` ou `application/`.
+
+## Conferência
+
+Antes de declarar pronto, copie e marque. Caixa vazia = falta.
+
+- [ ] Li e marquei a conferência de `agent-orchestration`
+- [ ] `StateGraph` só em `infrastructure/adapters/langgraph`
