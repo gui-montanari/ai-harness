@@ -14,7 +14,8 @@ Cada skill é uma pasta com um `SKILL.md` (metadados + instruções) e, quando n
 | [`principles-audit`](./principles-audit/) | Varredura contra o `AGENTS.md` (hexagonal, TDD, `/api/v1`, migrations). `/principles-audit` |
 | [`http-apis`](./http-apis/) | REST `/api/v1`, schemas ≠ Command, OpenAPI. `/http-apis` |
 | [`mcp-servers`](./mcp-servers/) | Borda MCP para Grok/Cursor: tools = use cases, Streamable HTTP. `/mcp-servers` |
-| [`oauth-connectors`](./oauth-connectors/) | OAuth Authorization Code + PKCE para conector de LLM (Grok). `/oauth-connectors` |
+| [`auth`](./auth/) | Login, JWT, M2M, sessão pública, webhook HMAC, OAuth de host MCP. Um principal, vários emissores. `/auth` |
+| [`oauth-connectors`](./oauth-connectors/) | Ponte: OAuth de host MCP vive em `auth`. |
 | [`sql-migrations`](./sql-migrations/) | `YYYYMMDD_VV`; no mesmo dia **acrescentar** no arquivo, não multiplicar. `/sql-migrations` |
 | [`agent-orchestration`](./agent-orchestration/) | Agente de produto: spec neutro, Make/LangGraph só adapter, um agente no v1. `/agent-orchestration` |
 | [`langgraph-agents`](./langgraph-agents/) | Ponte: LangGraph é adapter. Use `agent-orchestration`. |
@@ -30,7 +31,7 @@ Clone o repositório e aponte **todas** as skills para o runtime do agente (syml
 git clone https://github.com/gui-montanari/skills.git
 cd skills
 mkdir -p ~/.agents/skills ~/.grok/skills
-for s in security-audit principles-audit http-apis mcp-servers oauth-connectors \
+for s in security-audit principles-audit http-apis mcp-servers auth oauth-connectors \
          sql-migrations agent-orchestration langgraph-agents persistence-ports \
          frontend-surfaces frontend-chat; do
   ln -sfn "$(pwd)/$s" ~/.agents/skills/$s

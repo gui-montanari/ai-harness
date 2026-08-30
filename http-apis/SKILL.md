@@ -4,7 +4,7 @@ description: >
   Use when creating or changing a REST/HTTP API, FastAPI/Nest route, OpenAPI
   contract, /api/v1 endpoint, webhook, health/ready probe, or when Pydantic/Zod
   would sit next to a handler. For MCP hosts use mcp-servers; for OAuth of LLM
-  connectors use oauth-connectors.
+  connectors use auth.
 ---
 
 # APIs HTTP
@@ -38,11 +38,11 @@ application/
 
 ## MCP
 
-Host de LLM (Grok, Cursor, …) não ganha regra própria. Skill `mcp-servers`: cada tool é um use case já existente, schema JSON de input, auth do conector (`oauth-connectors`). Sem SQL no handler MCP.
+Host de LLM não ganha regra própria. Skill `mcp-servers`: cada tool é um use case já existente. Auth: skill `auth`. Sem SQL no handler MCP.
 
-## Auth da API de produto
+## Auth
 
-Bearer JWT / sessão interna. M2M: OAuth2 `client_credentials`. Tenant do **contexto**, nunca do body. Isso **não** é o OAuth de conector Grok — skill `oauth-connectors`.
+Skill `auth`. Borda HTTP autentica, converte para `Principal`, chama o use case. Tenant do contexto, nunca do body.
 
 ## Red flags
 

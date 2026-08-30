@@ -10,7 +10,7 @@ description: >
 
 MCP é **outra borda** do mesmo produto, não um segundo backend. Tools chamam use cases. SQL, LLM e regra ficam onde já estavam.
 
-**REQUIRED SUB-SKILL:** `http-apis` (contrato) e `oauth-connectors` (quando o host exige login).
+**REQUIRED SUB-SKILL:** `http-apis` (contrato) e `auth` (quando o host exige login).
 
 ## Transporte
 
@@ -39,7 +39,7 @@ Allowlist no manifest. Tool nova = contrato versionado. Host que pede `allowed_t
 
 1. API de produto em `/api/v1` (skill `http-apis`).
 2. Borda MCP em `/mcp` (Streamable HTTP) no **mesmo** composition root.
-3. Se o host mandar request sem token: `401` + metadata OAuth (`oauth-connectors`).
+3. Se o host mandar request sem token: `401` + metadata OAuth (skill `auth`, emissor `connector`).
 4. Admin cola a URL em grok.com/connectors → Custom.
 5. Tools aparecem no host: OAuth uma vez, depois chamada sob demanda.
 
