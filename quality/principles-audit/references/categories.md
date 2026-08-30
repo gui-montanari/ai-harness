@@ -57,6 +57,10 @@ Achado quando:
 - rota de negócio fora de `/api/v1`
 - `os.environ` / `getenv` / `process.env` em `core/` ou `application/`
 - `tenant_id="acme"` (ou o nome do produto) em worker, composition ou handler
+- Smell `hardcoded_product_literal` / `hardcoded_config_default` / `hardcoded_localhost`
+- Timeout, pool, lote, origin CORS, e-mail, token com default não-vazio no código de produção
+
+**Não é achado:** enum de domínio, cópia canônica, fixture de teste, `tenant_id: str = ""` (recusa).
 - adapter ou handler HTTP lendo env (fora de composition root, settings, entrypoint, migrate)
 - smell do scanner `getenv_in_core_or_application` / `getenv_outside_composition`
 
@@ -195,6 +199,7 @@ Achado quando:
 - Prefixo do artefato de deploy (`WORKSPACE_DATABASE_URL`) — smell `deploy_unit_env`
 - Schema SQL com nome de artefato (`CREATE SCHEMA workspace`) — smell `deploy_unit_schema`. Tabela de conversa é `agents.conversations`
 - Nome de env que mudaria se o produto **ou a unidade de deploy** mudasse de nome
+- Valor operacional literal (constituição §3.1 zero hardcode)
 
 Fila extra: grep `os.environ` / `getenv` / `process.env` e as chaves do compose. Prefixo do repo (`tenda-communications` → `TENDA_`) e prefixo de artefato (`WORKSPACE_`, `PLATFORM_`, `MONOLITH_`) são achado. Provider de mercado (`OPENAI_API_KEY`, `TWILIO_AUTH_TOKEN`), `DATABASE_URL` deste processo, e bounded context alheio ainda falado daqui (`MESSAGING_DATABASE_URL`, `VAULT_DATABASE_URL`) são o padrão certo.
 

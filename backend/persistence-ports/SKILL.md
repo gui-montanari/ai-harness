@@ -46,6 +46,7 @@ Dois bounded contexts = dois schemas/roles. Mesmo cluster Postgres **não** auto
 - Um `DATABASE_URL` só para um processo que hospeda vários donos
 - Schema `workspace` / `platform` com tabelas de agents e cases
 - Adapter de persistência lendo `os.environ` (a URL entra pelo composition root)
+- `create_pool(..., max_size=10)` cravado; o teto é `DB_POOL_MAX_SIZE` na composição
 
 ## Conferência
 

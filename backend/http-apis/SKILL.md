@@ -36,6 +36,8 @@ application/
 
 `/health` e `/ready` **fora** de `/api/v1`. Webhook: `/api/v1/webhooks/<adapter>`, autentica o envelope **antes** de normalizar.
 
+Factory ASGI (`--factory`): tenant, CORS e título vêm do env no start (`TENANT_ID`, `CORS_ORIGINS`, `APP_TITLE`). Não `app = create_http_app()` no import — quebra teste e crava default. `allow_origins=["http://localhost:5173"]` e `title="NomeDoProduto"` são hardcode.
+
 ## MCP
 
 Host de LLM não ganha regra própria. Servidor: `mcp-servers`. Cada tool ou jornada: `mcp-tools` (o mesmo use case). Auth: skill `auth`.
@@ -52,6 +54,7 @@ Skill `auth`. Borda HTTP autentica, converte para `Principal`, chama o use case.
 - regra no webhook, no MCP ou no Make.com
 - proxy de dev que apaga `/api/v1`
 - OpenAPI gerado e ninguém consome
+- CORS, título ou token cravados no `app.py`
 
 ## Conferência
 
@@ -62,3 +65,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Rota de negócio em `/api/v1`; `/health` `/ready` na raiz
 - [ ] Handler só traduz; authz no use case; tenant do contexto
 - [ ] OpenAPI do schema; cliente gerado ou nenhum cliente artesanal
+- [ ] CORS/título/tenant na factory via env; sem literal de produto

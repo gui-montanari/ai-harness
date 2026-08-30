@@ -92,6 +92,13 @@ LAYER_PATH = (
     ("infrastructure", ("/infrastructure/", "/adapters/", "/infra/")),
     ("presentation", ("/presentation/", "/api/", "/controllers/", "/handlers/", "/runtimes/")),
 )
+HARD_CONFIG_ASSIGN = re.compile(
+    r"""(?ix)
+    \b(tenant_id|password|secret|api_key|webhook_token|auth_token)
+    \s*(?::[^=\n]{0,80})?=\s*["'][^"']+["']
+    """
+)
+LOCALHOST_URL = re.compile(r"https?://localhost(?:[/:]\S*)?", re.I)
 ENV_GET = re.compile(
     r"""(?:os\.environ(?:\.get)?|os\.getenv)\s*(?:\(|\[)\s*['\"]([A-Z][A-Z0-9_]+)['\"]"""
 )
@@ -246,6 +253,13 @@ def env_smells(text: str, rel: str, layer: str, brand: str) -> list[str]:
         smells.append("product_brand_env")
     if any(prefix in DEPLOY_UNIT_PREFIXES for prefix in prefixes):
         smells.append("deploy_unit_env")
+    if layer != "test":
+        if brand and re.search(rf"""['\"]{re.escape(brand)}['\"]""", text, re.I):
+            smells.append("hardcoded_product_literal")
+        if HARD_CONFIG_ASSIGN.search(text):
+            smells.append("hardcoded_config_default")
+        if LOCALHOST_URL.search(text):
+            smells.append("hardcoded_localhost")
     reads_env = bool(names) or "os.environ" in text or "os.getenv" in text or "process.env" in text
     if not reads_env:
         return smells
