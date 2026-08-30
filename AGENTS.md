@@ -232,9 +232,11 @@ Use case **não** se chama `OrderService`. Adapter **não** se chama e não mora
 
 **Teste:** abra dois módulos distantes. Sem olhar o autor, o desenho é o mesmo?
 
-**Env:** nome de **capacidade** (`DATABASE_URL`, `LLM_API_KEY`) ou contrato de mercado do provider (`OPENAI_API_KEY`, `TWILIO_AUTH_TOKEN`). Defeito: prefixo da **marca** (`TENDA_PG_WORKSPACE`) e prefixo do **artefato de deploy** (`WORKSPACE_DATABASE_URL`, `PLATFORM_DATABASE_URL`). O banco **deste** processo é `DATABASE_URL`. Outro dono ainda falado daqui leva o nome do bounded context (`MESSAGING_DATABASE_URL`, `VAULT_DATABASE_URL`), nunca o nome do processo que os hospeda. `os.environ` / `getenv` / `process.env` só em composition root, settings, entrypoint de processo e runner de migration. Adapter, handler, use case e domínio recebem o valor **injetado**. Completar com string vazia e seguir é fallback silencioso.
+**Env:** nome de **capacidade** ou bounded context (`AGENTS_DATABASE_URL`, `LLM_API_KEY`) ou contrato de mercado do provider (`OPENAI_API_KEY`, `TWILIO_AUTH_TOKEN`). Processo com **um** dono: `DATABASE_URL`. Processo que **compõe** vários donos: um DSN por dono (`AGENTS_DATABASE_URL`, `CASES_DATABASE_URL`), nunca um DSN com o nome do artefato (`WORKSPACE_DATABASE_URL`). Defeito também: prefixo da marca (`TENDA_PG_*`). `os.environ` / `getenv` / `process.env` só em composition root, settings, entrypoint de processo e runner de migration. Adapter, handler, use case e domínio recebem o valor **injetado**. Completar com string vazia e seguir é fallback silencioso.
 
-**Teste (env):** se o produto **ou o artefato de deploy** mudar de nome, quantos env eu renomeio? A resposta correta é **zero**.
+**Schema SQL:** o nome do schema é o bounded context dono (`agents`, `cases`, `workforce`, `messaging`, `vault`). Nunca o artefato de deploy (`workspace`, `platform`). Uma role de app por schema; tabela tenant-scoped nasce com RLS. A porta (`ConversationStore`) não conhece o nome da tabela; o adapter traduz.
+
+**Teste (env/schema):** se o produto **ou o artefato de deploy** mudar de nome, quantos env e schemas eu renomeio? A resposta correta é **zero**.
 
 ### 3.2 Nome e ordem de migration
 

@@ -40,6 +40,7 @@ Não crie `_02`, `_03`, `_04` no mesmo PR porque “cada ALTER merece um arquivo
 - Sem senha, token, PII.
 - RLS + `tenant_id` nascem com a tabela tenant-scoped.
 - Role de app não é owner; sem `BYPASSRLS` em request/worker.
+- Schema e arquivo vivem no **dono** (bounded context): `agents.conversations` no serviço agents. Nunca `workspace.conversations` nem pasta `workspace/migrations` como dono de conversa/caso.
 - Destrutiva: outro deploy, depois que o último leitor sumiu.
 
 ## Red flags
@@ -49,6 +50,8 @@ Não crie `_02`, `_03`, `_04` no mesmo PR porque “cada ALTER merece um arquivo
 - Dez arquivos `20260830_0N` no mesmo dia
 - Editar migration já aplicada
 - `CREATE TABLE` sem `tenant_id`/RLS em dado de negócio
+- Schema ou role com nome de artefato (`workspace`, `platform`, `monolith`)
+- Conversa, caso e workforce no mesmo schema “porque o processo é um só”
 
 ## Conferência
 
@@ -57,5 +60,6 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Filename `YYYYMMDD_VV__snake.sql`; um runner
 - [ ] Mesmo dia ainda não no ledger: acrescente no arquivo, não `_02`
 - [ ] `tenant_id` + RLS na tabela tenant-scoped
+- [ ] Schema = bounded context dono; arquivo no serviço dono; sem schema de artefato
 - [ ] Sem senha/PII no SQL; sem dump no entrypoint
 - [ ] Dialeto extra no mesmo arquivo (`sql-dialects`), não segundo runner

@@ -143,7 +143,7 @@ Env: capacidade ou contrato de mercado, nunca marca.
 
 Sem provider escolhido, `model_name`/`provider` ficam `None` e o composition **não** instancia o adapter. Completar o config com um modelo inventado é teatro.
 
-A mesma regra vale para **todo** env, não só LLM: constituição §3.1. `DATABASE_URL`, não `TENDA_PG_*` nem `WORKSPACE_DATABASE_URL`.
+A mesma regra vale para **todo** env e **schema SQL**, não só LLM: constituição §3.1. `agents.conversations` atrás de `ConversationStore`. Não `workspace.conversations` nem `TENDA_PG_*`.
 
 ## Guardas — montagem e uso
 

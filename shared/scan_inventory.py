@@ -283,6 +283,12 @@ def scan_deploy(repo: Path) -> dict:
                 signals.append({"file": rel, "kind": "product_brand_env"})
             if re.search(r"\b(?:WORKSPACE|PLATFORM|MONOLITH)_[A-Z0-9_]+\s*:", text):
                 signals.append({"file": rel, "kind": "deploy_unit_env"})
+        if path.suffix.lower() == ".sql" and re.search(
+            r"CREATE\s+SCHEMA\s+(?:IF\s+NOT\s+EXISTS\s+)?(workspace|platform|monolith)\b",
+            text,
+            re.I,
+        ):
+            signals.append({"file": rel, "kind": "deploy_unit_schema"})
         elif name == "dockerfile":
             dockerfiles.append(rel)
             if "HEALTHCHECK" not in text:

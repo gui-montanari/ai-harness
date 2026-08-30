@@ -191,7 +191,8 @@ Achado quando:
 - Senha de role, token ou segredo no SQL da migration
 - Dois runners (Alembic **e** SQL cru, Prisma **e** dump) no mesmo schema
 - Prefixo da marca do produto em variável de ambiente (`TENDA_LLM_TOKEN`) — smell `product_brand_env`
-- Prefixo do artefato de deploy (`WORKSPACE_DATABASE_URL`, `PLATFORM_DATABASE_URL`) — smell `deploy_unit_env`. O banco deste processo é `DATABASE_URL`
+- Prefixo do artefato de deploy (`WORKSPACE_DATABASE_URL`) — smell `deploy_unit_env`
+- Schema SQL com nome de artefato (`CREATE SCHEMA workspace`) — smell `deploy_unit_schema`. Tabela de conversa é `agents.conversations`
 - Nome de env que mudaria se o produto **ou a unidade de deploy** mudasse de nome
 
 Fila extra: grep `os.environ` / `getenv` / `process.env` e as chaves do compose. Prefixo do repo (`tenda-communications` → `TENDA_`) e prefixo de artefato (`WORKSPACE_`, `PLATFORM_`, `MONOLITH_`) são achado. Provider de mercado (`OPENAI_API_KEY`, `TWILIO_AUTH_TOKEN`), `DATABASE_URL` deste processo, e bounded context alheio ainda falado daqui (`MESSAGING_DATABASE_URL`, `VAULT_DATABASE_URL`) são o padrão certo.

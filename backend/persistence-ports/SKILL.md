@@ -24,7 +24,7 @@ O banco é um **adapter**. Grafo LangGraph, rota HTTP e MCP **não** importam o 
 | Dialeto (Postgres ↔ SQL Server) | skill `sql-dialects` — a DSN escolhe o engine |
 | Conexão, pool, RLS | composition root + sessão da request/worker |
 
-Dois bounded contexts = dois schemas/roles. Mesmo cluster Postgres **não** autoriza JOIN cross-service.
+Dois bounded contexts = dois schemas/roles. Mesmo cluster Postgres **não** autoriza JOIN cross-service. Processo composto (vários módulos no mesmo artefato) **não** unifica schema: cada porta usa o pool da role do dono (`AGENTS_DATABASE_URL` → `agents.*`).
 
 ## Regras
 
@@ -42,7 +42,9 @@ Dois bounded contexts = dois schemas/roles. Mesmo cluster Postgres **não** auto
 - Tabela tenant-scoped sem RLS
 - Dois serviços escrevendo a mesma tabela
 - SDK Supabase em `core/`
-- DSN com prefixo da marca (`TENDA_PG_WORKSPACE`) ou do artefato (`WORKSPACE_DATABASE_URL`); deste processo é `DATABASE_URL`
+- DSN com prefixo da marca ou do artefato (`TENDA_PG_*`, `WORKSPACE_DATABASE_URL`)
+- Um `DATABASE_URL` só para um processo que hospeda vários donos
+- Schema `workspace` / `platform` com tabelas de agents e cases
 - Adapter de persistência lendo `os.environ` (a URL entra pelo composition root)
 
 ## Conferência
@@ -54,4 +56,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] I/O async; sessão já no tenant; RLS + teste negativo
 - [ ] Role de app sem `BYPASSRLS` / owner
 - [ ] Dialeto pela DSN (`sql-dialects`); blob = `object-storage`; cache = `cache-ports`
-- [ ] Deste processo: `DATABASE_URL`; outro dono: nome do bounded context; adapter sem `getenv`
+- [ ] Um DSN e um schema por dono; composition injeta o pool; adapter sem `getenv`
