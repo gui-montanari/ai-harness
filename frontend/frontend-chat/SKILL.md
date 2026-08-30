@@ -17,6 +17,8 @@ Nasce com **lista à esquerda + thread à direita**. Cada conversa tem o própri
 
 Exceção: um único thread sem “novo chat” (ex.: acompanhamento por token). Aí a lista some. Dois ou mais chats = lista obrigatória.
 
+Fila de **tickets** do suporte/operação: skill `frontend-backoffice`, não esta lista.
+
 ## Árvore canônica
 
 ```

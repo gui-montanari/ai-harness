@@ -38,6 +38,8 @@ Vista mental (indústria, sem diagrama obrigatório): contexto → limites (cont
 | Login | `frontend-login` |
 | Área logada | `frontend-shell` |
 | Chat | `frontend-chat` |
+| Fila operacional / tickets | `ops-backoffice` |
+| UI do backoffice | `frontend-backoffice` |
 
 ## Gate depois de implementar
 

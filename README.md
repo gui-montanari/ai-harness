@@ -22,11 +22,13 @@ backend/
   background-workers/
   agent-orchestration/
   langgraph-agents/        # ponte → agent-orchestration
+  ops-backoffice/
 frontend/
   frontend-surfaces/
   frontend-login/
   frontend-shell/
   frontend-chat/
+  frontend-backoffice/
 quality/
   principles-audit/
   security-audit/
@@ -56,6 +58,7 @@ shared/                    # scanner/PDF dos audits
 | [`reliable-messaging`](./backend/reliable-messaging/) | Outbox, inbox, envelope, at-least-once. `/reliable-messaging` |
 | [`background-workers`](./backend/background-workers/) | API ≠ worker; drain; job single-flight. `/background-workers` |
 | [`agent-orchestration`](./backend/agent-orchestration/) | Spec neutro; Make/LangGraph são adapters. `/agent-orchestration` |
+| [`ops-backoffice`](./backend/ops-backoffice/) | Fila, atribuição, SLA, protocolo. `/ops-backoffice` |
 
 ### Frontend
 
@@ -64,7 +67,8 @@ shared/                    # scanner/PDF dos audits
 | [`frontend-surfaces`](./frontend/frontend-surfaces/) | Tokens, tema claro/escuro, PT/EN, viewport, home. `/frontend-surfaces` |
 | [`frontend-login`](./frontend/frontend-login/) | Página e campos de acesso. `/frontend-login` |
 | [`frontend-shell`](./frontend/frontend-shell/) | Sidebar esquerda, nav, dropdown do usuário. `/frontend-shell` |
-| [`frontend-chat`](./frontend/frontend-chat/) | Thread: bolha, composer, thinking. `/frontend-chat` |
+| [`frontend-chat`](./frontend/frontend-chat/) | Lista de conversas + thread. `/frontend-chat` |
+| [`frontend-backoffice`](./frontend/frontend-backoffice/) | Inbox de tickets, detalhe, timeline. `/frontend-backoffice` |
 
 ## Como usar
 
