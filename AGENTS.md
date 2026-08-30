@@ -173,7 +173,7 @@ Produto com API **e** UI — backend e frontend **não** ficam soltos na raiz. C
   .github/workflows/
 ```
 
-Frontend (quando existir UI) — skill `frontend-surfaces`. Chat — skill `frontend-chat`. Persistência — skill `persistence-ports`. Agentes LangGraph — skill `langgraph-agents`. Com dois consumidores reais, primitives vivem em `frontend/ui/` (tokens, i18n PT/EN, shells). Páginas e `lib/api.ts` ficam no app. `ui/` sem fetch e sem domínio. Identidade visual por tenant: `data-tenant` + `tenants/<id>.css`. Sem portal autenticado do colaborador no v1.
+Frontend (quando existir UI) — skill `frontend-surfaces`. Chat — skill `frontend-chat`. Persistência — skill `persistence-ports`. Agentes — skill `agent-orchestration` (Make/LangGraph são adapters). Com dois consumidores reais, primitives vivem em `frontend/ui/` (tokens, i18n PT/EN, shells). Páginas e `lib/api.ts` ficam no app. `ui/` sem fetch e sem domínio. Identidade visual por tenant: `data-tenant` + `tenants/<id>.css`. Sem portal autenticado do colaborador no v1.
 
 Repo só de API: `backend/` (ou `src/` hexagonal) sem inventar `frontend/` vazio. Repo só de UI: o inverso. **Misturar `services/` e `apps/` na raiz de um repo que tem os dois é achado.**
 
