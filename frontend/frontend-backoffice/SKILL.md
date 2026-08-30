@@ -53,6 +53,8 @@ Nasce split, como a lista de chat — mas é **fila de trabalho**, não conversa
 
 &lt;900px: lista em tela cheia; detalhe em rota própria ou drawer. Não esconda filtros.
 
+Catálogo, histórico tabular, afiliados, qualquer listagem **sem** split: `DataTable` da skill `frontend-surfaces`. Um vocabulário. Não invente uma segunda tabela nesta SPA.
+
 ## Detalhe
 
 Header: protocolo, status, assignee (nome operacional, **não** identidade de canal), aging/SLA. Ações só as que o **servidor** já autorizou na projeção (`can_reply`, `can_close`, `can_assign`). Botão invisível ≠ permissão.
@@ -92,7 +94,8 @@ Herdados: light/dark, PT/EN, `dvh`, toque 44px. `robots noindex`. Verificar 375 
 Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
 - [ ] SPA interna + `frontend-shell`; UserMenu no sul; tema/idioma nativos
-- [ ] Inbox split: filtros servidor + lista de protocolo/status/hora
+- [ ] Inbox split: filtros servidor + lista de protocolo/status/hora (card, não tabela)
+- [ ] Listagem tabular (se houver) usa `DataTable` tokenizado (`frontend-surfaces`)
 - [ ] Detalhe: timeline do **item selecionado**; sem misturar
 - [ ] Ações só com flag da API; 403 tratado
 - [ ] Sem relato/PII na lista se o domínio for confidencial

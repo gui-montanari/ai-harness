@@ -4,19 +4,20 @@ description: >
   Use when scaffolding or refactoring a React frontend, splitting public vs
   authenticated shells, adding i18n PT/EN, dark/light theme, tenant visual
   tokens, shared UI primitives (PublicHeader, PublicFooter, ThemeToggle,
-  LanguageSwitch), designing the unauthenticated area or public home (hero,
-  orbit diagram, circular nodes that scale on hover, product board, metric
-  strip, sections, CTA), making a layout work on mobile/tablet/desktop, or
-  when the user mentions design system, system-visual, visual-node, or
-  /frontend-surfaces. For product chat use frontend-chat. For login use
-  frontend-login. For logged-in shell use frontend-shell.
+  LanguageSwitch, DataTable, StatusBadge), designing the unauthenticated
+  area or public home (hero, orbit diagram, circular nodes that scale on
+  hover, product board, metric strip, sections, CTA), making a layout work
+  on mobile/tablet/desktop, or when the user mentions design system, table,
+  DataTable, system-visual, visual-node, or /frontend-surfaces. For product
+  chat use frontend-chat. For login use frontend-login. For logged-in shell
+  use frontend-shell.
 ---
 
 # Superfícies frontend
 
 SSOT das regras: constituição `AGENTS.md` §3. Este skill é o **lugar** dos arquivos. Não copie HTML, CSS, rotas, auth ou domínio de outro produto.
 
-Gramática visual e tokens: `references/design-system.md` — área não autenticada, tema claro/escuro, PT/EN, viewport, home, visual reativo. Login: `frontend-login`. Área logada: `frontend-shell`. Chat: `frontend-chat`.
+Gramática visual e tokens: `references/design-system.md` — área não autenticada, tema, PT/EN, viewport, home, visual reativo, **tabela e primitivos**. Login: `frontend-login`. Área logada: `frontend-shell`. Chat: `frontend-chat`. Backoffice: `frontend-backoffice`.
 
 ## Árvore canônica
 
@@ -30,7 +31,8 @@ frontend/
       shell.css               # botões, campos, skip-link, site-shell
       tenants/<id>.css        # light + dark por superfície
       i18n/                   # pt-BR + en, mesmas chaves
-      components/             # PublicHeader, PublicFooter, LanguageSwitch, ThemeToggle
+      components/             # PublicHeader, PublicFooter, LanguageSwitch, ThemeToggle,
+                              # DataTable, StatusBadge, EmptyState — zero fetch, zero domínio
       theme/                  # TenantProvider + ThemeProvider; zero fetch, zero domínio
   <app>/                      # web-public | backoffice
     src/
@@ -50,6 +52,7 @@ frontend/
 - Tema: `data-theme=light|dark` no `html` desde o primeiro commit. Ícone no header público; item do `UserMenu` na área logada. Tudo herda tokens — chat, login, shell inclusos.
 - Área pública, shell autenticado, chat, estados vazios/erro, mobile/tablet/desktop e i18n seguem a gramática deste skill. Não copiar implementação, paleta, rotas, HITL, SSE ou domínio de outro produto.
 - Hex só em `tokens.css` / `tenants/<id>.css` (os dois temas). Página e componente usam `var(--token)`.
+- Primitivo (tabela, badge, empty, flash) nasce em `ui/` e é **o** vocabulário. Segunda tabela “só desta tela” é achado.
 - Home pública é full-bleed. `site-shell` envolve o conteúdo interno, não o hero nem a faixa de métricas.
 - Hero tem **um** visual reativo (órbita com nós que escalam no hover, **ou** quadro de jornada). CSS, 180ms. `prefers-reduced-motion` zera movimento.
 - Chat: skill `frontend-chat`. Lista à esquerda + thread; primitivos em `ui/src/chat/`; a página dona o fetch.
@@ -68,6 +71,7 @@ frontend/
 - labels ou paleta de outro produto no diagrama em órbita
 - chat com input de uma linha, sem header, avatar, auto-resize ou Enter/Shift+Enter
 - copiar HTML/CSS de outro produto (paleta, typeface, hex de chat, SSE, markdown)
+- tabela com hex, sem hover, sem `scope="col"`, ou copiada numa página só
 
 ## Conferência
 
@@ -80,4 +84,5 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Viewport 375 / 768 / 1280; `dvh`; header não esconde idioma/tema/CTA
 - [ ] Público e interno sem sessão/cookie/CSP cruzados
 - [ ] Empty / loading / erro / 403 existem e estão traduzidos
+- [ ] Tabela/badge/empty/flash no `ui/`, só token; hover e foco conferidos nos dois temas
 - [ ] `ui/` sem `fetch` nem domínio

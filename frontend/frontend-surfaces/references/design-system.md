@@ -167,6 +167,54 @@ Botão: min-height 46px, radius ~12, gap 0.55rem, primário `--action` / texto b
 
 Pulso e status só quando o fato é honesto. “Ao vivo” mentiroso é pior que estático.
 
+## Primitivos (sempre token, sempre compartilhados)
+
+Vivem em `ui/src/components/` + `shell.css` quando há **2+ consumidores reais**. Página não copia borda, hover nem hex. Variante de status é **prop** (`ok | action | danger | muted`) que a página mapeia da API — não um regex no rótulo.
+
+| Peça | Papel |
+|------|--------|
+| `DataTable` | lista operacional (catálogo, fila tabular) |
+| `StatusBadge` | pílula de estado |
+| `EmptyState` | empty da tabela/lista |
+| `Pagination` | página estável (cursor da API) |
+| `Flash` | toast `role="status"` |
+| campo / botão | já em `frontend-login` / botão acima |
+
+### Tabela
+
+Um vocabulário. Backoffice, catálogo e qualquer listagem usam o mesmo. Inbox de tickets em split (`frontend-backoffice`) é **card**, não tabela — não misture os dois no mesmo recorte.
+
+```
+[ heading + ações ]
+[ table-scroll ]
+    thead sticky
+    tbody (hover, foco, clique)
+[ Pagination ]
+```
+
+- Wrapper `.table-scroll { overflow-x: auto }`. Tabela `width: 100%`, `border-collapse: collapse`. `min-width` só quando as colunas não cabem (não encolhe letra).
+- `th`: `scope="col"`, muted, peso 600, 0.6–0.75rem, uppercase + letter-spacing se for índice, fundo `--surface-soft`, nowrap, padding `.75rem 1rem`, hairline `--border`.
+- `td`: padding `.85rem 1rem`, `--ink`, vertical-align middle, border-bottom `--border`.
+- `tbody tr:hover`: `color-mix(--action 4%, --surface)` ou `--surface-soft`. Linha clicável: `cursor: pointer`, Enter, `:focus-visible` anel `--action` (offset interno). Destaque da linha ativa: `--surface-soft` + acento.
+- Número: `font-variant-numeric: tabular-nums`, `text-align: end`. Protocolo/id: `font-mono`, ellipsis, muted, `title` nativo.
+- Badge **dentro** da célula usa `StatusBadge`. Sem hex de “verde do status”.
+- `thead` pode ser sticky no scroll vertical longo.
+- Empty: `EmptyState` no lugar do tbody. Loading: skeleton de 5–8 linhas, não spinner no canto.
+- Paginação **abaixo**, i18n, prev/next; página/cursor vêm da API (`ops-backoffice`). Front não fatia o JSON inteiro.
+- Mobile/tablet: scroll horizontal no wrapper **ou** cada linha vira card com `data-label` nas células. Não esconda coluna crítica em silêncio. Toque ≥ 44px na linha clicável.
+- Sem tabela aninhada, sem `<table>` de layout, sem `border="1"`.
+
+`DataTable({ columns, rows, rowKey, onRowAction? })` é burro. Fetch na página.
+
+### Badge, tabs, flash, toolbar
+
+- **Badge:** pílula radius 999, padding 4px 10px, 0.72rem, peso 700. Fundo `color-mix(token 14–16%, --surface)`, texto no token. Cor + texto.
+- **Tabs/chips de filtro:** o mesmo hover/ativo da nav (`--action`, peso 600). Filtro é query de servidor.
+- **Flash:** topo do main, `role="status"`, some sozinho ~4s, borda `--ok`/`--danger`. Sem `alert()` nativo.
+- **Toolbar:** flex, wrap, gap 8px, alinha à heading da tabela.
+- **Divisor:** 1px `--border`.
+- **Avatar:** 32px, circular, `--action`, inicial — o do `UserMenu` (`frontend-shell`). Não um segundo.
+
 ## Estados (empty / loading / erro)
 
 Toda lista e toda página nasce com os três, i18n, tokens. Sem “tela branca”.
@@ -217,3 +265,7 @@ Nasce nos três. `viewport` = `width=device-width, initial-scale=1`. Altura usa 
 - Dicionário só em PT, ou chave só em um idioma
 - Layout só desktop; tablet tratado como “mobile quebrado”
 - Chat com `100vh` (teclado cobre o composer)
+- Tabela nativa sem token; hex na célula; status por regex no rótulo
+- Página reimplementando hover/borda da tabela
+- Inbox de ticket **e** tabela para o mesmo recorte
+- Paginação no cliente sobre payload completo
