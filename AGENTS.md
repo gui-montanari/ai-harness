@@ -173,7 +173,7 @@ Produto com API **e** UI — backend e frontend **não** ficam soltos na raiz. C
   .github/workflows/
 ```
 
-Frontend (quando existir UI) — skills `frontend-surfaces`, `frontend-login`, `frontend-shell`, `frontend-chat`, `frontend-backoffice`. Persistência — `persistence-ports` + `sql-migrations` + `sql-dialects`. Eventos — `reliable-messaging`. Cache — `cache-ports`. Arquivos — `object-storage`. Telemetria — `observability`. Workers — `background-workers`. Agentes — `agent-orchestration`. Fila operacional — `ops-backoffice`. Desenho e gate — `architecture`. Com dois consumidores reais, primitives vivem em `frontend/ui/` (tokens, i18n PT/EN, shells). Páginas e `lib/api.ts` ficam no app. `ui/` sem fetch e sem domínio. Identidade visual por tenant: `data-tenant` + `tenants/<id>.css`. Sem portal autenticado do colaborador no v1.
+Frontend (quando existir UI) — skills `frontend-surfaces`, `frontend-login`, `frontend-shell`, `frontend-chat`, `frontend-backoffice`. Persistência — `persistence-ports` + `sql-migrations` + `sql-dialects`. Eventos — `reliable-messaging`. Cache — `cache-ports`. Arquivos — `object-storage`. Telemetria — `observability`. Workers — `background-workers`. Agentes — `agent-orchestration`. Fila operacional — `ops-backoffice`. Pipeline — `cicd`. Desenho e gate — `architecture`. Com dois consumidores reais, primitives vivem em `frontend/ui/` (tokens, i18n PT/EN, shells). Páginas e `lib/api.ts` ficam no app. `ui/` sem fetch e sem domínio. Identidade visual por tenant: `data-tenant` + `tenants/<id>.css`. Sem portal autenticado do colaborador no v1.
 
 Repo só de API: `backend/` (ou `src/` hexagonal) sem inventar `frontend/` vazio. Repo só de UI: o inverso. **Misturar `services/` e `apps/` na raiz de um repo que tem os dois é achado.**
 
@@ -462,6 +462,8 @@ CD: o humano (ou o fluxo do repo) promove artefato **já construído**. CI verde
 
 Dois ambientes (dev/prod) **não** se misturam por merge de branch longa. Entrega seletiva (cherry-pick / PR por destino) quando o repo assim exigir — o `AGENTS.md` local manda.
 
+Procedimento: skill `cicd`. Imagem e compose: esta seção. Schema no CI: `sql-migrations`.
+
 ---
 
 ## 8. Segurança, performance, escala, resiliência, robustez
@@ -645,5 +647,6 @@ A skill do recorte termina em **Conferência**. O agente copia as caixas e marca
 - rota de negócio sem `/api/v1`
 - `001_init.sql`, dump em `docker-entrypoint-initdb.d`, ou `psql < dump.sql` no Makefile
 - migration sem data+versão (`YYYYMMDD_VV`) no filename; prefixo duplicado; dois runners de schema
+- `|| true` / `continue-on-error` em lint, typecheck, teste ou gate de fronteira no CI
 
 Qualquer um desses: pare, volte às dimensões, corrija o plano. Não empurre o diff.

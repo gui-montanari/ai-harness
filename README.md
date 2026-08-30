@@ -33,6 +33,7 @@ frontend/
   frontend-chat/
   frontend-backoffice/
 quality/
+  cicd/
   principles-audit/
   security-audit/
 shared/                    # scanner/PDF dos audits
@@ -45,6 +46,7 @@ shared/                    # scanner/PDF dos audits
 | Skill | Quando |
 |-------|--------|
 | [`architecture`](./architecture/) | Desenhar limites, ADRs, onde mora cada capacidade. Gate: audits até zero. `/architecture` |
+| [`cicd`](./quality/cicd/) | Workflows seguros, jobs, ruff/mypy/eslint, coverage, deploy por SHA. `/cicd` |
 | [`principles-audit`](./quality/principles-audit/) | Varredura hexagonal / TDD / `/api/v1`. `/principles-audit` |
 | [`security-audit`](./quality/security-audit/) | Tenant, IDOR, XSS, segredos. `/security-audit` |
 

@@ -10,7 +10,7 @@ description: >
 
 # Arquitetura
 
-**REQUIRED BACKGROUND:** constituição `AGENTS.md` (princípios, hexagonal, dimensões §5). Esta skill é o **desenho** e o **gate de entrega**. Skills de pasta (`http-apis`, `auth`, `agent-orchestration`, `frontend-surfaces`, …) executam o recorte.
+**REQUIRED BACKGROUND:** constituição `AGENTS.md` (princípios, hexagonal, dimensões §5). Esta skill é o **desenho** e o **gate de entrega**. Skills de pasta (`http-apis`, `auth`, `agent-orchestration`, `frontend-surfaces`, `cicd`, …) executam o recorte.
 
 ## Como desenhar
 
@@ -43,6 +43,7 @@ Vista mental (indústria, sem diagrama obrigatório): contexto → limites (cont
 | Chat | `frontend-chat` |
 | Fila operacional / tickets | `ops-backoffice` |
 | UI do backoffice | `frontend-backoffice` |
+| CI/CD, gates, workflows | `cicd` |
 
 ## Gate depois de implementar
 
