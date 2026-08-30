@@ -5,7 +5,8 @@ description: >
   ConversationalSpec, GraphSpec, WorkflowSpec, conversational vs operational
   flow, conversational/engine, specs/<job>, graph.py, node.py, edge.py,
   config.py, prompts folder, prompts/guardrails.md, prompts/reflection.md, canonical copy vs
-  prompt, LLM-driven turn, specialist/sub-agent, agent config.py,
+  prompt, LLM protocol, provider, model, openai_chat_completions, ChatCompletionsLlm,
+  LLM-driven turn, specialist/sub-agent, agent config.py,
   LLM_API_KEY, LLM_BASE_URL, getenv, guards, guardrails, output guard,
   state guard, or reflection. Activating Make/LangGraph/in-process:
   orchestration-runtime. LangGraph mention: langgraph-agents.
@@ -44,7 +45,7 @@ Mesmo commit. Ordem abaixo. Conferência vazia = não pronto.
 3. **Duas casas.** Semântica nos `.md`. Legal / recusa / recap no domínio. Schema/enum no domínio. `PromptCatalog` é porta; core não lê disco; versão no trace.
 4. **Guardas no caminho.** Estado (schema) + `inspect_outbound` / `approve_outbound` no texto **gerado**. Recusa canônica no domínio. Sem a chamada de saída, o agente não ativa.
 5. **Sensibilizar.** A jornada chama `active("guardrails")` e `active("reflection")`. Vazio = no-op. Ausente = não sobe. Reflection nunca substitui a saída; revisão **reentra** em `inspect_outbound`.
-6. **Config de LLM.** `specs/<job>/config.py` é SSOT por node (`llm_turn`, `reflection` se o slot tiver corpo): modelo, provider, temperatura, max_tokens. Sem `getenv`, sem segredo, sem marca do produto. Segredo e URL vivem em settings do composition root, com nome de **capacidade** (`LLM_API_KEY` / `LLM_BASE_URL`) ou o nome padrão do provider (`OPENAI_API_KEY`). Adapter recebe a conexão injetada — `os.environ` no adapter é defeito. Sem provider escolhido: não invente `model_name` e **não** construa o adapter.
+6. **Config de LLM — protocolo, provider, modelo.** Três camadas distintas no `config.py` do spec, por node: `protocol` (envelope HTTP, ex. `openai_chat_completions`), `provider` (quem hospeda: `openai`, `deepseek`, `tencent`), `model_name` (id do deployment). Temperatura e max_tokens no mesmo config. Sem `getenv`, sem segredo. URL e chave injetadas no composition (`LLM_API_KEY` / `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` / `TENCENT_API_KEY` conforme o provider). O adapter implementa **um protocolo**; o catálogo de providers mapeia provider → protocolo + URL default. Trocar Tencent por DeepSeek nativo muda provider e chave, não o domínio. `complete()` vazio é falha, não fallback.
 7. **Runtime.** Um adapter (`orchestration-runtime`). Capabilities exigidas ⊂ oferecidas. Mesmo builder na API e no worker.
 8. **Testes de nascimento** (senão é teatro): catálogo falha sem cada slot; heading-only → `active` é `None`; bloqueia reivindicação e permite abertura canônica; recap intacto **e** montado das labels do spec; registro rejeita segundo agente no v1 e rejeita conversacional sem guarda de saída; engine não importa spec concreto nem copy canônica; composição: `execute_turn` chama a guarda no gerado; `config.py` existe no spec; adapter de LLM sem `getenv` e sem prefixo da marca.
 
@@ -109,7 +110,7 @@ Grafo (LangGraph, StateGraph, cenário Make): **node** = unidade de trabalho; **
 
 `token=None` = aresta linear (depois de coletar o campo). `token="continuar"` / `"sim"` = aresta condicional. Nó sem `field` e sem aresta de saída = terminal.
 
-Quando um runtime **compilador** for o escolhido (ADR, **um** adapter): o adapter lê o **mesmo** `ConversationalSpec` e faz `GraphSpec → StateGraph`. Não copie o grafo para um segundo `graph.py` com SDK. `from langgraph.graph import StateGraph` no spec, no engine ou no use case é defeito. Ponte: `langgraph-agents`.
+Quando LangGraph é o runtime escolhido: `infrastructure/adapters/langgraph/` lê o **mesmo** `ConversationalSpec` (`nodes` + `edges`) e compila `StateGraph`. Um turno de usuário = um `ainvoke` (aresta para END). Banco do serviço continua SSOT — checkpointer do LangGraph não substitui `ConversationStore`. Não copie o grafo para um segundo `graph.py` com SDK. `from langgraph.graph import StateGraph` no spec, no engine ou no use case é defeito. Ponte: `langgraph-agents`.
 
 Não crie `nodes/` extra “para quando o LangGraph chegar”. Função de node LLM só nasce com o adapter e o `LlmPort` ligados.
 
@@ -127,7 +128,9 @@ v1 registra exatamente um. A árvore já admite o segundo; o registro é que tra
 
 LangGraph **agora** para “depois trocar por Make” = dois adapters descartáveis. Escolha **um** (`orchestration-runtime`) e compile o spec nele. In-process já orquestra o grafo de coleta. LangGraph entra quando a ADR o escolhe como **o** runtime — não como ensaio.
 
-Canal de entrada: o provider do requisito do v1 (API oficial, template pré-aprovado, identidade, janela de envio). Cliente não oficial da sessão web do canal (Evolution, Baileys e equivalentes) **não** é stepping stone: identidade, webhook e template não sobrevivem à troca. Dev local sem credencial: adapter fake ou sandbox **atrás da mesma porta** do messaging-gateway.
+Canal de entrada **não** mora no serviço de agentes. Twilio, Evolution e qualquer outro webhook vivem em `messaging-gateway/infrastructure/adapters/<canal>/`, normalizam para o vocabulário neutro e **não** vazam `remoteJid` / `MessageSid` para casos. Evolution **não** substitui o provider oficial de template/janela; é adapter de envelope, não o canal de produção do requisito.
+
+Cópia canônica (`canonical_texts` ou equivalente no domínio) **é** necessária: abertura legal, recusa da guarda, hold humano, enum de categoria. Não é obsoleto. Obsoleto é constante sem leitor (apaga).
 
 Stub de fala que devolve transcrição inventada, porta sem caminho, `presentation/` que ninguém importa: não nascem. “Depois a gente liga” é ocupação.
 
@@ -160,35 +163,45 @@ Turno de modelo:
 
 Não coloque enum de categoria ou regra de confirmação no prompt. Política de nunca-prometer mora em `prompts/guardrails.md`; o matcher 100% mora em `inspect_outbound`. Não coloque “como perguntar a regional em linguagem natural” em constante Python.
 
-## Config de LLM — três casas
+## Config de LLM — protocolo ≠ provider ≠ modelo
 
 Marca do produto no nome da variável (`ACME_LLM_TOKEN`) acopla o código ao tenant. Adapter que lê `os.environ` fura o composition root. `config.py` com a chave da API mistura segredo com política do node.
 
+| Camada | É | Não é |
+|--------|---|--------|
+| **Protocolo** | envelope HTTP (`openai_chat_completions`) | o vendor comercial |
+| **Provider** | quem hospeda (`openai`, `deepseek`, `tencent`) | o id do modelo |
+| **Modelo** | deployment (`deepseek-v4-flash-202605`, `gpt-4.1-mini`) | a URL |
+
+O mesmo protocolo serve a vários providers (Tencent TokenHub e DeepSeek nativo falam Chat Completions). O adapter do protocolo não se chama `OpenAiLlm` se outros providers o usam — `ChatCompletionsLlm`.
+
 | Casa | Mora | Não mora |
 |------|------|----------|
-| `specs/<job>/config.py` | modelo, provider, temperatura, max_tokens **por node** | `getenv`, URL, token, prefixo da marca |
-| Settings (composition root) | conexão: `LLM_API_KEY` / `LLM_BASE_URL` **ou** o nome padrão do provider | qual node usa qual modelo |
-| Adapter (`LlmPort`) | HTTP/SDK com URL e token **injetados** | `os.environ`, fallback silencioso (`complete` vazio se faltar URL) |
+| `specs/<job>/config.py` | protocol, provider, model_name, temperatura, max_tokens **por node** | `getenv`, URL, token, prefixo da marca |
+| Catálogo de providers (infra) | provider → protocolo + URL default | chave, regra de negócio |
+| Settings (composition) | chave do provider escolhido | qual node usa qual modelo |
+| Adapter (`LlmPort`) | HTTP do **protocolo**, URL/token/modelo **injetados** | `os.environ`, `complete()` vazio |
 
-`LlmNodeConfig` é value object de domínio (dataclass fria). Sem Pydantic no core. Sem `api_key` no config do node — o DI passa a conexão.
+`LlmNodeConfig` é dataclass de domínio. Sem Pydantic no core. Sem `api_key` no config do node.
 
 ```
 NODE_CONFIGS = {
-    "llm_turn": LlmNodeConfig(temperature=0.2, max_tokens=4096, model_name=..., provider=...),
-    "reflection": LlmNodeConfig(temperature=0.2, max_tokens=2048, model_name=..., provider=...),
+    "llm_turn": LlmNodeConfig(
+        temperature=0.2, max_tokens=4096,
+        model_name="deepseek-v4-flash-202605",
+        provider="tencent",
+        protocol=LlmApiProtocol.OPENAI_CHAT_COMPLETIONS,
+    ),
 }
 ```
 
-Não declare node LLM chamado `guardrails`: a guarda de saída é determinística. Juiz-LLM, se existir, é rede extra **depois** de `inspect_outbound`, com outro nome.
+Não declare node LLM chamado `guardrails`. Sem chave no composition: **não** instancia o adapter.
 
-Env: capacidade ou contrato de mercado, nunca marca.
+Env: capacidade ou contrato de mercado do **provider**, nunca marca do produto.
 
 | Ok | Defeito |
 |----|---------|
-| `LLM_API_KEY`, `LLM_BASE_URL` | `TENDA_LLM_TOKEN`, `ACME_GPT_KEY` |
-| `OPENAI_API_KEY` (se o provider for esse) | `PRODUTO_OPENAI_KEY` |
-
-Sem provider escolhido, `model_name`/`provider` ficam `None` e o composition **não** instancia o adapter. Completar o config com um modelo inventado é teatro.
+| `LLM_API_KEY`, `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`, `TENCENT_API_KEY` | `ACME_GPT_KEY`, `TENDA_LLM_TOKEN` |
 
 A mesma regra vale para **todo** env e **schema SQL**, não só LLM: constituição §3.1. `agents.conversations` atrás de `ConversationStore`. Não `workspace.conversations` nem `TENDA_PG_*`.
 
@@ -346,6 +359,7 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 - `guardrails.md` como única enforcement (sem `inspect_outbound`)
 - Prefixo da marca em variável de LLM (`*_LLM_URL`, `*_LLM_TOKEN`)
 - Adapter de LLM lendo `os.environ` / `getenv`
+- Provider misturado com protocolo (`OpenAiLlm` falando com Tencent)
 - `api_key` ou URL no `config.py` do agente
 - Node LLM chamado `guardrails` no lugar de `inspect_outbound`
 - `complete()` devolvendo vazio quando falta URL (fallback silencioso)
@@ -361,8 +375,8 @@ Antes de declarar pronto, copie e marque. Caixa vazia = o agente **não nasceu**
 - [ ] Duas casas: semântica nos `.md`; legal/recusa/recap e schema no domínio
 - [ ] Guardas de estado e de saída no caminho do turno; LLM não cria o fato oficial
 - [ ] `active("guardrails")` e `active("reflection")` sensibilizados; vazio = no-op; reflection nunca substitui a saída
-- [ ] `config.py` SSOT por node; settings com nome de capacidade; adapter sem `getenv` e sem prefixo da marca
-- [ ] Runtime: um adapter (`orchestration-runtime`); capabilities no startup; mesmo builder API/worker
+- [ ] `config.py` com protocol + provider + model_name por node; catálogo de providers na infra; adapter sem `getenv`
+- [ ] Runtime: um adapter da porta (`in-process` ou `langgraph`); SDK LangGraph só em `adapters/langgraph/`; capabilities no startup
 - [ ] Testes de nascimento verdes (slots, `active`, bloqueio, abertura, recap, registro, composição, config LLM)
 - [ ] Título de conversa (se houver lista): use case após a 1ª resposta, ≤6 palavras
 - [ ] Roteamento determinístico vs modelo explícito; opção “parecida” não vira clique

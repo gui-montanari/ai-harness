@@ -79,9 +79,9 @@ LLM é `LlmPort` (gerar texto / structured). O runtime **chama** a porta nos **t
 
 **Make.com:** só depois da capability matrix. Cenário no adapter; regra canônica no serviço. Callback autenticado, idempotente, correlacionado. Make não escolhe tenant nem guarda saída.
 
-**LangGraph:** `infrastructure/adapters/<runtime>/`. Compila `GraphSpec` → `StateGraph`. `interrupt` vira `PendingInteraction` no domínio, não um tipo do SDK vazando. Ponte: `langgraph-agents`.
+**LangGraph:** `infrastructure/adapters/langgraph/`. Compila `ConversationalSpec.nodes/edges` → `StateGraph`. Um turno = um `ainvoke`; persistência no `ConversationStore`, não no checkpointer. `interrupt` vira HITL no domínio. Ponte: `langgraph-agents`.
 
-Proibido: `from langgraph.graph import StateGraph` em `core/`, `application/`, `graph.py` do agente. O `graph.py` monta o **spec**.
+Proibido: `from langgraph.graph import StateGraph` em `core/`, `application/`, `specs/<job>/graph.py`. O `graph.py` do job monta o **spec**.
 
 ## Relação com o processo
 
