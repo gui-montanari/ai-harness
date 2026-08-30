@@ -34,6 +34,7 @@ frontend/
   frontend-backoffice/
 quality/
   cicd/
+  skills-audit/
   principles-audit/
   security-audit/
 shared/                    # scanner/PDF dos audits
@@ -47,6 +48,7 @@ shared/                    # scanner/PDF dos audits
 |-------|--------|
 | [`architecture`](./architecture/) | Desenhar limites, ADRs, onde mora cada capacidade. Gate: audits até zero. `/architecture` |
 | [`cicd`](./quality/cicd/) | Workflows seguros, jobs, ruff/mypy/eslint, coverage, deploy por SHA. `/cicd` |
+| [`skills-audit`](./quality/skills-audit/) | Coerência do catálogo; só achado com valor; veredito 10/10. `/skills-audit` |
 | [`principles-audit`](./quality/principles-audit/) | Varredura hexagonal / TDD / `/api/v1`. `/principles-audit` |
 | [`security-audit`](./quality/security-audit/) | Tenant, IDOR, XSS, segredos. `/security-audit` |
 
@@ -92,7 +94,7 @@ find architecture backend frontend quality -name SKILL.md | while read -r f; do
 done
 ```
 
-Copie `AGENTS.md` para a raiz de cada produto. Cada skill termina em **Conferência** — o agente marca as caixas antes de declarar pronto. Depois: `/principles-audit` e `/security-audit` até **zero** achados (`architecture`).
+Copie `AGENTS.md` para a raiz de cada produto. Cada skill termina em **Conferência** — o agente marca as caixas antes de declarar pronto. Depois: `/principles-audit` e `/security-audit` até **zero** achados (`architecture`). Para auditar **este** catálogo (outra LLM, 10/10, inconsistência): `/skills-audit`.
 
 ## Convenção
 
