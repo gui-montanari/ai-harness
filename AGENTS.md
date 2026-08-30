@@ -156,11 +156,12 @@ Produto com API **e** UI — backend e frontend **não** ficam soltos na raiz. C
     services/<bounded-context>/src/<pkg>/
       core/domain/
       core/ports/
-      application/              # casos de uso (funções)
-      infrastructure/adapters/
+      application/              # casos de uso (funções, um verbo)
+      application/commands/     # Command/Result do caso de uso — não HTTP
+      infrastructure/adapters/  # Memory*, Postgres*, SDKs
       infrastructure/di/
       presentation/
-        schemas/                # único lugar de Pydantic/Zod de borda
+        schemas/                # único lugar de Pydantic/Zod de borda HTTP
         http/
           app.py                # factory FastAPI, /health /ready
           v1/                   # endpoints; prefixo /api/v1
@@ -204,14 +205,24 @@ Proibido no mesmo idioma: `getOrder` em Python, `get_order` em TS, `HTTPClient` 
 | Record de persistência | `infrastructure/adapters/` | `OrderRecord` / `OrderRow` | mapeia tabela. ORM **aqui** |
 | Porto | `core/ports/` | `OrderRepository`, `Clock`, `HttpClient` | interface |
 | Caso de uso | `application/` | `CreateOrder`, `ChargeOrder` | um verbo, um motivo. Sem dataclass/Command neste arquivo |
-| Command / Result do caso de uso | `application/schemas/` | `CreateOrderCommand`, `TurnResult` | entrada/saída tipada, sem `execute` |
-| Adapter | `infrastructure/adapters/` | `PostgresOrderRepository`, `StripeGateway` | implementação do porto |
+| Command / Result do caso de uso | `application/commands/` | `CreateOrderCommand`, `TurnResult` | entrada/saída tipada, sem `execute`. Não é schema HTTP |
+| Adapter | `infrastructure/adapters/` | `PostgresOrderRepository`, `MemoryOrderRepository` | implementação do porto. Nunca em `application/` |
 
 Um `Order` que é entidade **e** tabela SQLAlchemy **e** payload FastAPI é violação de SRP e de hexagonal. O mapper vive no adapter (mecânico; DRY não exige “utils”).
 
-`http.py` com `BaseModel` **e** `@router.post` é o mesmo cheiro: dois motivos para mudar. Schema de borda na pasta `presentation/schemas/`; Command/Result em `application/schemas/`; função em `application/`; endpoint em `http/v1/`. O arquivo da função **não declara tipo**.
+`http.py` com `BaseModel` **e** `@router.post` é o mesmo cheiro: dois motivos para mudar. Schema de borda na pasta `presentation/schemas/`; Command/Result em `application/commands/`; função em `application/`; endpoint em `http/v1/`. O arquivo da função **não declara tipo**.
 
-Use case **não** se chama `OrderService`. Handler **não** se chama `order_utils`. Pasta **não** mistura `models.py` god-file com entidade + schema + row.
+Não crie pastas MVC `models/` + `schemas/` + `services/` no bounded context. `models` vira ORM, `services` vira lixeira, `schemas` mistura HTTP com Command. O mapa é:
+
+| Quem diz | Onde vive |
+|----------|-----------|
+| schema HTTP | `presentation/schemas/` |
+| model de negócio | `core/domain/` |
+| função / caso de uso | `application/` (não se chama `*Service`) |
+| Command do caso de uso | `application/commands/` |
+| record de banco | `infrastructure/adapters/` |
+
+Use case **não** se chama `OrderService`. Adapter **não** se chama e não mora em `application/` (`MemoryX` em `application/` é achado). Handler **não** se chama `order_utils`. Pasta **não** mistura `models.py` god-file com entidade + schema + row.
 
 **Consistência do repo:** o segundo bounded context copia a **forma** do primeiro (mesmos sufixos, mesmas pastas, mesmos verbos). Exceção só no plano, com prazo para alinhar. Linter de estilo (ruff/eslint) é o piso; o padrão de nomes de papel é esta tabela.
 
@@ -256,8 +267,9 @@ Rotas de produto (não probes) vivem sob `/api/v1`. `/health` e `/ready` ficam n
 |-------|--------|------------|
 | `presentation/schemas/` | `BaseModel` / Zod de request e response | regra, SQL, `APIRouter` |
 | `presentation/http/v1/` | endpoints versionados | `BaseModel`, regra de domínio |
-| `application/` | um verbo por caso de uso | Pydantic, FastAPI, `@dataclass` de Command/Result |
-| `application/schemas/` | Command e Result | `execute`, regra |
+| `application/` | um verbo por caso de uso | Pydantic, FastAPI, `@dataclass` de Command/Result, classe `Memory*` |
+| `application/commands/` | Command e Result | `execute`, regra, Pydantic |
+| `infrastructure/adapters/` | `Memory*` / `Postgres*` | caso de uso |
 
 Probes `/health` e `/ready` não entram em `/api/v1`. Webhook de provider entra em `/api/v1/webhooks/<adapter>` e autentica **antes** de normalizar.
 
@@ -322,7 +334,7 @@ Toda mudança, por menor que seja, passa por isto **antes** do primeiro teste. S
 | 11 | Resiliência | Worker morre no meio? Restart, DLQ, drain? Retry **global**? Idempotência **global**? |
 | 12 | Operação | Log sem PII, métrica, rollback, probe de vivo vs pronto, dono da flag? |
 | 13 | Runtime / SSOT | Async-only? Políticas (tenant, retry, semáforo, idempotência) num dono, o resto herda? |
-| 14 | Consistência | Case da linguagem? Schema ≠ entity ≠ record? Pydantic só em `presentation/schemas/`? `/api/v1`? `backend/` ≠ `frontend/`? Migration `YYYYMMDD_VV`? |
+| 14 | Consistência | Case da linguagem? Schema HTTP ≠ Command ≠ entity ≠ record? Pydantic só em `presentation/schemas/`? Command em `application/commands/`? Adapter fora de `application/`? `/api/v1`? `backend/` ≠ `frontend/`? Migration `YYYYMMDD_VV`? |
 
 Trivial = um bug óbvio, um nome, um teste faltando em código que você não está reestruturando. Na dúvida, **não é trivial**: plano.
 
@@ -616,6 +628,9 @@ Não invente skill, pasta, ADR ou diagrama “para completar”. Skills de audit
 - `models.py` god-file; segundo bounded context com pastas diferentes sem plano
 - Pydantic/`BaseModel` no mesmo arquivo que o endpoint, no use case ou no domínio
 - `*Command` / `*Result` / `@dataclass` no mesmo arquivo que `execute`
+- Command em `application/schemas/` (o nome colide com HTTP; o lugar é `application/commands/`)
+- `Memory*` / adapter concreto em `application/`
+- pastas MVC `models/` + `services/` no bounded context hexagonal
 - `services/` e `apps/` soltos na raiz de um repo que tem API e UI; falta `backend/` e `frontend/`
 - rota de negócio sem `/api/v1`
 - `001_init.sql`, dump em `docker-entrypoint-initdb.d`, ou `psql < dump.sql` no Makefile

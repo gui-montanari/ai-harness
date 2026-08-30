@@ -7,8 +7,10 @@ description: >
   file size limits, import leaks, worker auto-recovery, DLQ, decoupling, microservices,
   scalability, performance, architectural security, async-only, multi-tenant isolation,
   semaphore, retry policy, idempotency, naming conventions, schema vs domain
-  vs persistence model separation, schema migrations, YYYYMMDD_VV filenames,
-  docker-entrypoint-initdb dumps, init.sql, or repo-wide consistency.
+  vs persistence model separation, application commands vs HTTP schemas,
+  backend vs frontend layout, /api/v1, Memory adapters in application,
+  schema migrations, YYYYMMDD_VV filenames, docker-entrypoint-initdb dumps,
+  init.sql, or repo-wide consistency.
   Also when they run /principles-audit, /hexagonal-audit, or say "varredura de princípios".
 ---
 
@@ -34,7 +36,7 @@ Entregue achados verificados no código, inventário de cobertura, PDF em pt-BR 
 - [ ] 10. Escala / desacoplamento — worker vs microsserviço, estado, backpressure, dados
 - [ ] 11. Resiliência — restart, ACK, DLQ, drain, probes
 - [ ] 12. Runtime — async-only; tenant/retry/semáforo/idempotência **globais** (o resto herda)
-- [ ] 13. Consistência — nomes; schema ≠ entity ≠ record; Pydantic em `presentation/schemas/`; `/api/v1`; `backend/`/`frontend/`; migrations `YYYYMMDD_VV`
+- [ ] 13. Consistência — nomes; schema HTTP ≠ entity ≠ record ≠ Command; Pydantic em `presentation/schemas/`; Command em `application/commands/`; `/api/v1`; `backend/`/`frontend/`; migrations `YYYYMMDD_VV`
 - [ ] 14. Registrar o que está CORRETO (cobertura por camada)
 - [ ] 15. findings.json + PDF + rasterizar páginas
 - [ ] 16. Entregar no chat: arquivo:linha + caminhos
@@ -70,7 +72,9 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 | “Pydantic no domínio é mais rápido” | Schema de borda ≠ entidade. ORM ≠ domínio. §3.1. |
 | “Neste módulo a gente usa camelCase em Python” | O repo tem um case. Indústria da linguagem. |
 | “Pydantic no http.py é só o request” | Schema e endpoint são dois motivos. `presentation/schemas/` + `http/v1/`. |
-| “Command no mesmo arquivo do execute é mais claro” | Tipo e função são dois motivos. `application/schemas/` + `application/`. |
+| “Command no mesmo arquivo do execute é mais claro” | Tipo e função são dois motivos. `application/commands/` + `application/`. |
+| “application/schemas é a pasta de tipos” | Schema HTTP ≠ Command. Command vai em `application/commands/`. |
+| “MemoryX no application é o fake do use case” | Fake é adapter. `infrastructure/adapters/memory/`. |
 | “services/ na raiz é o padrão do monorepo” | Com UI no mesmo repo: `backend/` e `frontend/`. Constituição §3. |
 | “O init.sql do compose é só para o primeiro boot” | É segundo dono do schema. Migration versionada + runner. Constituição §3.2. |
 | “Alembic já ordena pelos revision ids” | O filename no git ainda precisa `YYYYMMDD_VV`. Ordem visível sem a ferramenta. |

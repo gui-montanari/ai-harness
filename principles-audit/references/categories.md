@@ -50,6 +50,9 @@ Achado quando:
 - nomes do provedor (Stripe Invoice, WMS EmpresaId) no domínio
 - `BaseModel` / Pydantic no use case, no domínio ou no mesmo arquivo que o `APIRouter`
 - `*Command` / `*Result` / `@dataclass` no mesmo arquivo que o `execute` do caso de uso
+- Command/Result em `application/schemas/` em vez de `application/commands/`
+- classe `Memory*` ou adapter concreto em `application/`
+- pastas MVC `models/` + `services/` no lugar de `core/domain/` + `application/`
 - código de API e de UI misturados na raiz (`services/` + `apps/` sem `backend/` e `frontend/`)
 - rota de negócio fora de `/api/v1`
 
@@ -173,6 +176,8 @@ Achado quando:
 - `models.py` (ou `types.ts`) mistura os três papéis
 - Bounded context B usa pastas/sufixos diferentes do A sem plano
 - Pydantic fora de `presentation/schemas/`; endpoint e DTO no mesmo arquivo
+- Command em `application/schemas/` (colide com HTTP); o lugar é `application/commands/`
+- Pasta `models/` ou `services/` no bounded context misturando entidade, DTO e caso de uso
 - API e UI na raiz em vez de `backend/` e `frontend/`
 - Arquivo de schema `001_*.sql`, `init.sql`, ou montado em `docker-entrypoint-initdb.d`
 - Filename de migration que não casa `YYYYMMDD_VV__snake_description` (constituição §3.2)
