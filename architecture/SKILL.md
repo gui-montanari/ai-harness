@@ -32,7 +32,7 @@ Vista mental (indústria, sem diagrama obrigatório): contexto → limites (cont
 | MCP | `mcp-servers` |
 | Agente / Make / LangGraph | `agent-orchestration` |
 | Persistência | `persistence-ports` + `sql-migrations` |
-| Home pública | `frontend-surfaces` |
+| Área pública / home | `frontend-surfaces` |
 | Login | `frontend-login` |
 | Área logada | `frontend-shell` |
 | Chat | `frontend-chat` |
