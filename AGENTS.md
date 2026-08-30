@@ -279,7 +279,7 @@ Probes `/health` e `/ready` não entram em `/api/v1`. Webhook de provider entra 
 
 Frontend chama `/api/v1/...`. Proxy de dev **não** apaga o prefixo.
 
-**Teste:** OpenAPI da app — toda rota de negócio começa com `/api/v1`? Todo `import pydantic` está em `presentation/schemas/`? Procedimento: skill `http-apis`. MCP: `mcp-servers`. Conector OAuth de host LLM: `oauth-connectors`.
+**Teste:** OpenAPI da app — toda rota de negócio começa com `/api/v1`? Todo `import pydantic` está em `presentation/schemas/`? Procedimento: skill `http-apis`. MCP: `mcp-servers`. Identidade: skill `auth`.
 
 ---
 
