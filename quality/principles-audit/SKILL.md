@@ -11,7 +11,8 @@ description: >
   backend vs frontend layout, /api/v1, Memory adapters in application,
   schema migrations, YYYYMMDD_VV filenames, docker-entrypoint-initdb dumps,
   init.sql, or repo-wide consistency. Also getenv, product-prefixed env
-  (TENDA_LLM, ACME_PG), WORKSPACE_DATABASE_URL, os.environ in adapters.
+  (TENDA_LLM, ACME_PG), WORKSPACE_DATABASE_URL vs DATABASE_URL,
+  deploy-unit env, os.environ in adapters.
   Also when they run /principles-audit, /hexagonal-audit, or say "varredura de princípios".
 ---
 
@@ -79,7 +80,8 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 | “services/ na raiz é o padrão do monorepo” | Com UI no mesmo repo: `backend/` e `frontend/`. Constituição §3. |
 | “O init.sql do compose é só para o primeiro boot” | É segundo dono do schema. Migration versionada + runner. Constituição §3.2. |
 | “Alembic já ordena pelos revision ids” | O filename no git ainda precisa `YYYYMMDD_VV`. Ordem visível sem a ferramenta. |
-| “TENDA_ é o namespace do nosso repo” | Marca no env. Se o produto mudar de nome, o código muda. Capacidade (`WORKSPACE_DATABASE_URL`) não muda. Constituição §3.1. |
+| “TENDA_ é o namespace do nosso repo” | Marca no env. Constituição §3.1. |
+| “WORKSPACE_ é o nome da nossa unidade” | Artefato de deploy no env. O banco deste processo é `DATABASE_URL`. |
 | “O adapter lê os.environ, é infra” | Infra ainda recebe valor injetado. `getenv` só em composition/settings/entrypoint/migrate. |
 
 ## Passo 0 — Constituição e stack
@@ -95,7 +97,7 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 python3 <SKILL_DIR>/../../shared/scan_inventory.py . > docs/principles-audit/inventory.json
 ```
 
-O JSON lista todos os arquivos de código, camada inferida, linhas vs limite, funções/classes estouradas, imports de infra em `core`/`application`, clusters de duplicação textual, `deploy.signals` (restart, healthcheck, probes, API+worker no mesmo command, `product_brand_env` no compose) e `runtime_smells` (`time.sleep`, `requests`, `readFileSync`, `gather(*)`, `product_brand_env`, `getenv_in_core_or_application`, `getenv_outside_composition`).
+O JSON lista todos os arquivos de código, camada inferida, linhas vs limite, funções/classes estouradas, imports de infra em `core`/`application`, clusters de duplicação textual, `deploy.signals` (restart, healthcheck, probes, API+worker no mesmo command, `product_brand_env` no compose) e `runtime_smells` (`time.sleep`, `requests`, `readFileSync`, `gather(*)`, `product_brand_env`, `deploy_unit_env`, `getenv_in_core_or_application`, `getenv_outside_composition`).
 
 **O scanner não fecha a auditoria.** Ele impede amostragem. Cada `over_file`, `functions_over`, `infra_imports`, cluster de `duplicates`, `deploy.signals` e smell de env vira: achado confirmado, falso positivo documentado, ou N/A.
 

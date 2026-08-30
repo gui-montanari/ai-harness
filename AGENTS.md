@@ -232,9 +232,9 @@ Use case **não** se chama `OrderService`. Adapter **não** se chama e não mora
 
 **Teste:** abra dois módulos distantes. Sem olhar o autor, o desenho é o mesmo?
 
-**Env:** nome de **capacidade** (`WORKSPACE_DATABASE_URL`, `LLM_API_KEY`) ou contrato de mercado do provider (`OPENAI_API_KEY`, `TWILIO_AUTH_TOKEN`). Prefixo da marca do produto (`ACME_LLM_TOKEN`, `TENDA_PG_WORKSPACE`) é defeito: se o produto mudar de nome, o código não deveria mudar. `os.environ` / `getenv` / `process.env` só em composition root, settings, entrypoint de processo e runner de migration. Adapter, handler, use case e domínio recebem o valor **injetado**. Completar com string vazia e seguir é fallback silencioso.
+**Env:** nome de **capacidade** (`DATABASE_URL`, `LLM_API_KEY`) ou contrato de mercado do provider (`OPENAI_API_KEY`, `TWILIO_AUTH_TOKEN`). Defeito: prefixo da **marca** (`TENDA_PG_WORKSPACE`) e prefixo do **artefato de deploy** (`WORKSPACE_DATABASE_URL`, `PLATFORM_DATABASE_URL`). O banco **deste** processo é `DATABASE_URL`. Outro dono ainda falado daqui leva o nome do bounded context (`MESSAGING_DATABASE_URL`, `VAULT_DATABASE_URL`), nunca o nome do processo que os hospeda. `os.environ` / `getenv` / `process.env` só em composition root, settings, entrypoint de processo e runner de migration. Adapter, handler, use case e domínio recebem o valor **injetado**. Completar com string vazia e seguir é fallback silencioso.
 
-**Teste (env):** se o produto mudar de nome, quantos env eu renomeio? A resposta correta é **zero**.
+**Teste (env):** se o produto **ou o artefato de deploy** mudar de nome, quantos env eu renomeio? A resposta correta é **zero**.
 
 ### 3.2 Nome e ordem de migration
 

@@ -190,10 +190,11 @@ Achado quando:
 - Compose/Makefile aplica dump (`psql < …`) em vez do runner
 - Senha de role, token ou segredo no SQL da migration
 - Dois runners (Alembic **e** SQL cru, Prisma **e** dump) no mesmo schema
-- Prefixo da marca do produto em variável de ambiente (`TENDA_LLM_TOKEN`, `ACME_PG_WORKSPACE`) — constituição §3.1. Smell `product_brand_env` (código e compose)
-- Nome de env que mudaria se o produto mudasse de nome
+- Prefixo da marca do produto em variável de ambiente (`TENDA_LLM_TOKEN`) — smell `product_brand_env`
+- Prefixo do artefato de deploy (`WORKSPACE_DATABASE_URL`, `PLATFORM_DATABASE_URL`) — smell `deploy_unit_env`. O banco deste processo é `DATABASE_URL`
+- Nome de env que mudaria se o produto **ou a unidade de deploy** mudasse de nome
 
-Fila extra: grep `os.environ` / `getenv` / `process.env` e as chaves do compose. Confirme o prefixo contra o nome do repo (`tenda-communications` → `TENDA_`). Provider de mercado (`OPENAI_API_KEY`, `TWILIO_AUTH_TOKEN`) e capacidade (`WORKSPACE_DATABASE_URL`, `LLM_API_KEY`) são o padrão certo.
+Fila extra: grep `os.environ` / `getenv` / `process.env` e as chaves do compose. Prefixo do repo (`tenda-communications` → `TENDA_`) e prefixo de artefato (`WORKSPACE_`, `PLATFORM_`, `MONOLITH_`) são achado. Provider de mercado (`OPENAI_API_KEY`, `TWILIO_AUTH_TOKEN`), `DATABASE_URL` deste processo, e bounded context alheio ainda falado daqui (`MESSAGING_DATABASE_URL`, `VAULT_DATABASE_URL`) são o padrão certo.
 
 **Protegido:** `Order` no domain, `OrderRecord` no adapter, `OrderCreateRequest`/`OrderResponse` na borda; `CreateOrder` como use case; ruff/eslint no CI; migrations `YYYYMMDD_VV__…` aplicadas por um runner com ledger.
 

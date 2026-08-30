@@ -96,6 +96,7 @@ ENV_GET = re.compile(
     r"""(?:os\.environ(?:\.get)?|os\.getenv)\s*(?:\(|\[)\s*['\"]([A-Z][A-Z0-9_]+)['\"]"""
 )
 PROCESS_ENV = re.compile(r"""process\.env(?:\.([A-Z][A-Z0-9_]+)|\[\s*['\"]([A-Z][A-Z0-9_]+)['\"])""")
+DEPLOY_UNIT_PREFIXES = frozenset({"WORKSPACE", "PLATFORM", "MONOLITH"})
 ENV_HOME_PARTS = (
     "/di/",
     "/config/",
@@ -240,8 +241,11 @@ def env_smells(text: str, rel: str, layer: str, brand: str) -> list[str]:
     smells: list[str] = []
     names = [m.group(1) for m in ENV_GET.finditer(text)]
     names.extend(m.group(1) or m.group(2) for m in PROCESS_ENV.finditer(text))
-    if brand and any(name.split("_")[0] == brand for name in names):
+    prefixes = [name.split("_")[0] for name in names]
+    if brand and brand in prefixes:
         smells.append("product_brand_env")
+    if any(prefix in DEPLOY_UNIT_PREFIXES for prefix in prefixes):
+        smells.append("deploy_unit_env")
     reads_env = bool(names) or "os.environ" in text or "os.getenv" in text or "process.env" in text
     if not reads_env:
         return smells
@@ -277,6 +281,8 @@ def scan_deploy(repo: Path) -> dict:
             brand = brand_token(repo)
             if brand and re.search(rf"\b{re.escape(brand)}_[A-Z0-9_]+\s*:", text):
                 signals.append({"file": rel, "kind": "product_brand_env"})
+            if re.search(r"\b(?:WORKSPACE|PLATFORM|MONOLITH)_[A-Z0-9_]+\s*:", text):
+                signals.append({"file": rel, "kind": "deploy_unit_env"})
         elif name == "dockerfile":
             dockerfiles.append(rel)
             if "HEALTHCHECK" not in text:
