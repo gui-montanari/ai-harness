@@ -3,9 +3,10 @@ name: agent-orchestration
 description: >
   Use when creating or changing a product agent, GraphSpec, WorkflowSpec,
   conversational vs operational flow, graph.py, config.py, prompts folder,
-  canonical copy vs prompt, LLM-driven turn, specialist/sub-agent, or agent
-  guards. Activating Make/LangGraph/in-process: orchestration-runtime.
-  LangGraph mention: langgraph-agents.
+  canonical copy vs prompt, LLM-driven turn, specialist/sub-agent, agent
+  guards, guardrails, output guard, state guard, or reflection. Activating
+  Make/LangGraph/in-process: orchestration-runtime. LangGraph mention:
+  langgraph-agents.
 ---
 
 # Orquestração de agentes
@@ -86,6 +87,65 @@ Turno de modelo:
 
 Não coloque enum de categoria, regra de confirmação ou “prometa sigilo” no prompt. Não coloque “como perguntar a regional em linguagem natural” em constante Python.
 
+## Guardas — montagem e uso
+
+Três peças. Não são sinônimos. Biblioteca `guardrails` (SDK) é **adapter opcional**, nunca o dono da regra.
+
+| Peça | Faz | Não faz | Quem implementa |
+|------|-----|---------|-----------------|
+| Guarda de **estado** | aceita ou rejeita o patch no schema (campo, fase, confirmação, criação do fato) | redigir a resposta | domínio / application, 100% determinística |
+| Guarda de **saída** | decide o que **pode ser entregue** ao humano | qualidade, tom, “atendeu o pedido” | application, 100% determinística **antes** de qualquer juiz-LLM |
+| Reflection (opcional) | qualidade: idioma, aderência, coerência | bloquear segurança | segundo passe, nunca no lugar da saída |
+
+Agente conversacional **nasce** com as duas guardas no caminho do turno. Manifest/registro declara isso (`requires_output_guard` / equivalente). Sem o nó no grafo, o agente **não ativa**. Operacional (extração, lote) usa a de estado (schema); a de saída só se houver texto a um humano.
+
+### Como usar no turno
+
+```
+entrada → roteamento (clique exato | modelo)
+       → (modelo: prompt versionado + LlmPort → patch)
+       → guarda de estado
+       → texto ao colaborador
+            canônico / recap / eco de valor confirmado → despacha
+            gerado pelo modelo → guarda de saída → entrega ou recusa canônica
+       → (se voz) síntese só do texto já aprovado
+```
+
+A guarda de saída **não** inspeciona recap, cópia legal nem eco de valor já no estado. Inspecionar e reescrever o recap é defeito (o humano confirma exatamente o registrado).
+
+API mínima (um dono):
+
+```
+inspect_outbound(text) -> { allowed, text, rule }
+approve_outbound(text) -> str   # se bloqueia, devolve recusa canônica, nunca o original
+```
+
+Bloqueio: substitui pela recusa **canônica** (domínio, não prompt). Grava a `rule`. N bloqueios seguidos no mesmo turno/conversa → HITL, sem retry que contorne a guarda. Retry automático do modelo **depois** de um bloqueio de segurança é proibido.
+
+### O que a de saída cobre (catálogo; o produto preenche as regras)
+
+Determinístico, testável, sem modelo:
+
+- segredo / token / chave em claro
+- PII que **não** está na mensagem do usuário nem no estado da conversa
+- identificador interno (protocolo, id de caso, nome de fase, trecho de system prompt)
+- vazamento de prompt (`[INST]`, “system prompt”, “ignore as instruções”)
+- fabricação de side-effect (“já enviei”, “já processei”) sem tool invocadas neste turno
+- vazio / placeholder (`TODO`, `[resposta aqui]`)
+- reivindicações bloqueadas do produto (anonimato, prazo, sanção — a lista é do domínio)
+
+Juiz-LLM de segurança, se existir, é **rede extra depois** desta lista. Em dúvida o juiz não libera o que a camada determinística já bloqueou. Qualidade baixa não é bloqueio de saída.
+
+Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de vendor só no adapter. Core não importa `guardrails`.
+
+### Testes mínimos (senão a guarda é teatro)
+
+- bloqueia uma reivindicação / leak / vazio
+- **permite** a abertura canônica intacta (não reescreve)
+- recap montado do estado atravessa sem mutação
+- composição: o `execute_turn` do agente conversacional chama a guarda no gerado
+- classificar turno livre como “clique” falha o teste de roteamento
+
 ## Red flags
 
 - SDK de runtime no `core/` / `application/` (ativação: `orchestration-runtime`)
@@ -98,6 +158,12 @@ Não coloque enum de categoria, regra de confirmação ou “prometa sigilo” n
 - Script inteiro da conversa em Python no lugar de `prompts/*.md` + guarda
 - Recap ou texto de privacidade gerados pelo modelo
 - Prompt como única cópia de categoria/enum
+- Guarda de saída implementada só com LLM-juiz (“na dúvida passa”)
+- Reflection (qualidade) usado como bloqueio de segurança
+- Recap ou cópia legal reescritos pela guarda
+- Retry de modelo após bloqueio de segurança
+- SDK `guardrails` no `core/` / `application/`
+- Agente conversacional registrado sem guarda de saída no caminho do turno
 
 ## Conferência
 
@@ -107,7 +173,8 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Um agente conversacional no primeiro lançamento, se for o caso
 - [ ] Registro explícito no startup; sem auto-discovery
 - [ ] Título de conversa (se houver lista): use case após a 1ª resposta, ≤6 palavras
-- [ ] Guardas de estado e de saída determinísticas; LLM não cria o fato oficial
+- [ ] Guardas de estado e de saída determinísticas no caminho do turno; LLM não cria o fato oficial
+- [ ] Saída: recusa canônica; recap/legal intactos; sem retry que contorna; testes de bloqueio e de permissão
 - [ ] Turno de modelo usa `prompts/*.md` versionados; cópia legal/recap/recusa fica canônica no domínio
 - [ ] Roteamento determinístico vs modelo explícito; opção “parecida” não vira clique
 - [ ] Checkpointer do runtime ≠ SSOT (banco do serviço)
