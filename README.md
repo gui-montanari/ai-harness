@@ -84,19 +84,16 @@ shared/                    # scanner/PDF dos audits
 
 ## Como usar
 
+Instalação **na máquina do agente**, uma vez. Não copie este catálogo para dentro do produto.
+
 ```bash
-git clone https://github.com/gui-montanari/skills.git
-cd skills
-mkdir -p ~/.agents/skills ~/.grok/skills
-find architecture backend frontend quality -name SKILL.md | while read -r f; do
-  d=$(dirname "$f")
-  name=$(basename "$d")
-  ln -sfn "$(pwd)/$d" ~/.agents/skills/"$name"
-  ln -sfn "$(pwd)/$d" ~/.grok/skills/"$name"
-done
+git clone git@github.com:gui-montanari/skills.git ~/.local/share/gui-montanari-skills
+~/.local/share/gui-montanari-skills/install.sh
 ```
 
-Copie `AGENTS.md` para a raiz de cada produto. Cada skill termina em **Conferência** — o agente marca as caixas antes de declarar pronto. Depois: `/principles-audit` e `/security-audit` até **zero** achados (`architecture`). Para auditar **este** catálogo (outra LLM, 10/10, inconsistência): `/skills-audit`.
+O `install.sh` liga cada skill nas pastas de skills do usuário (Grok, Codex, Agy, Cursor e o Code CLI) e grava uma regra curta apontando para a [constituição](./AGENTS.md). Em outro notebook: o mesmo clone + `install.sh` (ou `git pull && ./install.sh` se o clone já existir).
+
+O produto tem o **próprio** `AGENTS.md` (domínio, ADR, fase) e **não** vendor este repositório. Cada skill termina em **Conferência**. Depois: `/principles-audit` e `/security-audit` até **zero** achados (`architecture`). Para auditar **este** catálogo: `/skills-audit`.
 
 ## Convenção
 

@@ -12,6 +12,8 @@ Antes de implementar, o agente **lê esta constituição** e responde, em silên
 
 Não gere documentação extra. Este arquivo + o plano em `docs/plans/` (quando houver trabalho a analisar) bastam. README, ADRs, wikis e “architecture.md” só existem se o humano pedir.
 
+Este arquivo **não** se copia para dentro do produto. Produto tem `AGENTS.md` próprio. Instalação na máquina: `./install.sh`.
+
 ---
 
 ## 1. Não negociáveis
