@@ -55,6 +55,11 @@ Achado quando:
 - pastas MVC `models/` + `services/` no lugar de `core/domain/` + `application/`
 - código de API e de UI misturados na raiz (`services/` + `apps/` sem `backend/` e `frontend/`)
 - rota de negócio fora de `/api/v1`
+- `os.environ` / `getenv` / `process.env` em `core/` ou `application/`
+- adapter ou handler HTTP lendo env (fora de composition root, settings, entrypoint, migrate)
+- smell do scanner `getenv_in_core_or_application` / `getenv_outside_composition`
+
+Fila extra: `runtime_smells` com esses kinds. Composition (`di/`, `settings`, `app.py` de fábrica, worker, migrate) **pode** ler env. O resto recebe injetado.
 
 **Protegido (ponto forte):** import-linter / dependency-cruiser no CI; porto em `core/ports`; adaptador em `infrastructure`; teste de contrato do adaptador.
 
@@ -185,6 +190,10 @@ Achado quando:
 - Compose/Makefile aplica dump (`psql < …`) em vez do runner
 - Senha de role, token ou segredo no SQL da migration
 - Dois runners (Alembic **e** SQL cru, Prisma **e** dump) no mesmo schema
+- Prefixo da marca do produto em variável de ambiente (`TENDA_LLM_TOKEN`, `ACME_PG_WORKSPACE`) — constituição §3.1. Smell `product_brand_env` (código e compose)
+- Nome de env que mudaria se o produto mudasse de nome
+
+Fila extra: grep `os.environ` / `getenv` / `process.env` e as chaves do compose. Confirme o prefixo contra o nome do repo (`tenda-communications` → `TENDA_`). Provider de mercado (`OPENAI_API_KEY`, `TWILIO_AUTH_TOKEN`) e capacidade (`WORKSPACE_DATABASE_URL`, `LLM_API_KEY`) são o padrão certo.
 
 **Protegido:** `Order` no domain, `OrderRecord` no adapter, `OrderCreateRequest`/`OrderResponse` na borda; `CreateOrder` como use case; ruff/eslint no CI; migrations `YYYYMMDD_VV__…` aplicadas por um runner com ledger.
 

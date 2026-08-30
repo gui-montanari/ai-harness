@@ -232,6 +232,10 @@ Use case **não** se chama `OrderService`. Adapter **não** se chama e não mora
 
 **Teste:** abra dois módulos distantes. Sem olhar o autor, o desenho é o mesmo?
 
+**Env:** nome de **capacidade** (`WORKSPACE_DATABASE_URL`, `LLM_API_KEY`) ou contrato de mercado do provider (`OPENAI_API_KEY`, `TWILIO_AUTH_TOKEN`). Prefixo da marca do produto (`ACME_LLM_TOKEN`, `TENDA_PG_WORKSPACE`) é defeito: se o produto mudar de nome, o código não deveria mudar. `os.environ` / `getenv` / `process.env` só em composition root, settings, entrypoint de processo e runner de migration. Adapter, handler, use case e domínio recebem o valor **injetado**. Completar com string vazia e seguir é fallback silencioso.
+
+**Teste (env):** se o produto mudar de nome, quantos env eu renomeio? A resposta correta é **zero**.
+
 ### 3.2 Nome e ordem de migration
 
 Schema evolui por arquivo versionado no git. **Um dono:** o runner (`make migrate` / serviço `migrate` no compose). Dump em `docker-entrypoint-initdb.d`, `001_init.sql`, `psql < dump.sql` no Makefile ou SQL colado no container é segundo dono — achado.

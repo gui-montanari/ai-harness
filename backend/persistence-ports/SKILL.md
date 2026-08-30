@@ -42,6 +42,8 @@ Dois bounded contexts = dois schemas/roles. Mesmo cluster Postgres **não** auto
 - Tabela tenant-scoped sem RLS
 - Dois serviços escrevendo a mesma tabela
 - SDK Supabase em `core/`
+- DSN com prefixo da marca (`TENDA_PG_WORKSPACE`); o nome é capacidade (`WORKSPACE_DATABASE_URL`)
+- Adapter de persistência lendo `os.environ` (a URL entra pelo composition root)
 
 ## Conferência
 
@@ -52,3 +54,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] I/O async; sessão já no tenant; RLS + teste negativo
 - [ ] Role de app sem `BYPASSRLS` / owner
 - [ ] Dialeto pela DSN (`sql-dialects`); blob = `object-storage`; cache = `cache-ports`
+- [ ] DSN com nome de capacidade; adapter sem `getenv`

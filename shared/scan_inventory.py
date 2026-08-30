@@ -92,6 +92,21 @@ LAYER_PATH = (
     ("infrastructure", ("/infrastructure/", "/adapters/", "/infra/")),
     ("presentation", ("/presentation/", "/api/", "/controllers/", "/handlers/", "/runtimes/")),
 )
+ENV_GET = re.compile(
+    r"""(?:os\.environ(?:\.get)?|os\.getenv)\s*(?:\(|\[)\s*['\"]([A-Z][A-Z0-9_]+)['\"]"""
+)
+PROCESS_ENV = re.compile(r"""process\.env(?:\.([A-Z][A-Z0-9_]+)|\[\s*['\"]([A-Z][A-Z0-9_]+)['\"])""")
+ENV_HOME_PARTS = (
+    "/di/",
+    "/config/",
+    "/settings",
+    "worker",
+    "/app.py",
+    "__main__",
+    "migrate",
+    "entrypoint",
+    "/container.py",
+)
 
 
 def should_skip(path: Path) -> bool:
@@ -212,6 +227,31 @@ def shingles(text: str, size: int = 10) -> dict[str, list[int]]:
     return out
 
 
+def brand_token(repo: Path) -> str:
+    return repo.name.split("-")[0].upper()
+
+
+def env_home(rel: str) -> bool:
+    n = rel.replace("\\", "/").lower()
+    return any(part in n for part in ENV_HOME_PARTS)
+
+
+def env_smells(text: str, rel: str, layer: str, brand: str) -> list[str]:
+    smells: list[str] = []
+    names = [m.group(1) for m in ENV_GET.finditer(text)]
+    names.extend(m.group(1) or m.group(2) for m in PROCESS_ENV.finditer(text))
+    if brand and any(name.split("_")[0] == brand for name in names):
+        smells.append("product_brand_env")
+    reads_env = bool(names) or "os.environ" in text or "os.getenv" in text or "process.env" in text
+    if not reads_env:
+        return smells
+    if layer in {"core", "application"}:
+        smells.append("getenv_in_core_or_application")
+    elif layer in {"infrastructure", "presentation", "other"} and not env_home(rel):
+        smells.append("getenv_outside_composition")
+    return smells
+
+
 def scan_deploy(repo: Path) -> dict:
     """Sinais de resiliência/escala em compose e Dockerfile. O agente confirma."""
     compose_files: list[str] = []
@@ -234,6 +274,9 @@ def scan_deploy(repo: Path) -> dict:
                 signals.append({"file": rel, "kind": "compose_no_healthcheck"})
             if re.search(r"command:.*(?:&&|;).*worker", text, re.I):
                 signals.append({"file": rel, "kind": "api_and_worker_same_command"})
+            brand = brand_token(repo)
+            if brand and re.search(rf"\b{re.escape(brand)}_[A-Z0-9_]+\s*:", text):
+                signals.append({"file": rel, "kind": "product_brand_env"})
         elif name == "dockerfile":
             dockerfiles.append(rel)
             if "HEALTHCHECK" not in text:
@@ -284,6 +327,7 @@ def classify_file(path: Path, repo: Path, text: str) -> dict:
     for pat, kind in checks:
         if re.search(pat, text):
             smells.append(kind)
+    smells.extend(env_smells(text, rel, layer, brand_token(repo)))
     return {
         "file": rel,
         "layer": layer,

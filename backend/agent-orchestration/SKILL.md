@@ -143,6 +143,8 @@ Env: capacidade ou contrato de mercado, nunca marca.
 
 Sem provider escolhido, `model_name`/`provider` ficam `None` e o composition **não** instancia o adapter. Completar o config com um modelo inventado é teatro.
 
+A mesma regra vale para **todo** env, não só LLM: constituição §3.1. `WORKSPACE_DATABASE_URL`, não `TENDA_PG_WORKSPACE`.
+
 ## Guardas — montagem e uso
 
 Três peças. Não são sinônimos. Biblioteca `guardrails` (SDK) é **adapter opcional**, nunca o dono da regra.
