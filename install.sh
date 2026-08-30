@@ -51,10 +51,10 @@ Vale em todo projeto. O \`AGENTS.md\` do repositório do produto prevalece no qu
 4. Entrega: conferência da skill + \`/principles-audit\` e \`/security-audit\` até zero achados.
 EOF
 
-mkdir -p "$HOME/.grok/rules" "$CC_HOME/rules" "$HOME/.cursor/rules"
+mkdir -p "$HOME/.grok/rules"
 cp "$RULE_FILE" "$HOME/.grok/rules/constituicao-e-skills.md"
-cp "$RULE_FILE" "$CC_HOME/rules/constituicao-e-skills.md"
-cp "$RULE_FILE" "$HOME/.cursor/rules/constituicao-e-skills.md"
+# Não copiar a mesma regra para as pastas de rules dos outros hosts:
+# o Grok as lê por compat e triplicaria o contexto.
 
 MARKER_START="<!-- gui-montanari-skills -->"
 MARKER_END="<!-- /gui-montanari-skills -->"
@@ -96,7 +96,7 @@ rm -f "$RULE_FILE" "$BLOCK_FILE"
 
 echo "Instaladas $count skills + constituição em:"
 echo "  clone:  $ROOT"
-echo "  grok:   $HOME/.grok/skills  +  $HOME/.grok/rules/constituicao-e-skills.md"
+echo "  grok:   $HOME/.grok/skills + $HOME/.grok/rules/constituicao-e-skills.md"
 echo "  code:   $CC_HOME/skills"
 echo "  codex:  $HOME/.codex/skills"
 echo "  agy:    $HOME/.agents/skills"
