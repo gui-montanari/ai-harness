@@ -34,7 +34,7 @@ Entregue achados verificados no código, inventário de cobertura, PDF em pt-BR 
 - [ ] 10. Escala / desacoplamento — worker vs microsserviço, estado, backpressure, dados
 - [ ] 11. Resiliência — restart, ACK, DLQ, drain, probes
 - [ ] 12. Runtime — async-only; tenant/retry/semáforo/idempotência **globais** (o resto herda)
-- [ ] 13. Consistência — nomes da indústria; schema ≠ entity ≠ record; migrations `YYYYMMDD_VV__…`; mesmo desenho no repo
+- [ ] 13. Consistência — nomes; schema ≠ entity ≠ record; Pydantic em `presentation/schemas/`; `/api/v1`; `backend/`/`frontend/`; migrations `YYYYMMDD_VV`
 - [ ] 14. Registrar o que está CORRETO (cobertura por camada)
 - [ ] 15. findings.json + PDF + rasterizar páginas
 - [ ] 16. Entregar no chat: arquivo:linha + caminhos
@@ -69,6 +69,8 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 | “Retry no use case é mais claro” | Retry é política global. Use case não tem `for _ in range`. |
 | “Pydantic no domínio é mais rápido” | Schema de borda ≠ entidade. ORM ≠ domínio. §3.1. |
 | “Neste módulo a gente usa camelCase em Python” | O repo tem um case. Indústria da linguagem. |
+| “Pydantic no http.py é só o request” | Schema e endpoint são dois motivos. `presentation/schemas/` + `http/v1/`. |
+| “services/ na raiz é o padrão do monorepo” | Com UI no mesmo repo: `backend/` e `frontend/`. Constituição §3. |
 | “O init.sql do compose é só para o primeiro boot” | É segundo dono do schema. Migration versionada + runner. Constituição §3.2. |
 | “Alembic já ordena pelos revision ids” | O filename no git ainda precisa `YYYYMMDD_VV`. Ordem visível sem a ferramenta. |
 

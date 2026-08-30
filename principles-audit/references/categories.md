@@ -48,6 +48,9 @@ Achado quando:
 - bounded context importa implementação de outro (não o contrato)
 - não há composition root: concretos espalhados
 - nomes do provedor (Stripe Invoice, WMS EmpresaId) no domínio
+- `BaseModel` / Pydantic no use case, no domínio ou no mesmo arquivo que o `APIRouter`
+- código de API e de UI misturados na raiz (`services/` + `apps/` sem `backend/` e `frontend/`)
+- rota de negócio fora de `/api/v1`
 
 **Protegido (ponto forte):** import-linter / dependency-cruiser no CI; porto em `core/ports`; adaptador em `infrastructure`; teste de contrato do adaptador.
 
@@ -168,6 +171,8 @@ Achado quando:
 - O mesmo tipo é entidade **e** row ORM **e** schema de API
 - `models.py` (ou `types.ts`) mistura os três papéis
 - Bounded context B usa pastas/sufixos diferentes do A sem plano
+- Pydantic fora de `presentation/schemas/`; endpoint e DTO no mesmo arquivo
+- API e UI na raiz em vez de `backend/` e `frontend/`
 - Arquivo de schema `001_*.sql`, `init.sql`, ou montado em `docker-entrypoint-initdb.d`
 - Filename de migration que não casa `YYYYMMDD_VV__snake_description` (constituição §3.2)
 - Prefixo `YYYYMMDD_VV` duplicado no repositório

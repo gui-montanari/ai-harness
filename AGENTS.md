@@ -129,7 +129,7 @@ Hexagonal **é** DIP aplicado ao sistema.
 
 | Camada | Pode importar | Não pode importar |
 |--------|---------------|-------------------|
-| `core` | stdlib, tipos puros | FastAPI, Nest, Django, Express, SQLAlchemy, Prisma, Redis, boto, React, Axios, SDK de provedor |
+| `core` | stdlib, tipos puros | FastAPI, Pydantic, Nest, Django, Express, SQLAlchemy, Prisma, Redis, boto, React, Axios, SDK de provedor |
 | `application` | `core` | infra concreta, framework web, ORM |
 | `infrastructure` | `core`, libs de provedor | `application` (salvo composition root) |
 | `presentation` | `application` (via composição), contratos de I/O | regras de negócio, ORM direto, `core` “só desta vez” para furar o use case |
@@ -146,33 +146,35 @@ Enforce: `import-linter` (Python), `eslint-plugin-boundaries` / `dependency-crui
 
 ### Organização de repositório
 
-Produto novo — **um bounded context por deployável**, não um monólito de pastas que se importam:
+Produto com API **e** UI — backend e frontend **não** ficam soltos na raiz. Código de servidor vive em `backend/`; interfaces em `frontend/`. Docs, deploy, testes de repositório e Makefile podem permanecer na raiz: não são o produto.
 
 ```
 <repo>/
-  AGENTS.md                 # este arquivo, ou o local que o estende
-  docs/plans/               # só planos de trabalho em curso
-  src/
-    core/
-      domain/
-      ports/
-    application/
-    infrastructure/
-      adapters/
-      di/                   # composition root
-    presentation/           # ou api/ + runtimes/
+  AGENTS.md
+  docs/plans/
+  backend/
+    services/<bounded-context>/src/<pkg>/
+      core/domain/
+      core/ports/
+      application/              # casos de uso (funções)
+      infrastructure/adapters/
+      infrastructure/di/
+      presentation/
+        schemas/                # único lugar de Pydantic/Zod de borda
+        http/
+          app.py                # factory FastAPI, /health /ready
+          v1/                   # endpoints; prefixo /api/v1
+    packages/                   # contratos estáveis ou platform sem domínio
+  frontend/
+    <superficie>/               # SPA; consome /api/v1; zero import de backend
   tests/
-    unit/                   # core + application, sem I/O
-    contract/               # adaptador obedece a porta
-    integration/
-    e2e/
-  deploy/                   # Dockerfiles, compose, charts
+  deploy/
   .github/workflows/
 ```
 
-Frontend: `apps/<nome>/` (ou repositório irmão). Integração = HTTP e contratos versionados.
+Repo só de API: `backend/` (ou `src/` hexagonal) sem inventar `frontend/` vazio. Repo só de UI: o inverso. **Misturar `services/` e `apps/` na raiz de um repo que tem os dois é achado.**
 
-Monorepo só quando os artefatos **nascem e versionam juntos**. Mesmo assim: nenhum import de código entre serviços. Compose na raiz; cada serviço permanece executável sozinho.
+Monorepo só quando os artefatos **nascem e versionam juntos**. Mesmo assim: nenhum import de código entre serviços nem do frontend para o backend. Compose na raiz; cada serviço permanece executável sozinho.
 
 Não criar pacote `shared/` que vira lixeira. O que é compartilhado ou é contrato publicado ou não é compartilhado.
 
@@ -197,13 +199,16 @@ Proibido no mesmo idioma: `getOrder` em Python, `get_order` em TS, `HTTPClient` 
 | Papel | Onde | Nome | É |
 |-------|------|------|---|
 | Entidade / valor de domínio | `core/domain/` | `Order`, `Money` | regra de negócio, sem ORM, sem HTTP |
-| Schema / DTO de borda | `presentation/` (request/response) | `OrderCreateRequest`, `OrderResponse` | validação de I/O. Pydantic/Zod **aqui** |
+| Schema / DTO de borda | `presentation/schemas/` | `OrderCreateRequest`, `OrderResponse` | validação de I/O. Pydantic/Zod **somente aqui** |
+| Endpoint HTTP | `presentation/http/v1/` | `orders.py` no router `/api/v1` | transporte. Sem BaseModel neste arquivo |
 | Record de persistência | `infrastructure/adapters/` | `OrderRecord` / `OrderRow` | mapeia tabela. ORM **aqui** |
 | Porto | `core/ports/` | `OrderRepository`, `Clock`, `HttpClient` | interface |
 | Caso de uso | `application/` | `CreateOrder`, `ChargeOrder` | um verbo, um motivo |
 | Adapter | `infrastructure/adapters/` | `PostgresOrderRepository`, `StripeGateway` | implementação do porto |
 
 Um `Order` que é entidade **e** tabela SQLAlchemy **e** payload FastAPI é violação de SRP e de hexagonal. O mapper vive no adapter (mecânico; DRY não exige “utils”).
+
+`http.py` com `BaseModel` **e** `@router.post` é o mesmo cheiro: dois motivos para mudar. Schema na pasta `schemas/`; função de caso de uso em `application/`; endpoint em `http/v1/`.
 
 Use case **não** se chama `OrderService`. Handler **não** se chama `order_utils`. Pasta **não** mistura `models.py` god-file com entidade + schema + row.
 
@@ -241,6 +246,22 @@ Regras:
 - ferramenta (SQL cru, Alembic, Prisma) é **uma**; dois runners no mesmo schema é SSOT furado
 
 **Teste:** `ls` nos diretórios de migration. Sem olhar o runner, a ordem de apply é óbvia?
+
+### 3.3 Borda HTTP
+
+Rotas de produto (não probes) vivem sob `/api/v1`. `/health` e `/ready` ficam na raiz da app: são operação, não contrato de negócio.
+
+| Pasta | Contém | Não contém |
+|-------|--------|------------|
+| `presentation/schemas/` | `BaseModel` / Zod de request e response | regra, SQL, `APIRouter` |
+| `presentation/http/v1/` | endpoints versionados | `BaseModel`, regra de domínio |
+| `application/` | um verbo por caso de uso | Pydantic, FastAPI |
+
+Probes `/health` e `/ready` não entram em `/api/v1`. Webhook de provider entra em `/api/v1/webhooks/<adapter>` e autentica **antes** de normalizar.
+
+Frontend chama `/api/v1/...`. Proxy de dev **não** apaga o prefixo.
+
+**Teste:** OpenAPI da app — toda rota de negócio começa com `/api/v1`? Todo `import pydantic` está em `presentation/schemas/`?
 
 ---
 
@@ -299,7 +320,7 @@ Toda mudança, por menor que seja, passa por isto **antes** do primeiro teste. S
 | 11 | Resiliência | Worker morre no meio? Restart, DLQ, drain? Retry **global**? Idempotência **global**? |
 | 12 | Operação | Log sem PII, métrica, rollback, probe de vivo vs pronto, dono da flag? |
 | 13 | Runtime / SSOT | Async-only? Políticas (tenant, retry, semáforo, idempotência) num dono, o resto herda? |
-| 14 | Consistência | Case da linguagem? Schema ≠ entity ≠ record? Mesmos sufixos no repo inteiro? Migration `YYYYMMDD_VV__…` (§3.2)? |
+| 14 | Consistência | Case da linguagem? Schema ≠ entity ≠ record? Pydantic só em `presentation/schemas/`? `/api/v1`? `backend/` ≠ `frontend/`? Migration `YYYYMMDD_VV`? |
 
 Trivial = um bug óbvio, um nome, um teste faltando em código que você não está reestruturando. Na dúvida, **não é trivial**: plano.
 
@@ -591,6 +612,9 @@ Não invente skill, pasta, ADR ou diagrama “para completar”. Skills de audit
 - `getOrder` em Python ou `OrderService` com três verbos
 - Entidade de domínio = modelo ORM = schema FastAPI/Zod no mesmo tipo
 - `models.py` god-file; segundo bounded context com pastas diferentes sem plano
+- Pydantic/`BaseModel` no mesmo arquivo que o endpoint, no use case ou no domínio
+- `services/` e `apps/` soltos na raiz de um repo que tem API e UI; falta `backend/` e `frontend/`
+- rota de negócio sem `/api/v1`
 - `001_init.sql`, dump em `docker-entrypoint-initdb.d`, ou `psql < dump.sql` no Makefile
 - migration sem data+versão (`YYYYMMDD_VV`) no filename; prefixo duplicado; dois runners de schema
 
