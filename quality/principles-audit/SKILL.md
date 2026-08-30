@@ -83,6 +83,7 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 | “TENDA_ é o namespace do nosso repo” | Marca no env. Constituição §3.1. |
 | “WORKSPACE_ é o nome da nossa unidade” | Artefato de deploy no env/schema. DSN e schema são do bounded context (`agents`). |
 | “O adapter lê os.environ, é infra” | Infra ainda recebe valor injetado. `getenv` só em composition/settings/entrypoint/migrate. |
+| “É um tenant só, pode cravar no default” | Literal de produto no worker. `TENANT_ID` na borda ou `tenant_id` da mensagem. |
 
 ## Passo 0 — Constituição e stack
 

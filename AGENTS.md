@@ -236,6 +236,8 @@ Use case **não** se chama `OrderService`. Adapter **não** se chama e não mora
 
 **Schema SQL:** o nome do schema é o bounded context dono (`agents`, `cases`, `workforce`, `messaging`, `vault`). Nunca o artefato de deploy (`workspace`, `platform`). Uma role de app por schema; tabela tenant-scoped nasce com RLS. A porta (`ConversationStore`) não conhece o nome da tabela; o adapter traduz.
 
+**Tenant:** nunca literal de produto no código de produção (`tenant_id="acme"`). Vem do principal autenticado, da mensagem/outbox, ou de `TENANT_ID` **só na borda** (composition, worker). Ausente = recusa. Worker não assume o tenant do README.
+
 **Teste (env/schema):** se o produto **ou o artefato de deploy** mudar de nome, quantos env e schemas eu renomeio? A resposta correta é **zero**.
 
 ### 3.2 Nome e ordem de migration

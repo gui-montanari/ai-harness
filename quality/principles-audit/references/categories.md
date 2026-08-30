@@ -56,6 +56,7 @@ Achado quando:
 - código de API e de UI misturados na raiz (`services/` + `apps/` sem `backend/` e `frontend/`)
 - rota de negócio fora de `/api/v1`
 - `os.environ` / `getenv` / `process.env` em `core/` ou `application/`
+- `tenant_id="acme"` (ou o nome do produto) em worker, composition ou handler
 - adapter ou handler HTTP lendo env (fora de composition root, settings, entrypoint, migrate)
 - smell do scanner `getenv_in_core_or_application` / `getenv_outside_composition`
 
