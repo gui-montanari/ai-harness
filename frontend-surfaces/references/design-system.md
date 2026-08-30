@@ -64,21 +64,9 @@ Footer curto: legal + links. Páginas internas: `page-main` com título editoria
 
 Não copiar: paleta roxa, órbitas de carreira, planos, signup, LinkedIn, `Manrope`/`Inter` como voz do produto.
 
-## Chat (propriedades do stockfy-ai-web)
+## Chat
 
-O checkout mais recente do `stockfy-ai-web` (master) é a referência de **comportamento**. Recriar com tokens do tenant.
-
-Quadro `sc-root`: coluna, min-height ~520px, borda, radius 12, header (avatar + título + status), lista com scroll, composer embaixo.
-
-Bolhas: assistente à esquerda, usuário à direita (`row-reverse`), avatar 28px, radius 14, `max-width: 78%`.
-
-Composer: textarea auto-resize (teto 160px), Enter envia, Shift+Enter quebra linha, botão ícone na `--chat-accent`, hint sob o form, `focus-within` com anel da ação.
-
-Auto-scroll no histórico. Busy = três pontos, sem fingir resposta. Empty state só se não houver opening.
-
-A página (`Channel`) é dona de fetch, protocolo e token. `ConversationThread` é burro: mensagens + composer.
-
-Não copiar: `--sc-accent: #2563eb`, SSE, HITL, markdown/GFM, typewriter, sidebar, launcher flutuante, segundo runtime.
+Tokens `--chat-*` neste arquivo. Casca, thinking, composer e o que não copiar do stockfy: skill `frontend-chat`.
 
 ## Mobile
 

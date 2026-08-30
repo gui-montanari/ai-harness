@@ -4,15 +4,15 @@ description: >
   Use when scaffolding or refactoring a React frontend, splitting public vs
   authenticated shells, adding i18n PT/EN, tenant visual tokens, shared UI
   primitives, designing a public home (hero, metric strip, sections, CTA),
-  building a ChatGPT-style conversation thread, or when the user mentions
-  design system, Autodin visual language, stockfy-ai-web chat, or /frontend-surfaces.
+  or when the user mentions design system, Autodin visual language,
+  or /frontend-surfaces. For product chat use frontend-chat.
 ---
 
 # Superfícies frontend
 
 SSOT das regras: constituição `AGENTS.md` §3 e ADR-015 do produto. Este skill é o **lugar** dos arquivos. Não copie HTML, CSS, rotas, auth ou domínio de Autodin/Stockfy.
 
-Gramática visual, tokens e chat: `references/design-system.md`.
+Gramática visual e tokens: `references/design-system.md`. Thread ChatGPT: skill `frontend-chat`.
 
 ## Árvore canônica
 
@@ -22,7 +22,7 @@ frontend/
     src/
       tokens.css              # tokens semânticos + aliases --chat-*
       public.css              # home pública (hero, seções, CTA)
-      chat.css                # thread estilo ChatGPT (só var(--chat-*))
+      chat/                   # ConversationThread — skill frontend-chat
       shell.css               # primitives + shell autenticado
       tenants/<id>.css        # um arquivo por tenant
       i18n/                   # pt-BR + en nativos
@@ -46,7 +46,7 @@ frontend/
 - Autodin/Stockfy: copiar **propriedades** (home pública, shell autenticado, chat ChatGPT, estados vazios/erro, mobile, i18n). Não copiar implementação, paleta, rotas, HITL, SSE ou domínio.
 - Hex só em `tokens.css` / `tenants/<id>.css`. Página e componente usam `var(--token)`.
 - Home pública é full-bleed. `site-shell` envolve o conteúdo interno, não o hero nem a faixa de métricas.
-- Chat é primitivo apresentacional (`ConversationThread`). A página dona o fetch.
+- Chat: skill `frontend-chat`. Primitivo em `ui/src/chat/`; a página dona o fetch.
 
 ## Achados
 
