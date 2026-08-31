@@ -3,7 +3,7 @@ name: agent-orchestration
 description: >
   Use when creating, scaffolding, or birthing a product agent, changing
   ConversationalSpec, GraphSpec, WorkflowSpec, conversational vs operational
-  flow, conversational/engine, specs/<job>, graph.py, node.py, edge.py,
+  flow, conversational/engine, specs/job, graph.py, node.py, edge.py,
   config.py, prompts folder, prompts/guardrails.md, prompts/reflection.md, canonical copy vs
   prompt, LLM protocol, provider, model, tencent, openai, deepseek,
   LLM-driven turn, specialist/sub-agent, agent config.py,
@@ -48,6 +48,11 @@ Mesmo commit. Ordem abaixo. Conferência vazia = não pronto.
 6. **Config de LLM — protocolo, provider, modelo.** Três camadas. `protocol` é o **nome do dialeto** (`openai`, `tencent`, `deepseek`) — não um apelido genérico (`openai_chat_completions`) nem um `Callable`. Cada dialeto tem adapter próprio; Tencent não reusa a classe OpenAI. `provider` é quem hospeda (catálogo → URL default + protocolo esperado). `model_name` é o deployment. Protocolo incompatível com o provider **falha fechado**. Chave injetada no composition. `complete()` vazio é falha.
 7. **Runtime.** Um adapter (`orchestration-runtime`). Capabilities exigidas ⊂ oferecidas. Mesmo builder na API e no worker.
 8. **Testes de nascimento** (senão é teatro): catálogo falha sem cada slot; heading-only → `active` é `None`; bloqueia reivindicação e permite abertura canônica; recap intacto **e** montado das labels do spec; registro rejeita segundo agente no v1 e rejeita conversacional sem guarda de saída; engine não importa spec concreto nem copy canônica; composição: `execute_turn` chama a guarda no gerado; `config.py` existe no spec; adapter de LLM sem `getenv` e sem prefixo da marca.
+
+Ausência ou indisponibilidade de LLM/runtime é erro recuperável do turno: persiste pendência e
+retoma idempotentemente. Nunca avança a coleta por formulário, regex ou pergunta canônica como
+se tivesse compreendido linguagem livre. Capacidade declarada no manifest/contrato (voz, tool,
+HITL) só fica ativa se adapter + capability check + caminho de execução + teste estiverem ligados.
 
 Não abra PR / não declare pronto com item da conferência vazio.
 
@@ -148,16 +153,28 @@ Misturar isso num `canonical_texts.py` com abertura legal **e** “qual é a obr
 
 O recap de confirmação monta-se do **estado estruturado** (a descrição é o texto do colaborador). Não se pede ao modelo para “resumir o caso”.
 
-**Roteamento do turno (determinístico):** escolha explícita que casa **exato** com uma opção oferecida → sem modelo; o valor entra no estado. Todo o resto (livre, áudio/transcrição, correção, ambiguidade, fora de ordem, “parecido”) → turno de modelo. Classificar mal é defeito bloqueante. Clicar é otimização de custo, não restrição.
+**Roteamento do turno:** clique em **elemento interativo** (payload estruturado do canal) → sem modelo. **Texto digitado é sempre turno de modelo**, mesmo quando a redação coincide com um rótulo (“Atraso de pagamento”, “Não sei”, “sim” num campo). Palavra mágica que dispensa o LLM quebra a premissa LLM-driven. Tokens de grafo (`continuar` na abertura, `sim` no recap, comandos de privacidade/direitos) continuam determinísticos: são opt-in legal e confirmação do fato, não vocabulário de campo. Classificar texto livre como clique é defeito bloqueante.
 
 Turno de modelo:
 
 1. `active("guardrails")` (se houver) + prompt da tarefa + versão no trace
-2. `LlmPort` propõe patch tipado + evidência no histórico
-3. Guarda de **estado** aceita ou rejeita o patch
-4. Se gerado e `active("reflection")`: passe de qualidade; revisão volta ao texto
-5. Guarda de **saída** **sempre** no texto a entregar (depois da reflection)
-6. Canônico, recap e eco de valor já confirmado **não** passam por geração, reflection nem guarda de geração — só se despacham
+2. `LlmPort` propõe **patch tipado** (`{"fields": {campo: valor}}`) + evidência no histórico. **Não** propõe a próxima fala.
+3. Guarda de **estado** aceita ou rejeita o patch; o motor **aplica** só campos do schema, pula nó já preenchido e nó cujo `when` não casa, e para na **próxima lacuna**
+4. A pergunta ao humano sai do `ask_*` **desse** nó (catálogo, ou paráfrase do modelo **amarrada** a esse slot). `reply` do extract **não** vira outbound
+5. Se gerado e `active("reflection")`: passe de qualidade; revisão volta ao texto
+6. Guarda de **saída** **sempre** no texto a entregar (depois da reflection)
+7. Canônico, recap e eco de valor já confirmado **não** passam por geração, reflection nem guarda de geração — só se despacham
+
+HITL de coleta (um turno = uma mensagem do canal):
+
+| Quem | Faz | Não faz |
+|------|-----|---------|
+| Modelo | compreende linguagem livre e preenche slots do schema, inclusive vários numa mensagem | inventar campo, pular ordem, redigir a jornada, confirmar, criar o fato |
+| Grafo | escolhe a próxima lacuna canônica; `when` no `NodeSpec` liga campo opcional a um valor já coletado | |
+| `ask_*.md` | semente da pergunta daquela lacuna (script da jornada) | copy legal |
+| Motor | aplica patch, pula preenchido, chega no `ask_*` devido | conhecer o job |
+
+Inventar “cidade” quando a lacuna é obra, ou usar o `reply` do JSON do modelo no lugar do `ask_*` do grafo, é defeito bloqueante. Teste: fake devolve `{"fields": {"regional": "Sudeste"}, "reply": "Qual é a cidade?"}` → outbound contém a pergunta de **obra**, não “cidade”.
 
 `PromptCatalog` é porta. Os `.md` carregam-se no composition root / adapter de arquivos. Domínio não lê disco. Versão (hash ou tag) registra-se em cada `AgentRun`. Sem I/O no `core/`.
 
@@ -320,6 +337,9 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 - heading-only → `active` é `None` (não participa)
 - turno de modelo prefixa guardrails e corre reflection **só** se `active`
 - texto que a reflection revisou ainda passa por `inspect_outbound`
+- matriz adversarial das reivindicações bloqueadas: forma direta, negação aparente, flexões,
+  pontuação, caixa, acento e paráfrases de alto risco definidas pelo produto
+- teste de mutação: remover/afrouxar cada regra crítica faz ao menos um teste falhar
 
 ## Red flags
 
@@ -365,6 +385,13 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 - `api_key` ou URL no `config.py` do agente
 - Node LLM chamado `guardrails` no lugar de `inspect_outbound`
 - `complete()` devolvendo vazio quando falta URL (fallback silencioso)
+- ausência/falha de LLM avançando a coleta por pergunta determinística
+- manifest anuncia voz/tool/HITL sem adapter ativo e teste de ponta a ponta
+- guarda que bloqueia só frase literal e permite paráfrase óbvia da mesma promessa
+- JSON de extract com `reply` usado como fala ao humano
+- Motor que avança um campo por turno e não pula lacuna já preenchida
+- Modelo inventando campo fora do `collect` do spec (cidade, CEP, documento…)
+- `is_deterministic_collect` / matching de vocabulário digitado para pular o LLM
 
 ## Conferência
 
@@ -376,10 +403,13 @@ Antes de declarar pronto, copie e marque. Caixa vazia = o agente **não nasceu**
 - [ ] `specs/<job>/prompts/guardrails.md` e `reflection.md` no mesmo commit; catálogo falha sem qualquer um; catálogo sem pasta default de um job
 - [ ] Duas casas: semântica nos `.md`; legal/recusa/recap e schema no domínio
 - [ ] Guardas de estado e de saída no caminho do turno; LLM não cria o fato oficial
+- [ ] Falha/ausência de LLM persiste turno pendente; nenhum fallback de formulário avança estado
 - [ ] `active("guardrails")` e `active("reflection")` sensibilizados; vazio = no-op; reflection nunca substitui a saída
 - [ ] `config.py` com protocol + provider + model_name por node; catálogo de providers na infra; adapter sem `getenv`
 - [ ] Runtime: um adapter da porta (`in-process` ou `langgraph`); SDK LangGraph só em `adapters/langgraph/`; capabilities no startup
 - [ ] Testes de nascimento verdes (slots, `active`, bloqueio, abertura, recap, registro, composição, config LLM)
+- [ ] Guardas críticas têm matriz adversarial + teste de mutação; capacidades anunciadas possuem adapter e caminho e2e ativos
 - [ ] Título de conversa (se houver lista): use case após a 1ª resposta, ≤6 palavras
 - [ ] Roteamento determinístico vs modelo explícito; opção “parecida” não vira clique
 - [ ] Checkpointer do runtime ≠ SSOT (banco do serviço)
+- [ ] HITL: extract só `fields`; próxima pergunta do `ask_*` da lacuna; fake com `reply: Qual é a cidade?` não vaza para o outbound

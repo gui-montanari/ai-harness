@@ -39,9 +39,17 @@ Cada borda **traduz** para o mesmo `Principal` (`tenant_id`, `subject`, `scopes`
 
 `IdentityProviderPort` → claims → `Principal`. Cookie `HttpOnly`, `Secure`, `SameSite`; CSRF na mutação. Sessão interna **não** compartilha cookie, cache ou audience com a superfície pública. Offboarding revoga membership mesmo com claim ainda válida.
 
+Sessão tem expiração absoluta e por inatividade, rotação após login/elevação e revogação
+server-side. MFA/SSO segue o requisito da superfície interna. SPA não persiste Bearer em
+`localStorage`/`sessionStorage`; prefira cookie HttpOnly ou BFF quando o browser for o cliente.
+
 ## Pública limitada
 
 Não cria usuário. Hash + salt, rate-limit, resposta uniforme no miss, headers `no-store`. JWT público só com `iss`/`aud` **distintos** do interno.
+
+O segredo pode chegar uma vez por link, mas a primeira resposta válida o troca por sessão
+pública curta em cookie `HttpOnly; Secure; SameSite`, redireciona para URL limpa e permite
+revogação. Não mantenha capability token em path/query, histórico, referrer, analytics ou log.
 
 ## Webhook
 
@@ -78,7 +86,9 @@ presentation/http/v1/auth/   # token + well-known; sem regra de caso
 - Um JWT / um cookie para público **e** interno
 - `tenant_id` no body autorizando
 - Secret na query string
+- Capability token permanecendo na URL após a troca inicial
 - Access token eterno; redirect URI coringa
+- Bearer de sessão do browser em Web Storage; sessão sem expiração/revogação/rotação
 - Policy só na UI
 - `jwt.decode` sem `algorithms`, `iss`, `aud`
 - Principal como dict solto entre camadas
@@ -91,5 +101,7 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Tenant do token/sessão, nunca do body
 - [ ] JWT: `iss`/`aud`/`exp`/`algorithms` allowlist
 - [ ] Público e interno com cookie/audience distintos
+- [ ] Sessão interna expira, rotaciona e revoga; browser não guarda Bearer em Web Storage
+- [ ] Token público é trocado por sessão curta e a URL fica limpa; miss uniforme e rate-limited
 - [ ] Webhook assina o body cru; MCP usa PKCE S256 se o host exigir
 - [ ] Segredo fora de git, log e URL

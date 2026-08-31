@@ -2,6 +2,9 @@
 
 O gerador `shared/generate_report.py` lê este JSON. Além dos campos comuns da auditoria de segurança, preencha `report`, `category_labels` e `category_order`.
 
+O PDF também exige, no mesmo diretório, `evidence.json`, `coverage.md`,
+`verify_audit.py` e, para princípios, `inventory.json`; gate vermelho impede geração.
+
 ```json
 {
   "project_name": "acme-api",

@@ -9,22 +9,24 @@ description: >
   de falhas de segurança". Produces a verified pt-BR PDF report and GitHub-ready issues.
 ---
 
-# Auditoria de segurança (5 categorias)
+# Auditoria de segurança (7 categorias)
 
-Audite o repositório atual em cinco categorias, **adaptadas à stack real**. Reporte só o que o código prova. Entregue achados no chat, um PDF em pt-BR e issues prontas para colar no GitHub.
+Audite o repositório atual em sete categorias, **adaptadas à stack real**. Reporte só o que o código prova. Entregue achados no chat, um PDF em pt-BR e issues prontas para colar no GitHub.
 
 ## Checklist (copie e marque)
 
 ```
 - [ ] 0. Detectar a stack e o mecanismo de isolamento
-- [ ] 1. BANCO SEM TRANCA — isolamento de inquilino/dono
-- [ ] 2. PERMISSÃO DEFINIDA NO NAVEGADOR — gate de papel só no frontend
-- [ ] 3. IDOR — TODOS os handlers de rota (não amostras)
-- [ ] 4. CHAVES EXPOSTAS — código, configs, git history, bundle frontend; REDIS_URL/RABBITMQ_URL fail-closed; cache/evento sem PII
-- [ ] 5. INPUTS SEM TRATAMENTO (XSS) — frontend e backend
-- [ ] 6. Registrar o que está CORRETO (cobertura)
-- [ ] 7. Gerar findings.json + PDF + verificar páginas
-- [ ] 8. Entregar no chat: achados linha a linha + caminhos dos arquivos
+- [ ] 1. ISOLAMENTO DE DADOS — tenant/dono, RLS e contexto global
+- [ ] 2. AUTORIZAÇÃO — ação, objeto, campo, impedimento e four-eyes no servidor
+- [ ] 3. IDOR E SUPERFÍCIES PÚBLICAS — TODOS os handlers; público exige fonte aprovada
+- [ ] 4. AUTH E SESSÃO — MFA/SSO, cookies/tokens, expiração, rotação e revogação
+- [ ] 5. SEGREDOS E DADOS SENSÍVEIS — código/histórico/bundle + PII em banco/cache/evento/log/URL
+- [ ] 6. INPUTS E INJEÇÃO — XSS, SQL/command/template injection, SSRF e path traversal
+- [ ] 7. ABUSO E DISPONIBILIDADE — rate limit, paginação, tamanho, timeout e replay
+- [ ] 8. Registrar o que está CORRETO (cobertura com evidência)
+- [ ] 9. Executar gates, verificar `evidence.json`, gerar PDF e verificar páginas
+- [ ] 10. Entregar no chat: achados linha a linha + caminhos dos arquivos
 ```
 
 Não pule etapa. Não feche a auditoria sem o PDF verificado.
@@ -37,6 +39,9 @@ Não pule etapa. Não feche a auditoria sem o PDF verificado.
 4. **Categoria que não se aplica à stack:** declare explicitamente (ex.: “sem frontend — categoria 2 e 5 frontend N/A”) em vez de forçar achado.
 5. **Anote condições de explorabilidade** (feature flag, config insegura necessária, ambiente, autenticação prévia, etc.).
 6. **IDOR não é amostragem.** Percorra sistematicamente **todos** os handlers de rota do backend. Se o conjunto for grande, inventarie-os (arquivo:handler) e marque cada um: protegido / furado / N/A.
+7. **`publico-intencional` exige autoridade.** Cite requisito/ADR aceito em `evidence.json`; sem fonte, a rota é achado.
+8. **Sessão não é autorização.** `require_session` prova autenticação, não policy por ação/objeto/campo.
+9. **Zero achados exige gates verdes.** O PDF não transforma autodeclaração em evidência.
 
 ## Desculpas que não valem
 
@@ -61,10 +66,16 @@ Antes de qualquer categoria, identifique e registre:
 - frontend (se houver) e como fala com a API
 - deploy: Docker, CI, Helm, Terraform, compose, charts
 - **mecanismo de isolamento de tenant/dono** (tem de ser **global**, o resto herda): RLS FORCE / session SET / middleware que cobre HTTP **e** worker; não um `if` copiado por rota. Ver constituição §8.6.
+- mecanismo de autorização por ação/objeto/campo e origem do actor/reviewer
+- ciclo de vida de sessão/token público e interno
+- grupos de dados sensíveis, cifragem/segregação, retenção e superfícies de log/cache/evento
 
 Mapeie cada categoria para o equivalente dessa stack. Escreva o mapeamento em `docs/security-audit/stack.md` (vai para a capa do PDF).
 
 Detalhe por categoria: leia [references/categories.md](references/categories.md) agora e siga os procedimentos de cada uma.
+
+Leia também as conferências das skills detectadas: `auth`, `http-apis`, `persistence-ports`,
+`object-storage`, `ops-backoffice`, `reliable-messaging` e canal/provider quando aplicáveis.
 
 ## Achado — formato canônico
 
@@ -84,7 +95,7 @@ Severidade:
 | `baixa` | Info leak limitado, sanitização incompleta, segredo de dev |
 | `informativa` | Superfície, config duvidosa sem exploração comprovada |
 
-## Passo 6 — Cobertura (pontos fortes)
+## Passo 8 — Cobertura (pontos fortes)
 
 Além dos achados, registre o que foi verificado e está correto. Exemplos válidos:
 
@@ -94,9 +105,24 @@ Além dos achados, registre o que foi verificado e está correto. Exemplos váli
 
 Isso não é elogio genérico. É evidência de que a categoria foi percorrida.
 
-## Passo 7 — Relatório PDF
+## Passo 9 — Evidência e relatório PDF
 
 Obrigatório: `docs/security-audit/relatorio-auditoria-seguranca.pdf`.
+
+Execute gates reais com `shared/run_audit_checks.py` e grave
+`docs/security-audit/evidence.json`. Acrescente em `authorities` cada superfície marcada
+`publico-intencional`, com `surface` e `source` no formato `arquivo:linha`. Então valide:
+Formato completo: [shared/evidence-schema.md](../../shared/evidence-schema.md).
+
+```bash
+python3 <SKILL_DIR>/../../shared/verify_audit.py \
+  --root . \
+  --findings docs/security-audit/findings.json \
+  --evidence docs/security-audit/evidence.json \
+  --coverage docs/security-audit/coverage.md
+```
+
+Gate vermelho ou rota pública sem fonte bloqueia o PDF final e vira achado.
 
 1. Escreva `docs/security-audit/findings.json` completo.
 2. Copie o gerador desta skill para o projeto auditado:
@@ -104,6 +130,7 @@ Obrigatório: `docs/security-audit/relatorio-auditoria-seguranca.pdf`.
 ```bash
 mkdir -p docs/security-audit
 cp <SKILL_DIR>/../../shared/generate_report.py docs/security-audit/
+cp <SKILL_DIR>/../../shared/verify_audit.py docs/security-audit/
 cp <SKILL_DIR>/../../shared/requirements.txt docs/security-audit/
 ```
 
@@ -133,14 +160,14 @@ Abra as PNGs. Corrija sobreposição, tabela cortada, gráfico ilegível, header
 
 Paleta (já no gerador): crítica `#B91C1C`, alta `#EA580C`, média `#D97706`, baixa `#2563EB`, ponto forte `#059669`, informativa `#6B7280`.
 
-## Passo 8 — Entrega no chat
+## Passo 10 — Entrega no chat
 
 Nesta ordem:
 
-1. Stack detectada e mapeamento das 5 categorias.
+1. Stack detectada e mapeamento das 7 categorias.
 2. Lista de achados **arquivo por arquivo, linha por linha** (com severidade).
 3. Pontos fortes (cobertura).
-4. Caminho do PDF e de todos os arquivos gerados (`findings.json`, `stack.md`, `generate_report.py`, venv local, PNG de verificação se houver).
+4. Caminho do PDF e de todos os arquivos gerados (`findings.json`, `evidence.json`, `coverage.md`, `stack.md`, `generate_report.py`, venv local, PNG de verificação se houver).
 5. Quantas issues foram agrupadas para o GitHub (o texto completo delas vive no PDF).
 
 Não abra as issues no GitHub a menos que o usuário peça.
@@ -150,6 +177,9 @@ Não abra as issues no GitHub a menos que o usuário peça.
 - Achado sem `arquivo:linha` e sem trecho
 - “Rotas típicas” em vez de inventário de handlers
 - Categoria omitida em silêncio
+- `publico-intencional` sem requisito/ADR citado
+- sessão genérica tratada como autorização da ação
+- `findings=[]` com qualquer gate vermelho
 - pip / npm / cargo install global para gerar o PDF
 - PDF sem gráficos, sem issues, ou sem página de capa
 - PDF não rasterizado

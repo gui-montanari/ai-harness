@@ -47,6 +47,9 @@ Envelope versionado: `event_id`, `event_type`, `event_version`, `occurred_at` UT
 - **Outbox:** insert na **mesma** transação da mutação.
 - **Relay:** processo à parte. Crash entre publicar e marcar = redelivery.
 - **Inbox:** unique `(consumer, event_id)`. ACK **depois** do efeito.
+- A claim da inbox e o efeito local são uma unidade atômica: mesma transação, ou estado
+  `processing/completed` com lease recuperável. Persistir “já vi” antes do efeito e depois
+  fazer `requeue` transforma a segunda entrega em perda silenciosa.
 - Retry + jitter + teto; depois **DLQ** + replay. A política vive no **adapter**, não no use case.
 - Ordem só por agregado quando o requisito pede.
 
@@ -103,6 +106,7 @@ I/O **async**. Segredo na URL/connection string: env, não git. Startup falha se
 - `redis.xadd` / `basic_publish` dentro do `commit()` do use case
 - Redis Streams usado como cache (`cache-ports`)
 - Consumer sem inbox; ACK antes de persistir
+- `remember(event_id)` commitado antes do efeito, seguido de retry que trata a nova entrega como concluída
 - Evento com PII; `subject_id` = pessoa
 - Exchange/queue não durable; prefetch ilimitado
 - SQL de inbox / fábrica de evento de BC no pacote de plataforma
@@ -116,6 +120,7 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Provider perguntado (ou já decidido); **um** adapter
 - [ ] Outbox na mesma transação; relay à parte; inbox unique
 - [ ] ACK depois do efeito; DLQ real no teto; backoff+jitter no adapter; prefetch limitado
+- [ ] Teste de janela de falha: crash depois da claim e antes do efeito; a 2ª entrega conclui o efeito uma vez
 - [ ] Inbox SQL no BC dono da tabela; fábrica do fato no produtor; envelope genérico na plataforma
 - [ ] Envelope versionado; sem PII; `subject_id` = agregado
 - [ ] Porto estável; factory no composition root; I/O async

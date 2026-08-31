@@ -27,7 +27,9 @@ Entregue achados verificados no código, inventário de cobertura, PDF em pt-BR 
 
 ```
 - [ ] 0. Ler AGENTS.md (projeto ou template) e detectar a stack/camadas reais
+- [ ] 0b. Extrair requisitos/ADRs aplicáveis e rotear capacidades para as skills especializadas
 - [ ] 1. Rodar shared/scan_inventory.py — inventário, não amostragem
+- [ ] 1b. Executar gates reais e gravar `evidence.json`; gate vermelho é achado, nunca “fora do audit”
 - [ ] 2. SSOT — dois donos da mesma regra
 - [ ] 3. DRY — lógica duplicada (não mapeamento mecânico)
 - [ ] 4. SRP — limites de linhas + “e” na responsabilidade
@@ -42,7 +44,8 @@ Entregue achados verificados no código, inventário de cobertura, PDF em pt-BR 
 - [ ] 12b. Mensageria e cache — porto vs BC dono; REDIS_URL/RABBITMQ_URL injetadas; sem SQL/evento de BC no pacote de plataforma
 - [ ] 13. Consistência — nomes; schema HTTP ≠ entity ≠ record ≠ Command; Pydantic em `presentation/schemas/`; Command em `application/commands/`; `/api/v1`; `backend/`/`frontend/`; migrations `YYYYMMDD_VV`; env de capacidade (não marca); `getenv` só na composição; **zero hardcode de config** (tenant, URL, token, CORS, timeout, lote)
 - [ ] 14. Registrar o que está CORRETO (cobertura por camada)
-- [ ] 15. findings.json + PDF + rasterizar páginas
+- [ ] 14b. Conferir completude vertical: campo/capacidade/rota do requisito até dono, saída e teste
+- [ ] 15. Verificar evidências + findings.json + PDF + rasterizar páginas
 - [ ] 16. Entregar no chat: arquivo:linha + caminhos
 ```
 
@@ -55,6 +58,8 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 3. **Varredura, não amostra.** Todo arquivo de código do inventário entra: violação, protegido ou N/A.
 4. **Categoria que não se aplica:** declare (ex.: repo só de Terraform — TDD de domínio N/A; infra ainda vale DRY/SRP).
 5. **Não reescreva o sistema no relatório.** Achado + correção mínima. Refatoração heroica só se o humano pedir.
+6. **Zero achados é uma conclusão, não um input.** Só é válido com gates reais verdes,
+   sinais do inventário dispostos e superfícies públicas ligadas a requisito/ADR aceito.
 
 ## Desculpas que não valem
 
@@ -106,11 +111,40 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 3. Mapeie as 12 categorias para **esta** árvore (pastas, compose, workers, filas, políticas globais, nomes). Grave em `docs/principles-audit/stack.md`.
 4. Procedimento fino: [references/categories.md](references/categories.md).
 
+Detecte capacidades e leia também a conferência da skill dona: auth, mensageria, worker,
+backoffice, agente/runtime, canal, persistência e CI conforme a matriz de `architecture`.
+O audit não duplica o HOW especializado; verifica se ele foi cumprido.
+
+Para cada requisito/invariante tocado, registre em `coverage.md` a cadeia:
+`fonte → entrada → principal/tenant → use case → dono do dado → saída → falha/concorrência → teste`.
+
 ## Passo 1 — Inventário (obrigatório)
 
 ```bash
 python3 <SKILL_DIR>/../../shared/scan_inventory.py . > docs/principles-audit/inventory.json
 ```
+
+Execute os gates existentes pelo runner, sem inventar comando ausente. Em repo com os alvos
+canônicos e Compose, por exemplo:
+
+Formato da evidência: [shared/evidence-schema.md](../../shared/evidence-schema.md).
+
+```bash
+python3 <SKILL_DIR>/../../shared/run_audit_checks.py \
+  --output docs/principles-audit/evidence.json \
+  --check 'lint::make lint' \
+  --check 'typecheck::make typecheck' \
+  --check 'test::make test' \
+  --check 'architecture::make check-architecture' \
+  --check 'migrations::make check-migrations' \
+  --check 'build::make build' \
+  --check 'deploy::docker compose -f deploy/compose.yaml config'
+```
+
+Comando vermelho vira finding com a causa no código/config. Não regenere `evidence.json`
+manualmente para trocar exit code.
+Target canônico ausente também é finding: implemente o target no Makefile; não o omita da
+evidência nem o substitua por `true`/`echo`.
 
 O JSON lista todos os arquivos de código, camada inferida, linhas vs limite, funções/classes estouradas, imports de infra em `core`/`application`, clusters de duplicação textual, `deploy.signals` (restart, healthcheck, probes, API+worker no mesmo command, `product_brand_env` no compose) e `runtime_smells` (`time.sleep`, `requests`, `readFileSync`, `gather(*)`, `product_brand_env`, `deploy_unit_env`, `getenv_in_core_or_application`, `getenv_outside_composition`, `hardcoded_product_literal`, `hardcoded_config_default`, `hardcoded_localhost`) e `deploy.signals` `deploy_unit_schema`.
 
@@ -123,6 +157,11 @@ arquivo  camada  linhas  SRP  hexagonal  dry/ssot  tdd  morto  segurança  escal
 ```
 
 status: `ok` | `achado` | `n/a`.
+
+`revisado` repetido em todas as colunas não é cobertura. Cada `ok`/`n/a` precisa de razão
+específica. Para cada item de `inventory.json.audit_signals`, copie a `key` para
+`evidence.json.inventory_dispositions` com `status` (`finding`, `false_positive` ou `n/a`)
+e `reason` concreta. O verificador reprova chave ausente.
 
 ## Achado — formato
 
@@ -144,9 +183,21 @@ Severidade:
 
 Obrigatório: `docs/principles-audit/relatorio-auditoria-principios.pdf`.
 
+Antes do PDF, falhe fechado:
+
+```bash
+python3 <SKILL_DIR>/../../shared/verify_audit.py \
+  --root . \
+  --findings docs/principles-audit/findings.json \
+  --evidence docs/principles-audit/evidence.json \
+  --coverage docs/principles-audit/coverage.md \
+  --inventory docs/principles-audit/inventory.json
+```
+
 ```bash
 mkdir -p docs/principles-audit
 cp <SKILL_DIR>/../../shared/generate_report.py docs/principles-audit/
+cp <SKILL_DIR>/../../shared/verify_audit.py docs/principles-audit/
 cp <SKILL_DIR>/../../shared/requirements.txt docs/principles-audit/
 cd docs/principles-audit
 python3 -m venv .venv
@@ -171,7 +222,7 @@ Corrija defeito visual e regenere.
 2. Números do inventário: arquivos, estouro de limite, leaks, clusters duplicados.
 3. Achados **arquivo por arquivo, linha por linha**.
 4. Pontos fortes (cobertura).
-5. Caminhos: PDF, `findings.json`, `inventory.json`, `coverage.md`, `stack.md`.
+5. Caminhos: PDF, `findings.json`, `inventory.json`, `evidence.json`, `coverage.md`, `stack.md`.
 6. Quantas issues no PDF.
 
 Não abra issues no GitHub a menos que o humano peça.
@@ -182,6 +233,9 @@ Não abra issues no GitHub a menos que o humano peça.
 - “Módulos principais” em vez de inventário
 - Relatório que recita SOLID sem trecho
 - Categoria omitida em silêncio
+- Gate vermelho tratado como ponto forte ou omitido
+- `revisado` autodeclarado no lugar de evidência/disposição
+- Skill especializada aplicável não lida
 - PDF sem rasterizar
 - Sugerir reescrever o monorepo inteiro no lugar de achados priorizados
 

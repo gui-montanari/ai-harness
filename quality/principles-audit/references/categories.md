@@ -14,6 +14,9 @@ Procure o mesmo fato em dois lugares:
 
 **Confirmação:** se a regra mudar, quantos diffs? >1 = achado.
 
+Faça também a linhagem de campos alterados: request/evento → command → entidade → record →
+projeção. Campo aceito e descartado no meio é achado de SSOT/completude, não “ainda não usado”.
+
 ## 2. DRY
 
 Do `duplicates` do scanner, abra os pares. Classifique:
@@ -124,6 +127,8 @@ Achado quando:
 - Segredo em imagem, compose literal, log
 - `except Exception: continue` em caminho autenticado
 - Fetch de URL fornecida pelo usuário sem allowlist
+- rota pública sem requisito/ADR aceito; endpoint de teste registrado em produção
+- principal técnico (`sender_key`, actor, reviewer) vindo do body
 
 Se o achado for um IDOR concreto com `arquivo:linha` de posse ausente: registre **aqui** se for padrão arquitetural (nenhum handler verifica posse) e deixe o detalhe rota-a-rota para `/security-audit` quando o humano pedir as duas. Não omita o padrão.
 
@@ -162,6 +167,8 @@ Achado quando:
 - Liveness = ping no Redis/DB (blip derruba o cluster)
 - Side-effect (cobrança, e-mail, WMS) sem chave de idempotência
 - Sem teste da 2ª entrega do mesmo `message_id`
+- inbox marca visto antes do efeito e a redelivery recebe ACK como duplicata; teste obrigatório
+  injeta falha exatamente entre claim e efeito
 
 O scanner pode marcar `deploy.signals` (restart/health). Confirme no arquivo. Sem compose no repo: declare N/A da parte de orquestração; a idempotência do use case **ainda vale**.
 
@@ -180,6 +187,9 @@ Achado quando a política **não tem dono global** ou o local **copia** em vez d
 | Idempotência | `processed = set()` em RAM; chave sem tenant; 2ª entrega duplica side-effect; store por use case em vez de um `IdempotencyStore` |
 
 **Protegido:** um `RetryPolicy` + um `IdempotencyStore` + um contexto de tenant + semáforos no DI; adapters e consumers só recebem. Teste da 2ª entrega e teste de outro tenant no adapter.
+
+Capacidade externa anunciada (LLM, voz, tool, canal) precisa de adapter ativo, capability check
+e teste de ponta a ponta. Ausência de provider não pode avançar estado por fallback incompatível.
 
 Não acuse o fake de teste que implementa a mesma porta — isso é hexagonal. Acuse o segundo `retry()` escrito na mão.
 

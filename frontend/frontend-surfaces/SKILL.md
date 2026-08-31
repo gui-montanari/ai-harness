@@ -53,6 +53,9 @@ frontend/
 - Área pública, shell autenticado, chat, estados vazios/erro, mobile/tablet/desktop e i18n seguem a gramática deste skill. Não copiar implementação, paleta, rotas, HITL, SSE ou domínio de outro produto.
 - Hex só em `tokens.css` / `tenants/<id>.css` (os dois temas). Página e componente usam `var(--token)`.
 - Primitivo (tabela, badge, empty, flash) nasce em `ui/` e é **o** vocabulário. Segunda tabela “só desta tela” é achado.
+- Controle, copy e ícone de capacidade externa (áudio, upload, canal, exportação) só aparecem
+  quando o contrato da superfície e o capability check do servidor confirmam caminho ativo.
+  Mock visual não anuncia feature que o backend rejeita.
 - Home pública é full-bleed. `site-shell` envolve o conteúdo interno, não o hero nem a faixa de métricas.
 - Hero tem **um** visual reativo (órbita com nós que escalam no hover, **ou** quadro de jornada). CSS, 180ms. `prefers-reduced-motion` zera movimento.
 - Chat: skill `frontend-chat`. Lista à esquerda + thread; primitivos em `ui/src/chat/`; a página dona o fetch.
@@ -72,6 +75,7 @@ frontend/
 - chat com input de uma linha, sem header, avatar, auto-resize ou Enter/Shift+Enter
 - copiar HTML/CSS de outro produto (paleta, typeface, hex de chat, SSE, markdown)
 - tabela com hex, sem hover, sem `scope="col"`, ou copiada numa página só
+- UI anuncia áudio/upload/canal que não possui adapter e teste de ponta a ponta ativos
 
 ## Conferência
 
@@ -86,3 +90,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Empty / loading / erro / 403 existem e estão traduzidos
 - [ ] Tabela/badge/empty/flash no `ui/`, só token; hover e foco conferidos nos dois temas
 - [ ] `ui/` sem `fetch` nem domínio
+- [ ] Capacidades anunciadas pela UI existem no contrato, capability check e teste e2e

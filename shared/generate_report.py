@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 import tempfile
 from collections import Counter
@@ -87,6 +88,14 @@ SEV_LABEL = {
 }
 SEV_ORDER = ["critica", "alta", "media", "baixa", "informativa"]
 CAT_LABEL = {
+    "isolamento_dados": "Isolamento de dados",
+    "autorizacao": "Autorização",
+    "idor_superficies_publicas": "IDOR e superfícies públicas",
+    "auth_sessao": "Auth e sessão",
+    "segredos_dados_sensiveis": "Segredos e dados sensíveis",
+    "inputs_injecao": "Inputs e injeção",
+    "abuso_disponibilidade": "Abuso e disponibilidade",
+    # Compatibilidade de relatórios antigos.
     "banco_sem_tranca": "Banco sem tranca",
     "permissao_navegador": "Permissão no navegador",
     "idor": "IDOR",
@@ -94,15 +103,17 @@ CAT_LABEL = {
     "xss": "Inputs sem tratamento",
 }
 CAT_ORDER = [
-    "banco_sem_tranca",
-    "permissao_navegador",
-    "idor",
-    "chaves_expostas",
-    "xss",
+    "isolamento_dados",
+    "autorizacao",
+    "idor_superficies_publicas",
+    "auth_sessao",
+    "segredos_dados_sensiveis",
+    "inputs_injecao",
+    "abuso_disponibilidade",
 ]
 DEFAULT_REPORT = {
     "title": "Relatório de Auditoria de Segurança",
-    "kicker": "AUDITORIA DE SEGURANÇA · 5 CATEGORIAS",
+    "kicker": "AUDITORIA DE SEGURANÇA · 7 CATEGORIAS",
     "footer": "gerado por security-audit",
     "filename": "relatorio-auditoria-seguranca.pdf",
 }
@@ -147,6 +158,7 @@ REQUIRED_TOP = [
     "scope",
     "methodology",
     "stack",
+    "coverage_notes",
     "findings",
     "strengths",
     "weaknesses",
@@ -163,8 +175,10 @@ REQUIRED_FINDING = [
     "description",
     "snippet",
     "why_exploitable",
+    "exploitability_conditions",
     "impact",
     "fix",
+    "acceptance_criteria",
 ]
 
 
@@ -190,9 +204,13 @@ def load_findings(path: Path) -> dict:
         if f["severity"] not in SEV_LABEL:
             die(f"finding[{i}] severity inválida: {f['severity']}")
         cat = f.get("category") or ""
-        if not str(cat).replace("_", "").isalnum():
+        allowed_categories = (
+            set(CAT_LABEL)
+            | set(data.get("category_order") or [])
+            | set((data.get("category_labels") or {}).keys())
+        )
+        if cat not in allowed_categories:
             die(f"finding[{i}] category inválida: {cat}")
-    data.setdefault("coverage_notes", {})
     return data
 
 
@@ -1132,6 +1150,34 @@ def main() -> None:
     args = p.parse_args()
     if not args.findings.is_file():
         die(f"arquivo não encontrado: {args.findings}")
+    audit_dir = args.findings.parent
+    verifier = Path(__file__).with_name("verify_audit.py")
+    evidence = audit_dir / "evidence.json"
+    coverage = audit_dir / "coverage.md"
+    if not verifier.is_file():
+        die("verify_audit.py deve estar ao lado do gerador")
+    repo_root = next(
+        (parent for parent in audit_dir.parents if (parent / "AGENTS.md").is_file() or (parent / ".git").exists()),
+        audit_dir.parent,
+    )
+    verify_command = [
+        sys.executable,
+        str(verifier),
+        "--root",
+        str(repo_root),
+        "--findings",
+        str(args.findings),
+        "--evidence",
+        str(evidence),
+        "--coverage",
+        str(coverage),
+    ]
+    inventory = audit_dir / "inventory.json"
+    if inventory.is_file():
+        verify_command.extend(["--inventory", str(inventory)])
+    verified = subprocess.run(verify_command, text=True, capture_output=True, check=False)
+    if verified.returncode != 0:
+        die((verified.stderr or verified.stdout).strip())
     data = load_findings(args.findings)
     output = args.output or (args.findings.parent / report_meta(data)["filename"])
     generate(data, output)

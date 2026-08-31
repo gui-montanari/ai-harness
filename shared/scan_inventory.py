@@ -87,6 +87,7 @@ INFRA_HINTS = (
 )
 LAYER_PATH = (
     ("test", ("/tests/", "/test/", "__tests__", ".test.", ".spec.")),
+    ("frontend", ("/frontend/",)),
     ("core", ("/core/", "/domain/", "/ports/")),
     ("application", ("/application/", "/usecase/", "/use_cases/", "/app/")),
     ("infrastructure", ("/infrastructure/", "/adapters/", "/infra/")),
@@ -140,6 +141,7 @@ def file_limit(layer: str) -> int:
         "infrastructure": LIMITS["adapter_file"],
         "presentation": LIMITS["presentation_file"],
         "test": LIMITS["test_file"],
+        "frontend": LIMITS["presentation_file"],
         "other": LIMITS["other_file"],
     }[layer]
 
@@ -213,13 +215,26 @@ def imports_of(text: str, ext: str) -> list[str]:
     found = []
     if ext == ".py":
         for m in re.finditer(r"^\s*(?:from|import)\s+([a-zA-Z0-9_\.]+)", text, re.M):
-            found.append(m.group(1).split(".")[0].lower())
+            found.append(m.group(1).lower())
     else:
         for m in re.finditer(r"""from\s+['\"]([^'\"]+)['\"]""", text):
             found.append(m.group(1).split("/")[0].lstrip("@").lower())
         for m in re.finditer(r"""require\(['\"]([^'\"]+)['\"]\)""", text):
             found.append(m.group(1).split("/")[0].lstrip("@").lower())
     return found
+
+
+def forbidden_import(layer: str, module: str) -> bool:
+    """Detecta SDK externo e vazamento interno entre camadas."""
+    root = module.split(".")[0].split("/")[0].lstrip("@").lower()
+    if root in INFRA_HINTS:
+        return True
+    normalized = "." + module.replace("/", ".").strip(".") + "."
+    if layer == "core":
+        return any(part in normalized for part in (".application.", ".infrastructure.", ".presentation."))
+    if layer == "application":
+        return any(part in normalized for part in (".infrastructure.", ".presentation."))
+    return False
 
 
 def shingles(text: str, size: int = 10) -> dict[str, list[int]]:
@@ -340,7 +355,11 @@ def classify_file(path: Path, repo: Path, text: str) -> dict:
     over_fn = [u for u in units if u["kind"] == "function" and u["lines"] > LIMITS["function"]]
     over_cls = [u for u in units if u["kind"] == "class" and u["lines"] > LIMITS["class"]]
     imps = imports_of(text, ext)
-    leaks = sorted({i for i in imps if i in INFRA_HINTS}) if layer in {"core", "application"} else []
+    leaks = (
+        sorted({i for i in imps if forbidden_import(layer, i)})
+        if layer in {"core", "application"}
+        else []
+    )
     smells = []
     checks = (
         (r"\btime\.sleep\s*\(", "time_sleep"),
@@ -367,6 +386,33 @@ def classify_file(path: Path, repo: Path, text: str) -> dict:
         "n_classes": sum(1 for u in units if u["kind"] == "class"),
         "runtime_smells": smells,
     }
+
+
+def audit_signals(files: list[dict], duplicates: list[dict], deploy: dict) -> list[dict]:
+    signals: list[dict] = []
+    for record in files:
+        file = record["file"]
+        if record["over_file"]:
+            signals.append({"key": f"over_file::{file}", "kind": "over_file", "file": file})
+        for unit in record["functions_over"]:
+            signals.append({"key": f"function_over::{file}:{unit['start']}", "kind": "function_over", "file": file})
+        for unit in record["classes_over"]:
+            signals.append({"key": f"class_over::{file}:{unit['start']}", "kind": "class_over", "file": file})
+        for module in record["infra_imports"]:
+            signals.append({"key": f"infra_import::{file}::{module}", "kind": "infra_import", "file": file})
+        for smell in record["runtime_smells"]:
+            signals.append({"key": f"runtime_smell::{file}::{smell}", "kind": "runtime_smell", "file": file})
+    for index, cluster in enumerate(duplicates):
+        signals.append({"key": f"duplicate::{index}", "kind": "duplicate", "files": cluster["files"]})
+    for signal in deploy["signals"]:
+        signals.append(
+            {
+                "key": f"deploy::{signal['file']}::{signal['kind']}",
+                "kind": "deploy",
+                "file": signal["file"],
+            }
+        )
+    return signals
 
 
 def main() -> None:
@@ -416,7 +462,14 @@ def main() -> None:
         "n_runtime_smells": sum(len(f.get("runtime_smells") or []) for f in files),
         "limits": LIMITS,
     }
-    out = {"summary": summary, "files": files, "duplicates": dupes[:80], "deploy": deploy}
+    limited_dupes = dupes[:80]
+    out = {
+        "summary": summary,
+        "files": files,
+        "duplicates": limited_dupes,
+        "deploy": deploy,
+        "audit_signals": audit_signals(files, limited_dupes, deploy),
+    }
     json.dump(out, sys.stdout, ensure_ascii=False, indent=2)
     sys.stdout.write("\n")
 

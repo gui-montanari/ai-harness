@@ -4,7 +4,7 @@ O gerador `scripts/generate_report.py` produz `relatorio-auditoria-seguranca.pdf
 
 ## Seções do PDF (nessa ordem)
 
-a) **Capa** — título `Relatório de Auditoria de Segurança — <nome do projeto>`, data, escopo, nota metodológica (mapeamento das 5 categorias para a stack).
+a) **Capa** — título `Relatório de Auditoria de Segurança — <nome do projeto>`, data, escopo, nota metodológica (mapeamento das 7 categorias para a stack).
 
 b) **Resumo executivo** — totais por severidade, gráfico de rosca por severidade, gráfico de barras por categoria. Paleta: crítica `#B91C1C`, alta `#EA580C`, média `#D97706`, baixa `#2563EB`, ponto forte `#059669`.
 

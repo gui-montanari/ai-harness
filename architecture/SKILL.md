@@ -21,6 +21,32 @@ description: >
 5. **Uma abordagem.** Plano em `docs/plans/<slug>.md` se não for trivial. ADR só para decisão que sobrevive ao PR.
 6. **YAGNI de serviço.** Worker no mesmo deployável antes de microsserviço. Segundo agente só com segundo domínio.
 
+## Completude vertical antes do primeiro teste
+
+Para cada requisito tocado, registre no plano (ou na análise do diff trivial) uma linha com:
+
+```
+requisito/fonte → entrada autorizada → principal/tenant → use case → dono do dado
+→ saída autorizada → falhas/retry/concorrência → testes negativos e de retomada
+```
+
+Não é documentação paralela: é a prova de que o comportamento chega ao dono e volta pela
+superfície correta. Campo coletado e descartado, capacidade anunciada sem adapter ativo,
+rota sem consumidor aprovado e teste que valida comportamento contrário ao requisito são
+falhas de completude, mesmo com cobertura alta.
+
+Selecione as skills pelo que o recorte **contém**, não só pelo pedido original:
+
+| Sinal no diff | Conferência adicional obrigatória |
+|---------------|-----------------------------------|
+| sessão, token, papel, superfície pública | `auth` |
+| fila, outbox, inbox, consumer | `reliable-messaging` + `background-workers` |
+| caso, atribuição, SLA, revisão | `ops-backoffice` |
+| LLM, prompt, guarda, turno | `agent-orchestration` + `orchestration-runtime` |
+| webhook/canal/identidade de remetente | `whatsapp-channel` + `http-apis` |
+| tabela, PII, concorrência de escrita | `persistence-ports` + `sql-migrations` |
+| Makefile, Compose, workflow, gate | `cicd` |
+
 Vista mental (indústria, sem diagrama obrigatório): contexto → limites (containers) → módulos (hexagonais) → adapters. Não comece pelo controller nem pela tela.
 
 Pacote `packages/platform` (no monorepo com UI: `backend/packages/platform`): mecânica **sem domínio**. Porto + Memory fake + adapter do provider. **SRP: uma pasta por capacidade**, nunca `.py` solto na raiz (só `__init__.py`):
@@ -65,12 +91,13 @@ platform/
 
 Não declare pronto no `make test` verde. Loop **obrigatório**:
 
-0. Conferência da skill do recorte — caixas marcadas.
-1. `/principles-audit` no diff.
-2. `/security-audit` no diff.
-3. Cada achado: corrige no dono do fato (não no relatório).
-4. Roda **os dois** de novo.
-5. Entrega só com **zero** achados. “É frontend” / “é skill” / “é migração” não isenta.
+0. Reexecutar a completude vertical e as conferências de **todas** as capacidades detectadas.
+1. Rodar os gates canônicos reais (`make lint typecheck test check-architecture check-migrations build`) e validar o manifesto de deploy (`docker compose config`, quando houver).
+2. `/principles-audit` no diff.
+3. `/security-audit` no diff.
+4. Cada achado: corrige no dono do fato (não no relatório).
+5. Roda gates e **os dois** audits de novo.
+6. Entrega só com **zero** achados e zero gate vermelho. “É frontend” / “é skill” / “é migração” não isenta.
 
 Sem `|| true`, sem achar ignorado por nome. Exceção só por ADR com prazo.
 
@@ -82,6 +109,8 @@ Sem `|| true`, sem achar ignorado por nome. Exceção só por ADR com prazo.
 - Runtime ou canal throwaway (“LangGraph agora, Make depois”; “Evolution agora, provider oficial depois”)
 - Porta/stub/`node.py` sem caminho de execução
 - Pular o loop de auditoria
+- Declarar capacidade na UI/contrato sem caminho ativo até o adapter e teste de ponta a ponta
+- Marcar rota pública como intencional sem requisito/ADR aceito que autorize a superfície
 - SQL ou evento de um bounded context no pacote de plataforma
 - `logs.py` / `postgres.py` / `ports.py` na raiz do pacote de plataforma (a capacidade é pasta)
 - `reject(requeue=True)` como se incrementasse `x-death` (não incrementa; teto de retry nunca dispara)
@@ -91,8 +120,10 @@ Sem `|| true`, sem achar ignorado por nome. Exceção só por ADR com prazo.
 Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
 - [ ] Invariante e dono do dado escritos
+- [ ] Completude vertical dos requisitos tocados; nenhum campo/capacidade/rota termina sem dono e consumidor
 - [ ] Camada certa; porto pequeno; composition root único
 - [ ] Pacote de plataforma: pasta por capacidade; raiz só `__init__.py`; sem SQL/fábrica de BC
 - [ ] Skill do recorte lida e conferência dela marcada
+- [ ] Skills adicionais selecionadas pelas capacidades presentes no diff
 - [ ] Sem microsserviço/segundo agente sem o critério da constituição
-- [ ] `/principles-audit` e `/security-audit` em zero achados
+- [ ] Gates canônicos + manifesto de deploy verdes; `/principles-audit` e `/security-audit` em zero achados

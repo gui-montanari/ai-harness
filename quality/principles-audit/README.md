@@ -15,4 +15,6 @@ No repositório-alvo, com a skill instalada:
 /principles-audit
 ```
 
-O agente lê o `AGENTS.md` do projeto (ou o template), roda `shared/scan_inventory.py` para não amostrar, confirma cada suspeita no código e gera `docs/principles-audit/relatorio-auditoria-principios.pdf`.
+O agente lê o `AGENTS.md` e as fontes superiores do projeto, roteia as capacidades para as
+skills especializadas, roda o inventário e os gates reais em `evidence.json`. O PDF só é
+gerado depois que `shared/verify_audit.py` confirma gates verdes e todas as disposições.

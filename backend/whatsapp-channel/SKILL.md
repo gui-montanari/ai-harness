@@ -23,6 +23,10 @@ normalize_inbound(payload) -> { sender_key, text, provider_message_id }
 
 Composition escolhe o adapter (`CHANNEL_ADAPTER=evolution|twilio`). Sem if de provider no use case, no agente ou no caso.
 
+O conjunto permitido vem do requisito/ADR do produto. A existência desta skill não autoriza
+Evolution, Twilio ou um canal web: implemente somente o provider aprovado para o ambiente.
+Fake de teste implementa a mesma porta e não registra rota pública de produção.
+
 | Peça | Mora | Não mora |
 |------|------|----------|
 | Porta | `messaging-gateway/core/ports/` | agente, casos, UI |
@@ -72,6 +76,7 @@ Inbound hoje: form-urlencoded, 401 se a assinatura falhar. Outbound: Messages AP
 ## Conferência
 
 - [ ] Uma porta; N adapters; composition escolhe
+- [ ] Somente providers/canais aprovados no requisito/ADR; fake não cria superfície pública
 - [ ] Domínio sem `remoteJid` / `MessageSid` / `content_sid`
 - [ ] Evolution e/ou Twilio com normalize + `send` + testes de 401 e envelope
 - [ ] Env no `.env.example`; adapter sem `getenv`

@@ -330,7 +330,7 @@ Escolha **uma** coluna e seja hexagonal nela. Não misture Django-views-com-regr
 Comandos canônicos na raiz (`Makefile` é SSOT de *como rodar*):
 
 ```
-make setup | lint | typecheck | test | check-migrations | migrate | build | up | down
+make setup | lint | typecheck | test | check-architecture | check-migrations | migrate | build | validate-deploy | up | down
 ```
 
 CI chama os mesmos alvos. Ninguém documenta um comando que o Makefile não tem.
@@ -357,6 +357,7 @@ Toda mudança, por menor que seja, passa por isto **antes** do primeiro teste. S
 | 12 | Operação | Log sem PII, métrica, rollback, probe de vivo vs pronto, dono da flag? |
 | 13 | Runtime / SSOT | Async-only? Políticas (tenant, retry, semáforo, idempotência) num dono, o resto herda? |
 | 14 | Consistência | Case da linguagem? Schema HTTP ≠ Command ≠ entity ≠ record? Pydantic só em `presentation/schemas/`? Command em `application/commands/`? Adapter fora de `application/`? `/api/v1`? `backend/` ≠ `frontend/`? Migration `YYYYMMDD_VV`? |
+| 15 | Completude vertical | Cada requisito/campo/capacidade chega da entrada autorizada ao dono do dado e volta por saída autorizada? Falha, retry, concorrência e negações estão testados? |
 
 Trivial = um bug óbvio, um nome, um teste faltando em código que você não está reestruturando. Na dúvida, **não é trivial**: plano.
 
@@ -392,6 +393,7 @@ Status: rascunho | aprovado | feito
 | operação | ...
 | runtime (async, tenant, retry, semáforo, idempotência) | ... |
 | consistência (nomes, schema/model, YYYYMMDD_VV) | ... |
+| completude vertical (fonte → entrada → principal → use case → dado → saída → falha/teste) | ... |
 
 ## Abordagem
 <uma abordagem. Não três ensaios.>
@@ -474,7 +476,8 @@ Todo push de PR:
 1. `make lint` e `make typecheck`
 2. Testes unit + contract
 3. Gate de fronteira (import-linter / cruiser)
-4. `make build` da imagem (cache, não push obrigatório)
+4. `make validate-deploy` (`docker compose config` / validador equivalente)
+5. `make build` da imagem (cache, não push obrigatório)
 
 CD: o humano (ou o fluxo do repo) promove artefato **já construído**. CI verde ≠ licença para o agente mergear ou deployar.
 
@@ -606,6 +609,7 @@ Ferramentas: ruff F401/F841, `knip` / `ts-prune`, `vulture` — **além** da lei
 ler constituição → dimensões (§5)
         │
         ├─ não trivial → docs/plans/<slug>.md → humano confirma se pediu confirmação
+        ├─ completude vertical + skills selecionadas pelas capacidades presentes
         │
         ├─ TDD: teste vermelho
         │
@@ -613,9 +617,9 @@ ler constituição → dimensões (§5)
         │
         ├─ refatorar (SRP, DRY, camadas, runtime global)
         │
-        ├─ make lint && make test
+        ├─ gates canônicos + validação do manifesto de deploy
         │
-        ├─ conferência da skill do recorte (caixas no SKILL.md)
+        ├─ conferência de todas as skills aplicáveis (caixas no SKILL.md)
         │     caixa vazia → corrige o dono do fato → marca de novo
         │
         ├─ /principles-audit e /security-audit
@@ -624,7 +628,11 @@ ler constituição → dimensões (§5)
         └─ não abrir PR / não mergear / não documentar extra
 ```
 
-A skill do recorte termina em **Conferência**. O agente copia as caixas e marca. Caixa vazia = a entrega não fechou. Trabalho só está entregue com a conferência completa **e** os dois audits em zero achados. “É frontend” não isenta. Skill `architecture` descreve o loop. Não invente pasta, ADR ou diagrama “para completar”.
+Cada skill aplicável termina em **Conferência**. O agente seleciona pelo que o diff contém,
+não só pelo pedido inicial, copia as caixas e marca. Caixa vazia = a entrega não fechou.
+Trabalho só está entregue com gates reais verdes, conferências completas e os dois audits em
+zero achados verificados. “É frontend” não isenta. Skill `architecture` descreve o loop.
+Não invente pasta, ADR ou diagrama “para completar”.
 
 ---
 
@@ -636,6 +644,7 @@ A skill do recorte termina em **Conferência**. O agente copia as caixas e marca
 - Mesma fórmula no frontend e no backend
 - Arquivo passando de 250 linhas de domínio sem fatiar
 - Teste escrito depois, verde de primeira, sem ter visto o vermelho
+- Campo aceito e descartado; capacidade anunciada sem adapter; rota pública sem fonte aprovada
 - `utils.py` / `helpers.ts` ganhando regra de negócio
 - Novo microserviço, bus ou “plataforma” sem o critério da §8.2
 - Worker sem `restart`, sem drain, sem idempotência, ou com estado só na RAM

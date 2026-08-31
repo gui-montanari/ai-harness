@@ -13,16 +13,18 @@
     "isolation_mechanism": "filtro manual por organizationId no Nest; sem RLS no Postgres"
   },
   "coverage_notes": {
-    "banco_sem_tranca": "aplicável — isolamento por organizationId no Prisma; sem RLS",
-    "permissao_navegador": "aplicável — gates isAdmin no frontend cruzados com guards Nest",
-    "idor": "aplicável — 28 handlers inventariados em coverage.md",
-    "chaves_expostas": "aplicável — código, compose, Helm, CI e git history",
-    "xss": "aplicável — Next.js + templates Handlebars de e-mail"
+    "isolamento_dados": "aplicável — isolamento por organizationId no Prisma; sem RLS",
+    "autorizacao": "aplicável — ações e gates isAdmin cruzados com policies Nest",
+    "idor_superficies_publicas": "aplicável — 28 handlers inventariados em coverage.md",
+    "auth_sessao": "aplicável — JWT/cookie, expiração, rotação e revogação",
+    "segredos_dados_sensiveis": "aplicável — código, banco, cache, eventos, compose, CI e git history",
+    "inputs_injecao": "aplicável — Next.js + templates Handlebars + URLs de saída",
+    "abuso_disponibilidade": "aplicável — login, listas, upload, timeout e rate limit"
   },
   "findings": [
     {
       "id": "F-001",
-      "category": "idor",
+      "category": "idor_superficies_publicas",
       "severity": "alta",
       "file": "apps/api/src/orders/orders.controller.ts",
       "lines": "42-58",
@@ -40,7 +42,7 @@
     },
     {
       "id": "F-002",
-      "category": "banco_sem_tranca",
+      "category": "isolamento_dados",
       "severity": "critica",
       "file": "apps/api/src/reports/reports.service.ts",
       "lines": "17-31",
@@ -58,7 +60,7 @@
     },
     {
       "id": "F-003",
-      "category": "permissao_navegador",
+      "category": "autorizacao",
       "severity": "alta",
       "file": "apps/web/app/settings/users/page.tsx",
       "lines": "12-18",
@@ -76,7 +78,7 @@
     },
     {
       "id": "F-004",
-      "category": "chaves_expostas",
+      "category": "segredos_dados_sensiveis",
       "severity": "critica",
       "file": "deploy/helm/values.yaml",
       "lines": "24-26",
@@ -94,7 +96,7 @@
     },
     {
       "id": "F-005",
-      "category": "xss",
+      "category": "inputs_injecao",
       "severity": "media",
       "file": "apps/web/components/CommentBody.tsx",
       "lines": "8-11",
@@ -112,7 +114,7 @@
     },
     {
       "id": "F-006",
-      "category": "chaves_expostas",
+      "category": "segredos_dados_sensiveis",
       "severity": "baixa",
       "file": "docker-compose.yml",
       "lines": "41-43",

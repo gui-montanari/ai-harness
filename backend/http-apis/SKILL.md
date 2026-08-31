@@ -34,6 +34,12 @@ application/
 4. Router em `http/v1/` — valida transporte, autentica, chama o use case, traduz erro.
 5. OpenAPI nasce do schema. Cliente gerado no pipeline, ou o cliente artesanal é achado.
 
+Rota pública exige consumidor e fonte de autoridade explícitos (requisito/ADR aceito). Não
+publique endpoint de teste para simular provider. Identidade técnica (`sender_key`, tenant,
+ator, reviewer) deriva do principal/envelope autenticado; nunca de body arbitrário. Endpoint
+que devolve histórico ou capability token recebe threat model e testes negativos de enumeração,
+personificação, cache e referrer.
+
 `/health` e `/ready` **fora** de `/api/v1`. Webhook: `/api/v1/webhooks/<adapter>`, autentica o envelope **antes** de normalizar.
 
 Factory ASGI (`--factory`): tenant, CORS e título vêm do env no start (`TENANT_ID`, `CORS_ORIGINS`, `APP_TITLE`). Não `app = create_http_app()` no import — quebra teste e crava default. `allow_origins=["http://localhost:5173"]` e `title="NomeDoProduto"` são hardcode.
@@ -54,6 +60,8 @@ Skill `auth`. Borda HTTP autentica, converte para `Principal`, chama o use case.
 - regra no webhook, no MCP ou no Make.com
 - proxy de dev que apaga `/api/v1`
 - OpenAPI gerado e ninguém consome
+- rota `publico-intencional` sem requisito/ADR e consumidor aprovado
+- cliente escolhe identidade de canal, tenant, ator ou revisor
 - CORS, título ou token cravados no `app.py`
 
 ## Conferência
@@ -64,5 +72,6 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Use case um verbo, com teste RED primeiro
 - [ ] Rota de negócio em `/api/v1`; `/health` `/ready` na raiz
 - [ ] Handler só traduz; authz no use case; tenant do contexto
+- [ ] Toda rota pública cita a fonte que a autoriza e tem testes negativos; nenhuma rota de teste sobe em produção
 - [ ] OpenAPI do schema; cliente gerado ou nenhum cliente artesanal
 - [ ] CORS/título/tenant na factory via env; sem literal de produto

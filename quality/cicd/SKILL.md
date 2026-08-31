@@ -36,9 +36,15 @@ make test            # unit + contract + coverage floor
 make check-architecture   # import-linter  |  dependency-cruiser
 make check-migrations
 make build           # imagem multi-stage, non-root, tag = git SHA
+make validate-deploy # docker compose config / helm lint, conforme o deploy real
 ```
 
 Python no `lint`: `ruff check .` **e** `ruff format --check .`. CI **não** roda `ruff check --fix` (mutação). TypeScript: `eslint` + `tsc --noEmit`. Fronteiras: se o linter de import não roda no CI, a regra hexagonal é teatro.
+
+O gate de arquitetura inventaria **todo** diretório produtivo detectado. Pacote novo ou camada
+`other` sem regra não é ignorado: o job falha até ser classificado. Além do linter estático, o
+CI executa `docker compose config` (ou o validador equivalente) para provar que o manifesto é
+sintaticamente e semanticamente carregável.
 
 Coverage é **piso**, não troféu. Um número no `pyproject.toml` / `vitest` (`--cov-fail-under` / `thresholds`). Queda abaixo do piso falha o job. Não chase % de linha; cubra comportamento de `core/` e `application/`.
 
@@ -116,6 +122,15 @@ jobs:
         with:
           persist-credentials: false
       - run: make check-migrations
+  validate-deploy:
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@<sha>
+        with:
+          persist-credentials: false
+      - run: make validate-deploy
   image:
     timeout-minutes: 20
     permissions:
@@ -167,6 +182,7 @@ GitLab: mesmos alvos; `rules:` no lugar de `on:`; `id_tokens` para OIDC; `CI_JOB
 | `architecture` | `core`/`application` sem SDK; fronteira hexagonal |
 | `migrations` | filename `YYYYMMDD_VV`; um runner |
 | `image` | o SHA é implantável; scan não é opcional se há container |
+| `validate-deploy` | compose/chart carrega; variáveis e tipos não quebram o deploy |
 
 Testes em `tests/architecture/` **entram** no job `architecture` (ou em `test` se o Makefile unificar — um dono). Diretório de produção fora do linter de import = gate mal configurado.
 
@@ -185,13 +201,16 @@ Testes em `tests/architecture/` **entram** no job `architecture` (ou em `test` s
 - `latest` como tag de produção
 - Agente mergeando ou deployando porque “o CI passou”
 - Dois hosts de CI no mesmo repo sem segundo ambiente real
+- Diretório produtivo retornando `limit=None`, `other` ou “não mapeado” no gate
+- Compose inspecionado só por regex; nenhum `docker compose config`
 
 ## Conferência
 
 Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
 - [ ] Host perguntado (ou já no ADR); **um** pipeline
-- [ ] Makefile é SSOT; CI chama `lint` `typecheck` `test` `check-architecture` `check-migrations` `build`
+- [ ] Makefile é SSOT; CI chama `lint` `typecheck` `test` `check-architecture` `check-migrations` `build` `validate-deploy`
+- [ ] `validate-deploy` carrega o manifesto real; todo diretório produtivo está no gate de arquitetura
 - [ ] `ruff check` + `ruff format --check` (ou eslint + `tsc --noEmit`); sem `--fix` no CI
 - [ ] Coverage com piso que falha o job
 - [ ] Jobs separados; `permissions: contents: read`; actions pinadas por SHA; timeout; sem `|| true`
