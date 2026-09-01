@@ -222,7 +222,7 @@ def _cache_dir() -> Path:
         return Path(configured).expanduser()
     xdg_cache = os.getenv("XDG_CACHE_HOME")
     base = Path(xdg_cache).expanduser() if xdg_cache else Path.home() / ".cache"
-    return base / "mcp-cli-toolkit" / "telegram-docs"
+    return base / "ai-harness" / "telegram-docs"
 
 
 def _cache_ttl_seconds() -> int:

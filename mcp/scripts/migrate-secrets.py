@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 home=Path.home(); root=Path(__file__).resolve().parents[1]
-target=home/".config/mcp-cli-toolkit/secrets"; target.mkdir(parents=True,exist_ok=True)
+target=home/".config/ai-harness/secrets"; target.mkdir(parents=True,exist_ok=True)
 claude=json.loads((home/".claude.json").read_text()) if (home/".claude.json").exists() else {}
 servers={**claude.get("mcpServersDisabled",{}),**claude.get("mcpServers",{})}
 

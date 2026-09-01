@@ -8,8 +8,8 @@ Fonte única: esta pasta. [`sync.py`](./sync.py) projeta — não se copia o cor
 ## Outro notebook / outro host
 
 ```bash
-git clone git@github.com:gui-montanari/ai-harness.git ~/.local/share/ai-harness
-~/.local/share/ai-harness/install.sh
+git clone git@github.com:gui-montanari/ai-harness.git ~/projetos/ferramentas/ai-harness
+~/projetos/ferramentas/ai-harness/install.sh
 ```
 
 Um canal nativo por provedor. O Grok **não** varre rules/hooks/skills/MCP/CLAUDE.md de Cursor ou Claude (`compat.*.{rules,hooks,agents,skills,mcps} = false`).

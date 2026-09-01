@@ -3,9 +3,9 @@
 Rule diz o que o modelo deve fazer. Hook **impede** o que o modelo ignoraria.
 Só o que é verdade em **qualquer** projeto entra no catálogo.
 
-O desenho é o mesmo do `mcp-cli-toolkit`: **um catálogo agnóstico + adapter por
-host**. O `install.sh` chama [`sync.py`](./sync.py). Não se edita JSON de Cursor
-ou `settings.json` do Claude na mão.
+O desenho é **um catálogo agnóstico + adapter por host**. O `install.sh` chama
+[`sync.py`](./sync.py). Não se edita JSON de Cursor ou `settings.json` do Claude
+na mão.
 
 ## Política
 

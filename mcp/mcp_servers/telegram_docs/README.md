@@ -13,7 +13,7 @@ leituras de rede são limitadas a URLs HTTPS de `core.telegram.org`.
 - `get_telegram_bot_api_reference`
 
 As páginas são mantidas em cache por seis horas em
-`~/.cache/mcp-cli-toolkit/telegram-docs`. Se a documentação estiver
+`~/.cache/ai-harness/telegram-docs`. Se a documentação estiver
 temporariamente indisponível, um cache anterior pode ser usado como fallback e a
 resposta será marcada como `stale-cache`.
 

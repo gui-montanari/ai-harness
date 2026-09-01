@@ -46,7 +46,7 @@ const allTools = toolset === "drive"
     : [...legacyTools, ...slidesTools];
 
 const server = new Server(
-  { name: `mcp-cli-toolkit/google-${toolset === "all" ? "workspace" : toolset}`, version: "1.0.0" },
+  { name: `ai-harness/google-${toolset === "all" ? "workspace" : toolset}`, version: "1.0.0" },
   { capabilities: { tools: {} } },
 );
 

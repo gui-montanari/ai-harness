@@ -4,7 +4,7 @@ MCP operacional oficial (`@twilio-alpha/mcp`) para chamar APIs da conta Twilio.
 É separado do `twilio-docs`, que permanece somente documental e sem autenticação.
 
 O servidor usa API Key (SID `SK` + secret) com Account SID (`AC`). Credenciais
-ficam em `~/.config/mcp-cli-toolkit/secrets/twilio.env`; o wrapper não as
+ficam em `~/.config/ai-harness/secrets/twilio.env`; o wrapper não as
 grava no catálogo nem na config dos clientes.
 
 Por limite de contexto do modelo, o padrão carrega só o núcleo de conta,

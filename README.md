@@ -115,9 +115,11 @@ Skills `mcp-servers` e `mcp-tools` continuam sendo o HOW da **borda MCP de um pr
 Instalação **na máquina do agente**, uma vez.
 
 ```bash
-git clone git@github.com:gui-montanari/ai-harness.git ~/.local/share/ai-harness
-~/.local/share/ai-harness/install.sh
+git clone git@github.com:gui-montanari/ai-harness.git ~/projetos/ferramentas/ai-harness
+~/projetos/ferramentas/ai-harness/install.sh
 ```
+
+O clone de trabalho é esse diretório. `install.sh` aponta `~/.local/share/ai-harness` para ele (hosts e wrappers leem o caminho canônico). Não trabalhe em `~/.local/share`.
 
 O `install.sh` liga skills, [rules](./rules/), [hooks](./hooks/) e [mcp](./mcp/) em
 **todos** os hosts conhecidos (Grok, Cursor, Claude Code, Codex, Agents,
