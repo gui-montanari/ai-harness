@@ -43,13 +43,14 @@ def script_path(spec: dict) -> Path:
     return CANON / "hooks" / "scripts" / name
 
 
-def command_line(spec: dict) -> str:
+def command_line(spec: dict, *, grok: bool = False) -> str:
     path = script_path(spec)
     runtime = spec.get("runtime") or ("python3" if path.suffix == ".py" else "bash")
-    # Grok trata um valor que começa com aspas como caminho relativo a
-    # ~/.grok/hooks/, então o comando precisa ser absoluto e sem quoting extra.
-    # JSON já serializa a string; aspas internas virariam o path
-    # ~/.grok/hooks/"/home/.../script.sh".
+    # Grok: caminho absoluto sem aspas. Se começar com aspas, prefixa ~/.grok/hooks/.
+    # Se começar com "python3 ", trata como shell; o execve do Grok no .py com
+    # shebang é o caminho estável (os .sh antigos sumiram e a sessão 2/7 quebrava).
+    if grok:
+        return str(path)
     if runtime == "python3":
         return f"python3 {path}"
     if runtime == "bash":
@@ -60,7 +61,7 @@ def command_line(spec: dict) -> str:
 def grok_json(name: str, spec: dict) -> dict:
     hooks: dict = {}
     for event, cfg in (spec.get("events") or {}).items():
-        group: dict = {"hooks": [{"type": "command", "command": command_line(spec), "timeout": spec.get("timeout", 5)}]}
+        group: dict = {"hooks": [{"type": "command", "command": command_line(spec, grok=True), "timeout": spec.get("timeout", 5)}]}
         matcher = (cfg or {}).get("matcher")
         if matcher:
             group["matcher"] = matcher
@@ -76,6 +77,9 @@ def sync_grok(items: dict[str, dict]) -> None:
         path = dest / f"{name}.json"
         if path.exists() or path.is_symlink():
             path.unlink()
+        script = script_path(spec)
+        if script.is_file():
+            script.chmod(script.stat().st_mode | 0o111)
         path.write_text(json.dumps(grok_json(name, spec), indent=2) + "\n")
     for path in dest.glob("*.json"):
         if path.stem not in managed and _managed_command(path.read_text(errors="replace")):

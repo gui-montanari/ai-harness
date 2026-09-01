@@ -1,0 +1,18 @@
+#!/bin/bash
+set -e
+ROOT="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+source "$ROOT/wrappers/common.sh"
+python3 "$ROOT/mcp_toolkit.py" menu --client codex --profile "${MCP_PROFILE:-default}"
+
+choose_launch_mode "Codex CLI" || exit 0
+if [[ "$launch_mode" == 2 || "$launch_mode" == 4 ]]; then
+  choose_resume_target || { echo "Saindo sem iniciar o Codex CLI."; exit 0; }
+fi
+case "$launch_mode" in
+  1) command=(codex) ;;
+  2) [[ "$resume_kind" == last ]] && command=(codex resume --last) || command=(codex resume "$session_id") ;;
+  3) command=(codex --dangerously-bypass-approvals-and-sandbox) ;;
+  4) [[ "$resume_kind" == last ]] && command=(codex --dangerously-bypass-approvals-and-sandbox resume --last) || command=(codex --dangerously-bypass-approvals-and-sandbox resume "$session_id") ;;
+esac
+
+CODEX_HOME="$HOME/.codex-cli" exec "${command[@]}" "$@"

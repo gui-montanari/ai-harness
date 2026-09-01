@@ -9,7 +9,7 @@ Vale em qualquer produto. O produto **não** copia este repositório — só o `
 | Skills | `architecture/` `backend/` `frontend/` `quality/` | HOW de um recorte ([Agent Skills](https://agentskills.io)) |
 | Rules | [`rules/`](./rules/) | Gate **sempre ligado** em todo projeto e todo host |
 | Hooks | [`hooks/`](./hooks/) | Enforcement no host (o modelo não escolhe obedecer) |
-| MCP | repo **privado** `mcp-cli-toolkit` | Catálogo, wrappers, servidores — não entra aqui |
+| MCP | [`mcp/`](./mcp/) | Catálogo da máquina, wrappers, OAuth persistente |
 
 Cada skill é uma pasta com `SKILL.md`. O `name` no YAML **é o nome da pasta da skill**, não o agrupador `backend/` / `frontend/`.
 
@@ -18,6 +18,7 @@ Cada skill é uma pasta com `SKILL.md`. O `name` no YAML **é o nome da pasta da
 ```
 rules/                     # gates de processo (sempre ligados)
 hooks/                     # catálogo + sync (Grok/Cursor/Claude/Agy/Gemini/Windsurf)
+mcp/                       # catálogo MCP da máquina + wrappers (`grok-cli`, …)
 architecture/              # desenho do sistema + gate de entrega
 backend/
   auth/
@@ -53,15 +54,18 @@ quality/
 shared/                    # scanner/PDF dos audits
 ```
 
-## MCP (repo irmão, privado)
+## MCP da máquina
 
-`gui-montanari/mcp-cli-toolkit` é **privado**: perfis de cliente, VPS, secrets de máquina.
-Não se mistura neste repo público. O `install.sh` deste harness chama o do toolkit
-se o clone existir em `~/projetos/ferramentas/mcp-cli-toolkit` ou
-`~/.local/share/mcp-cli-toolkit`.
+Vive neste repo, em [`mcp/`](./mcp/). Clone + `./install.sh` em qualquer notebook:
 
-Skills `mcp-servers` e `mcp-tools` ensinam a **borda MCP de um produto**.
-O toolkit ensina a **máquina do agente** (quais MCPs o host carrega).
+1. skills, rules, hooks;
+2. wrappers em `~/bin` (`grok-cli`, `claude-cli`, …);
+3. catálogo universal sincronizado nos hosts;
+4. `mcp/secrets.example/*.env.example` copiados para `~/.config/ai-harness/secrets/` se ainda não existirem — preencha as chaves lá.
+
+OAuth (Cloudflare, Make, Stripe) grava refresh token em `~/.mcp-auth` na primeira autorização; as sessões seguintes reusam. Servidor que é só desta máquina (VPS, cliente) entra em `~/.config/ai-harness/overlay/mcp/` — o git público não leva IP nem subscription.
+
+Skills `mcp-servers` e `mcp-tools` continuam sendo o HOW da **borda MCP de um produto**. O catálogo em `mcp/` é o que o **host do agente** carrega.
 
 ## Skills
 
@@ -115,11 +119,12 @@ git clone git@github.com:gui-montanari/ai-harness.git ~/.local/share/ai-harness
 ~/.local/share/ai-harness/install.sh
 ```
 
-O `install.sh` liga skills, [rules](./rules/) e [hooks](./hooks/) em **todos** os hosts
-conhecidos (Grok, Cursor, Claude Code, Codex, Agents, Gemini/Antigravity, Windsurf,
-OpenCode): skills/rules por symlink; hooks por catálogo + adapter, no mesmo espírito do
-`mcp-cli-toolkit`. Overlay de cliente fica em `~/.config/ai-harness/overlay/` e não entra
-neste repo. Se o toolkit MCP privado estiver na máquina, o install chama-o também.
+O `install.sh` liga skills, [rules](./rules/), [hooks](./hooks/) e [mcp](./mcp/) em
+**todos** os hosts conhecidos (Grok, Cursor, Claude Code, Codex, Agents,
+Gemini/Antigravity, Windsurf, OpenCode). Cada host recebe **um** canal nativo;
+o Grok não varre rules/hooks/skills/MCP/`CLAUDE.md` de Cursor ou Claude.
+Overlay de cliente fica em `~/.config/ai-harness/overlay/{rules,hooks,mcp}/` e
+não entra neste repo.
 Em outro notebook: o mesmo clone + `install.sh` (ou `git pull && ./install.sh`).
 
 O produto tem o **próprio** `AGENTS.md` (domínio, ADR, fase). Cada skill termina em **Conferência**.

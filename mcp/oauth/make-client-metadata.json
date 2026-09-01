@@ -1,0 +1,3 @@
+{
+  "scope": "mcp:use scenarios:read scenarios:write scenarios:run connections:read connections:write hooks:read hooks:write datastores:read datastores:write organizations:read organizations:write teams:read"
+}

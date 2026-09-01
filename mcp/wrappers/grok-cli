@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+ROOT="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+source "$ROOT/wrappers/common.sh"
+python3 "$ROOT/mcp_toolkit.py" menu --client grok --profile "${MCP_PROFILE:-default}"
+choose_launch_mode "Grok CLI" || exit 0
+if [[ "$launch_mode" == 2 || "$launch_mode" == 4 ]]; then choose_resume_target || exit 0; fi
+case "$launch_mode" in
+  1) command=(grok) ;;
+  2) [[ "$resume_kind" == last ]] && command=(grok --continue) || command=(grok --resume "$session_id") ;;
+  3) command=(grok --permission-mode bypassPermissions) ;;
+  4) [[ "$resume_kind" == last ]] && command=(grok --permission-mode bypassPermissions --continue) || command=(grok --permission-mode bypassPermissions --resume "$session_id") ;;
+esac
+exec "${command[@]}" "$@"

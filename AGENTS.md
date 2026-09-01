@@ -10,7 +10,7 @@ Código e prosa de produto: **português brasileiro**. Identificadores, APIs pú
 
 Antes de implementar, o agente **lê esta constituição** e responde, em silêncio, às dimensões da §5. Se alguma dimensão falha, não se escreve código — escreve-se o plano ou pergunta-se. **Zero violação:** um “sim, mas só neste arquivo” ainda é violação.
 
-Este repositório é o **harness** (`ai-harness`): constituição + skills + [`rules/`](./rules/) + [`hooks/`](./hooks/). Skill é o HOW do recorte. Rule é o gate de processo em todo projeto. Hook é o enforcement no host. MCP da **máquina** mora no repo privado `mcp-cli-toolkit` — não aqui. O `install.sh` liga o harness nos hosts e, se o toolkit existir na máquina, instala-o.
+Este repositório é o **harness** (`ai-harness`): constituição + skills + [`rules/`](./rules/) + [`hooks/`](./hooks/) + [`mcp/`](./mcp/). Skill é o HOW do recorte. Rule é o gate de processo em todo projeto. Hook é o enforcement no host. MCP da **máquina** (catálogo universal + wrappers) mora em [`mcp/`](./mcp/). Segredo só em `~/.config/ai-harness/secrets/*.env` (contrato em `mcp/secrets.example/`). O que é só desta máquina — MCP, hook ou rule de cliente — entra em `~/.config/ai-harness/overlay/{mcp,hooks,rules}/`, nunca no git público. O `install.sh` liga tudo nos hosts: um canal nativo por provedor, sem o Grok reler Cursor/Claude.
 
 Não gere documentação extra. Este arquivo + o plano em `docs/plans/` (quando houver trabalho a analisar) bastam. README, ADRs, wikis e “architecture.md” só existem se o humano pedir.
 

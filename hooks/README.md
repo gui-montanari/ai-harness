@@ -33,8 +33,9 @@ provedor:
 | Gemini CLI | `~/.gemini/settings.json` (`BeforeTool`) |
 | Windsurf / Devin Desktop | `~/.codeium/windsurf/hooks.json` |
 
-O Grok não lê os hooks do Claude/Cursor (`compat.*.hooks = false`) para o mesmo
-script não rodar duas vezes. Cada host recebe a **própria** projeção do catálogo.
+O Grok não lê hooks/rules/skills/MCP/`CLAUDE.md` do Claude/Cursor
+(`compat.*.{hooks,rules,agents,skills,mcps} = false`) para o mesmo artefato não
+rodar duas vezes. Cada host recebe a **própria** projeção do catálogo.
 
 O Grok resolve `command` relativo ao JSON em `~/.grok/hooks/` quando o valor
 não é um caminho absoluto. O sync **não** envolve o path em aspas: `" /abs/script.sh"`

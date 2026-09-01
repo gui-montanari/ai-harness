@@ -70,11 +70,12 @@ Raiz = repositório `skills` **ou** a pasta `skills/` vendorizada num produto. I
 
 ```bash
 find architecture backend frontend quality -name SKILL.md | sort
-ls rules/*.md | grep -v README
+ls rules/*.md rules/sync.py | grep -v README
 ls hooks/catalog.json hooks/sync.py hooks/scripts
+ls mcp/catalog/mcp-catalog.json mcp/mcp_toolkit.py mcp/wrappers
 ```
 
-`rules/` e `hooks/` **não** são skill (não têm `SKILL.md`). Têm de aparecer na árvore do README. Overlay local do host (`stockfy-repos-autorizacao` e similares) **não** mora neste repo. `mcp-cli-toolkit` é repo irmão **privado** — ausência aqui não é achado.
+`rules/`, `hooks/` e `mcp/` **não** são skill (não têm `SKILL.md`). Têm de aparecer na árvore do README. Overlay local do host (`~/.config/ai-harness/overlay/{rules,hooks,mcp}/`) **não** mora neste repo. Segredo só em `secrets.example` + cópia local; valor real no git é achado. Rule de cliente no git público é achado.
 
 Para cada um registre:
 

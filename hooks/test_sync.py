@@ -70,9 +70,10 @@ class HookSyncTest(unittest.TestCase):
         dest = self.home / ".grok" / "hooks"
         python_cmd = json.loads((dest / "protect-secrets.json").read_text())["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
         rm_cmd = json.loads((dest / "rm-guard.json").read_text())["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
-        self.assertTrue(python_cmd.startswith("python3 /"), python_cmd)
+        self.assertTrue(python_cmd.startswith("/"), python_cmd)
         self.assertNotIn('"', python_cmd)
-        self.assertTrue(rm_cmd.startswith("python3 /"), rm_cmd)
+        self.assertTrue(python_cmd.endswith("protect_secrets.py"), python_cmd)
+        self.assertTrue(rm_cmd.startswith("/"), rm_cmd)
         self.assertNotIn('"', rm_cmd)
         self.assertTrue(rm_cmd.endswith("rm_guard.py"))
 

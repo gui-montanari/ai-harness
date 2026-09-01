@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "servers": {
+    "cloudflare-api": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@0.1.38",
+        "https://mcp.cloudflare.com/mcp",
+        "--static-oauth-client-metadata",
+        "@{toolkit}/oauth/cloudflare-client-metadata.json"
+      ]
+    },
+    "make": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@0.1.38",
+        "https://mcp.make.com",
+        "--static-oauth-client-metadata",
+        "@{toolkit}/oauth/make-client-metadata.json"
+      ]
+    },
+    "stripe": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote@0.1.38", "https://mcp.stripe.com"]
+    },
+    "twilio-docs": {"url": "https://mcp.twilio.com/docs"},
+    "twilio": {"command": "bash", "args": ["{toolkit}/mcp_servers/twilio/start.sh"], "secretFile": "twilio.env"},
+    "openai-complete": {"command": "npx", "args": ["-y", "@robinson_ai_systems/openai-mcp"], "secretFile": "openai-complete.env"},
+    "canva-dev": {"command": "npx", "args": ["-y", "@canva/cli@latest", "mcp"]},
+    "brave-search": {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-brave-search"], "secretFile": "brave-search.env"},
+    "atlassian-jira": {"command": "npx", "args": ["-y", "mcp-jira-cloud"], "secretFile": "atlassian-jira.env"},
+    "langfuse-prod": {"command": "npx", "args": ["-y", "langfuse-mcp@1.2.0"], "secretFile": "langfuse-prod.env"},
+    "langfuse-dev": {"command": "npx", "args": ["-y", "langfuse-mcp@1.2.0"], "secretFile": "langfuse-dev.env"},
+    "hostinger-api": {"command": "npx", "args": ["-y", "hostinger-api-mcp@1.5.1"], "secretFile": "hostinger-api.env"},
+    "telegram-docs": {"command": "python3", "args": ["{toolkit}/mcp_servers/telegram_docs/server.py"]},
+    "gdrive": {"command": "bash", "args": ["{toolkit}/mcp_servers/gdrive/start.sh"], "secretFile": "gdrive.env", "env": {"GOOGLE_WORKSPACE_TOOLSET": "drive"}},
+    "google-slides": {"command": "bash", "args": ["{toolkit}/mcp_servers/gdrive/start.sh"], "secretFile": "gdrive.env", "env": {"GOOGLE_WORKSPACE_TOOLSET": "slides"}},
+    "sequential-thinking": {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-sequential-thinking@2026.7.4"]},
+    "chrome-devtools": {"command": "npx", "args": ["-y", "chrome-devtools-mcp@1.6.0", "--autoConnect", "--no-usage-statistics", "--no-performance-crux"]},
+    "mercado-pago-oficial": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@0.1.38",
+        "https://mcp.mercadopago.com/mcp",
+        "--header",
+        "Authorization:Bearer ${MERCADO_PAGO_ACCESS_TOKEN}",
+        "--silent"
+      ],
+      "secretFile": "mercado-pago.env"
+    }
+  }
+}

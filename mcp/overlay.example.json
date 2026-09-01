@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "servers": {
+    "meu-mcp-local": {
+      "command": "python3",
+      "args": ["{overlay}/servers/meu_mcp.py"]
+    }
+  }
+}

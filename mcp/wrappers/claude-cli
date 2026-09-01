@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+ROOT="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+source "$ROOT/wrappers/common.sh"
+python3 "$ROOT/mcp_toolkit.py" menu --client claude --profile "${MCP_PROFILE:-default}"
+choose_launch_mode "Claude Code" || exit 0
+if [[ "$launch_mode" == 2 || "$launch_mode" == 4 ]]; then choose_resume_target || exit 0; fi
+case "$launch_mode" in
+  1) command=(claude) ;;
+  2) [[ "$resume_kind" == last ]] && command=(claude --continue) || command=(claude --resume "$session_id") ;;
+  3) command=(claude --dangerously-skip-permissions) ;;
+  4) [[ "$resume_kind" == last ]] && command=(claude --dangerously-skip-permissions --continue) || command=(claude --dangerously-skip-permissions --resume "$session_id") ;;
+esac
+exec "${command[@]}" "$@"

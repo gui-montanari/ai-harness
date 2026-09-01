@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+ROOT="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+python3 "$ROOT/mcp_toolkit.py" menu --client cursor --profile "${MCP_PROFILE:-default}"
+echo
+echo "Recarregue a janela do Cursor (Developer: Reload Window) para os MCPs novos aparecerem."
