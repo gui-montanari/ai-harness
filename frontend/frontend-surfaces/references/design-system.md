@@ -41,6 +41,8 @@ Tenant novo = arquivo em `tenants/<id>.css` com **light e dark**. Sem hex na pá
 
 `site-shell`: `width: min(1180px, calc(100% - 3rem))`. Envolve o miolo, nunca o bleed do hero nem da faixa de métricas.
 
+Aba do browser (`document.title`, texto ao lado do favicon): nome de exibição do tenant (`TENANT_DISPLAY_NAMES` no `TenantProvider`). `<title>` no `index.html` é o mesmo. Página (fila, login, privacidade) não sobrescreve.
+
 ## Tema claro / escuro
 
 Nativo, desde o primeiro commit de UI. Tudo herda: home, legal, login, canal, chat, shell, dropdown, empty/error. Um `background: #fff` ou `color: #000` em componente é achado — quebra o dark.
@@ -49,7 +51,7 @@ Nativo, desde o primeiro commit de UI. Tudo herda: home, legal, login, canal, ch
 
 | Superfície | Controle |
 |------------|----------|
-| Não autenticada | ícone no `PublicHeader` (sol/lua ou ◐), ao lado do idioma. `aria-pressed`, `aria-label` i18n |
+| Não autenticada | ícone no `PublicHeader` (sol/lua ou ◐), **depois** do CTA e do idioma. `aria-pressed`, `aria-label` i18n |
 | Autenticada | item do `UserMenu` (skill `frontend-shell`). Sem segundo botão no topbar |
 
 **Como funciona de verdade**
@@ -65,7 +67,9 @@ Não esconda o ícone no mobile “para caber”. Ele envolve com o idioma e o C
 
 Nativo, desde o primeiro commit. Dicionário `pt-BR` e `en` com as **mesmas** chaves (`MessageKey`). Texto canônico de produto continua em `docs/requisitos.md`; chrome, empty, erro, thinking, aria-label e tema vivem no dicionário.
 
-O `LanguageSwitch` **funciona**: `onChange` atualiza o provider, `document.documentElement.lang`, `localStorage` (`ui:locale`) e **re-renderiza** toda string. Select que só muda `lang` e deixa o PT na tela é achado.
+O `LanguageSwitch` **funciona**: troca o locale, `document.documentElement.lang`, `localStorage` (`ui:locale`) e **re-renderiza** toda string. Controle que só muda `lang` e deixa o PT na tela é achado.
+
+Não é `<select>` nativo. É botão + listbox no **mesmo** vocabulário do `UserMenu` (`.menu-pop`, tokens, hover `--surface-soft`, 180ms). Trigger pílula min-height 38px, padding à direita ≥ 1.8rem; caret (`::after` ou `.lang-caret`) com `right` ≥ 10px — seta colada na borda é achado. Pop abre para baixo (`top: calc(100% + 8px)`), Escape e clique fora fecham. Opção ativa na `--action`.
 
 - Nenhuma literal de UI em JSX. `t("chave")`.
 - Chave ausente em um idioma = erro de tipo, não fallback silencioso.
@@ -81,13 +85,15 @@ Primitivos em `ui/src/components/`, zero fetch, hrefs por props:
 
 | Peça | Papel |
 |------|-------|
-| `PublicHeader` | sticky, skip-link, brand, nav, idioma, **tema**, CTA |
+| `PublicHeader` | sticky, skip-link, brand, nav, **CTA**, idioma, tema |
 | `PublicFooter` | legal curto + links |
-| `LanguageSwitch` | PT/EN real; persiste; `html.lang` |
+| `LanguageSwitch` | listbox PT/EN; persiste; `html.lang`; `.menu-pop` |
 | `ThemeToggle` | ícone sol/lua; persiste; `data-theme` |
 | botão | `.btn` primário / `.ghost` em `shell.css` |
 
-Header: sticky `top: 0`, fundo `--bg` a 82% + `backdrop-filter: blur(20px)`, hairline `--border`, `nav-shell` min-height 72px. Brand-mark 34px, radius 11, sombra da `--action`. Nav muted; hover e `is-active` na `--action`. CTA do header compacto (min-height 38px). Nav envolve abaixo de 900px — não some, não overflow hidden.
+Header: sticky `top: 0`, fundo `--bg` a 82% + `backdrop-filter: blur(20px)`, hairline `--border`, `nav-shell` min-height 72px. Brand-mark 34px, radius 11, sombra da `--action`. Nav muted; hover e `is-active` na `--action`. CTA do header compacto (min-height 38px), **depois** o idioma, **depois** o tema. Nav envolve abaixo de 900px — não some, não overflow hidden.
+
+Dev: Vite `server.host: true` (ou bind equivalente em 0.0.0.0 / 127.0.0.1). Escutar só `[::1]` faz o link interno `http://127.0.0.1:<porta>` falhar.
 
 Footer: `padding-block: 2rem`, tipo 0.72rem muted, links com hover `--action`.
 
@@ -98,7 +104,7 @@ Páginas internas (`page-main`): título editorial, lead ~68ch, glow radial disc
 Página-bandeira da área pública. Full-bleed.
 
 ```
-[ PublicHeader: brand | nav | lang | tema | CTA ]
+[ PublicHeader: brand | nav | CTA | lang | tema ]
 [ hero 2-col: tese + visual reativo ]
 [ métrica | métrica | métrica ]
 [ eyebrow / h2 / lead ]
@@ -107,7 +113,7 @@ Página-bandeira da área pública. Full-bleed.
 [ PublicFooter ]
 ```
 
-Hero: min-height ~680px, grid 46px, glow radial da `--action` no canto, fade nas laterais com `--bg`. Grid `1.05fr 0.95fr`, gap 5rem, padding-block 6.5rem. Eyebrow com traço de 18px. H1 `clamp(2.5rem, 5.2vw, 4.4rem)`, tracking `-0.06em`, **uma** palavra em itálico `--action`. Lead ~60ch, 1.75. Dois botões (primário + ghost). Nota com pulso honesto — só afirma o que é verdade.
+Hero: min-height ~680px, grid 46px, glow radial da `--action` no canto, fade nas laterais com `--bg`. A grade é **fundo**: `--grid-hero` e `--grid-accent` ≤ ~0.10 de opacidade. Laranja forte na malha compete com o H1 e o CTA — o acento `--action` fica no texto e nos botões, não no quadriculado. Grid `1.05fr 0.95fr`, gap 5rem, padding-block 6.5rem. Eyebrow com traço de 18px. H1 `clamp(2.5rem, 5.2vw, 4.4rem)`, tracking `-0.06em`, **uma** palavra em itálico `--action`. Lead ~60ch, 1.75. Dois botões (primário + ghost). Nota com pulso honesto — só afirma o que é verdade.
 
 Faixa de métricas: fundo `--surface`, 3 colunas, valor 1.7rem `--action`, hairline entre elas.
 
@@ -247,6 +253,7 @@ Nasce nos três. `viewport` = `width=device-width, initial-scale=1`. Altura usa 
 ## Red flags
 
 - Hero dentro de `site-shell` ou de um card escuro
+- Quadriculado do hero com `--grid-accent` alto (laranja competindo com o texto)
 - Visual do hero estático: círculo que não escala, card que não sobe, botão sem seta
 - Dois visuais no mesmo hero, ou órbita **e** quadro
 - Labels, paleta ou typeface de outro produto no visual
@@ -262,6 +269,10 @@ Nasce nos três. `viewport` = `width=device-width, initial-scale=1`. Altura usa 
 - Hex ou `background: #fff` no componente (quebra o dark)
 - Tema só na home; login/chat/shell em claro eterno
 - `LanguageSwitch` que não re-renderiza as strings
+- `LanguageSwitch` com `<select>` nativo; opções cinza do SO; caret colado na borda
+- idioma/tema à esquerda do CTA no header público
+- Vite de dev só em `[::1]`; `127.0.0.1` recusa conexão
+- `document.title` com nome de página (fila, login, backoffice) em vez do tenant
 - Dicionário só em PT, ou chave só em um idioma
 - Layout só desktop; tablet tratado como “mobile quebrado”
 - Chat com `100vh` (teclado cobre o composer)

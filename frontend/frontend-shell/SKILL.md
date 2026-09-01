@@ -45,13 +45,15 @@ O mesmo componente na sidebar do app **e** na lista de conversas quando o chat �
 - Itens: ícone stroke 16px muted + label, padding 8px, hover `--surface-soft`, largura 100%.
 - Sem segundo botão de tema no topbar. `html[data-theme]` já pintou; o item só troca a preferência.
 
-Selects e date pickers do conteúdo repetem o mesmo dropdown (mesma borda, mesmo hover). Um só vocabulário.
+Selects e date pickers do conteúdo repetem o mesmo dropdown (`.menu-pop`, mesma borda, mesmo hover). Um só vocabulário. `LanguageSwitch` do chrome **não** é `<select>` nativo — skill `frontend-surfaces`.
 
 ## Tokens
 
 Classes de chrome usam `--bg`, `--surface`, `--ink`, `--muted`, `--border`, `--action`. Superfície `data-surface="internal"` **e** tema `data-theme`. Sem hex. O cockpit tem light e dark — não é “interno = sempre escuro”.
 
 Idioma: o mesmo `LanguageSwitch` da área pública, no topbar (compacto). PT/EN desde o primeiro commit; strings do shell no dicionário.
+
+Título da **página** (topbar) é a jornada (fila, caso). Título da **aba** (`document.title`) é o tenant — skill `frontend-surfaces`. Não copiar o rótulo da fila para a aba.
 
 ## Red flags
 

@@ -1,14 +1,23 @@
-# skills
+# ai-harness
 
-Coleção pública de [Agent Skills](https://agentskills.io).
+Harness de desenvolvimento com IA: constituição, skills, rules e hooks.
+Vale em qualquer produto. O produto **não** copia este repositório — só o `AGENTS.md` local.
 
-Cada skill é uma pasta com `SKILL.md`. O `name` no YAML **é o nome da pasta da skill** (última segmento), não o agrupador `backend/` / `frontend/`.
+| Camada | Pasta | O que é |
+|--------|-------|---------|
+| Constituição | [`AGENTS.md`](./AGENTS.md) | Princípio, processo, forma |
+| Skills | `architecture/` `backend/` `frontend/` `quality/` | HOW de um recorte ([Agent Skills](https://agentskills.io)) |
+| Rules | [`rules/`](./rules/) | Gate **sempre ligado** em todo projeto e todo host |
+| Hooks | [`hooks/`](./hooks/) | Enforcement no host (o modelo não escolhe obedecer) |
+| MCP | repo **privado** `mcp-cli-toolkit` | Catálogo, wrappers, servidores — não entra aqui |
 
-**Constituição:** [`AGENTS.md`](./AGENTS.md) — SSOT de princípios. Skills são o **como**. Não reescrevem o princípio.
+Cada skill é uma pasta com `SKILL.md`. O `name` no YAML **é o nome da pasta da skill**, não o agrupador `backend/` / `frontend/`.
 
 ## Árvore
 
 ```
+rules/                     # gates de processo (sempre ligados)
+hooks/                     # catálogo + sync (Grok/Cursor/Claude/Agy/Gemini/Windsurf)
 architecture/              # desenho do sistema + gate de entrega
 backend/
   auth/
@@ -43,6 +52,16 @@ quality/
   security-audit/
 shared/                    # scanner/PDF dos audits
 ```
+
+## MCP (repo irmão, privado)
+
+`gui-montanari/mcp-cli-toolkit` é **privado**: perfis de cliente, VPS, secrets de máquina.
+Não se mistura neste repo público. O `install.sh` deste harness chama o do toolkit
+se o clone existir em `~/projetos/ferramentas/mcp-cli-toolkit` ou
+`~/.local/share/mcp-cli-toolkit`.
+
+Skills `mcp-servers` e `mcp-tools` ensinam a **borda MCP de um produto**.
+O toolkit ensina a **máquina do agente** (quais MCPs o host carrega).
 
 ## Skills
 
@@ -89,16 +108,23 @@ shared/                    # scanner/PDF dos audits
 
 ## Como usar
 
-Instalação **na máquina do agente**, uma vez. Não copie este catálogo para dentro do produto.
+Instalação **na máquina do agente**, uma vez.
 
 ```bash
-git clone git@github.com:gui-montanari/skills.git ~/.local/share/gui-montanari-skills
-~/.local/share/gui-montanari-skills/install.sh
+git clone git@github.com:gui-montanari/ai-harness.git ~/.local/share/ai-harness
+~/.local/share/ai-harness/install.sh
 ```
 
-O `install.sh` liga cada skill nas pastas de skills do usuário (Grok, Codex, Agy, Cursor e o Code CLI) e grava uma regra curta apontando para a [constituição](./AGENTS.md). Em outro notebook: o mesmo clone + `install.sh` (ou `git pull && ./install.sh` se o clone já existir).
+O `install.sh` liga skills, [rules](./rules/) e [hooks](./hooks/) em **todos** os hosts
+conhecidos (Grok, Cursor, Claude Code, Codex, Agents, Gemini/Antigravity, Windsurf,
+OpenCode): skills/rules por symlink; hooks por catálogo + adapter, no mesmo espírito do
+`mcp-cli-toolkit`. Overlay de cliente fica em `~/.config/ai-harness/overlay/` e não entra
+neste repo. Se o toolkit MCP privado estiver na máquina, o install chama-o também.
+Em outro notebook: o mesmo clone + `install.sh` (ou `git pull && ./install.sh`).
 
-O produto tem o **próprio** `AGENTS.md` (domínio, ADR, fase) e **não** vendor este repositório. Cada skill termina em **Conferência**. Depois: `/principles-audit` e `/security-audit` até **zero** achados (`architecture`). Para auditar **este** catálogo: `/skills-audit`.
+O produto tem o **próprio** `AGENTS.md` (domínio, ADR, fase). Cada skill termina em **Conferência**.
+Depois: `/principles-audit` e `/security-audit` até **zero** achados (`architecture`).
+Para auditar **este** catálogo: `/skills-audit`.
 
 ## Convenção
 

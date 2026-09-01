@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "hooks": {
+    "protect-secrets": {
+      "script": "protect_secrets.py",
+      "runtime": "python3",
+      "timeout": 5,
+      "events": {
+        "PreToolUse": {
+          "matcher": "Bash|Write|Edit|StrReplace|NotebookEdit|run_terminal_command|Shell|search_replace|write"
+        }
+      },
+      "cursor": {
+        "event": "beforeShellExecution",
+        "matcher": "git\\s.*(add|commit)",
+        "timeout": 10
+      },
+      "antigravityMatcher": "run_command",
+      "windsurfEvent": "pre_run_command"
+    },
+    "rm-guard": {
+      "script": "rm_guard.py",
+      "runtime": "python3",
+      "timeout": 5,
+      "events": {
+        "PreToolUse": { "matcher": "Bash|run_terminal_command|Shell" }
+      },
+      "cursor": { "event": "beforeShellExecution" },
+      "antigravityMatcher": "run_command",
+      "windsurfEvent": "pre_run_command"
+    },
+    "sql-guard": {
+      "script": "sql_guard.py",
+      "runtime": "python3",
+      "timeout": 5,
+      "events": {
+        "PreToolUse": { "matcher": "Bash|run_terminal_command|Shell" }
+      },
+      "cursor": { "event": "beforeShellExecution" },
+      "antigravityMatcher": "run_command",
+      "windsurfEvent": "pre_run_command"
+    },
+    "git-destructive-guard": {
+      "script": "git_destructive_guard.py",
+      "runtime": "python3",
+      "timeout": 5,
+      "events": {
+        "PreToolUse": { "matcher": "Bash|run_terminal_command|Shell" }
+      },
+      "cursor": { "event": "beforeShellExecution" },
+      "antigravityMatcher": "run_command",
+      "windsurfEvent": "pre_run_command"
+    },
+    "docker-guard": {
+      "script": "docker_guard.py",
+      "runtime": "python3",
+      "timeout": 5,
+      "events": {
+        "PreToolUse": { "matcher": "Bash|run_terminal_command|Shell" }
+      },
+      "cursor": { "event": "beforeShellExecution" },
+      "antigravityMatcher": "run_command",
+      "windsurfEvent": "pre_run_command"
+    },
+    "commit-identity-guard": {
+      "script": "commit_identity_guard.py",
+      "runtime": "python3",
+      "timeout": 5,
+      "events": {
+        "PreToolUse": { "matcher": "Bash|run_terminal_command|Shell" }
+      },
+      "cursor": { "event": "beforeShellExecution" },
+      "antigravityMatcher": "run_command",
+      "windsurfEvent": "pre_run_command"
+    },
+    "ssh-prod-guard": {
+      "script": "ssh_prod_guard.py",
+      "runtime": "python3",
+      "timeout": 5,
+      "events": {
+        "PreToolUse": {
+          "matcher": "Bash|run_terminal_command|Shell|mcp__ssh-hostinger__execute_command|ssh-hostinger__.*|hostinger-api__.*"
+        }
+      },
+      "cursor": { "event": "beforeShellExecution" },
+      "antigravityMatcher": "run_command",
+      "windsurfEvent": "pre_run_command"
+    }
+  }
+}

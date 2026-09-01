@@ -48,7 +48,11 @@ frontend/
 - Superfície pública e backoffice **não** compartilham sessão, cookie, cache, CSP.
 - Sem diretório `portal-user` no v1.
 - Tenant visual: `data-tenant` + arquivo em `tenants/`. O front **não** envia `tenant_id` para autorizar.
+- `document.title` (texto ao lado do favicon) é o **nome de exibição do tenant**, dono `TenantProvider`. Página (fila, login, privacidade) não sobrescreve a aba.
 - Idioma: dicionário `pt-BR` e `en` desde o primeiro commit. `LanguageSwitch` re-renderiza de verdade. Textos canônicos de produto continuam em `docs/requisitos.md`.
+- `LanguageSwitch` é **listbox** no vocabulário `.menu-pop` (mesmo pop do `UserMenu`). `<select>` nativo no chrome é achado: opção cinza do SO, seta colada na borda.
+- Header público, ações à direita: **CTA do canal → idioma → tema**. Idioma/tema não ficam à esquerda do botão primário.
+- Dev Vite escuta IPv4 e IPv6 (`server.host: true`). Só `[::1]` faz `http://127.0.0.1:<porta>` recusar conexão.
 - Tema: `data-theme=light|dark` no `html` desde o primeiro commit. Ícone no header público; item do `UserMenu` na área logada. Tudo herda tokens — chat, login, shell inclusos.
 - Área pública, shell autenticado, chat, estados vazios/erro, mobile/tablet/desktop e i18n seguem a gramática deste skill. Não copiar implementação, paleta, rotas, HITL, SSE ou domínio de outro produto.
 - Hex só em `tokens.css` / `tenants/<id>.css` (os dois temas). Página e componente usam `var(--token)`.
@@ -67,6 +71,9 @@ frontend/
 - `ui/` com regra de negócio
 - uma SPA para público e interno
 - i18n só em um idioma, ou select que não troca o texto
+- `LanguageSwitch` com `<select>` nativo; seta do dropdown colada na borda
+- idioma/tema à esquerda do CTA no header público
+- `document.title` com nome de página (fila, login, backoffice) em vez do tenant
 - tema só na home; hex `#fff` no componente
 - pasta `models/`/`services/` no frontend com domínio de caso
 - hero em card escuro no lugar da gramática de seções
@@ -82,8 +89,10 @@ frontend/
 Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
 - [ ] Tokens só em `tokens.css` / `tenants/<id>.css`; páginas usam `var(--token)`
+- [ ] Aba do browser = nome do tenant; páginas não escrevem `document.title`
 - [ ] `data-theme` light **e** dark nas duas superfícies; ícone no header público
-- [ ] PT/EN com as mesmas chaves; `LanguageSwitch` re-renderiza de verdade
+- [ ] PT/EN com as mesmas chaves; `LanguageSwitch` listbox (`.menu-pop`), caret com respiro à direita, re-renderiza de verdade
+- [ ] Header público: CTA → idioma → tema
 - [ ] Home: hero 2 col + visual reativo; `site-shell` não envolve o bleed
 - [ ] Viewport 375 / 768 / 1280; `dvh`; header não esconde idioma/tema/CTA
 - [ ] Público e interno sem sessão/cookie/CSP cruzados

@@ -25,7 +25,7 @@ O objetivo é saber se um agente que só lê este catálogo implementa certo —
 - [ ] 0. Confirmar o alvo: pasta das skills (não o produto)
 - [ ] 1. Ler AGENTS.md inteiro
 - [ ] 2. Inventário de todo SKILL.md (não amostrar)
-- [ ] 3. Catálogo cruzado: árvore README, tabelas README, architecture «Onde mora», name=pasta
+- [ ] 3. Catálogo cruzado: árvore README (inclui `rules/` e `hooks/`), tabelas README, architecture «Onde mora», name=pasta
 - [ ] 4. Cada skill lida por completo; Conferência presente e cobre as invariantes dela
 - [ ] 5. Pontes redirecionam; colisões XOR apontam para o dono certo
 - [ ] 6. Constituição × skill: sem contradição, sem segundo dono da mesma regra
@@ -70,7 +70,11 @@ Raiz = repositório `skills` **ou** a pasta `skills/` vendorizada num produto. I
 
 ```bash
 find architecture backend frontend quality -name SKILL.md | sort
+ls rules/*.md | grep -v README
+ls hooks/catalog.json hooks/sync.py hooks/scripts
 ```
+
+`rules/` e `hooks/` **não** são skill (não têm `SKILL.md`). Têm de aparecer na árvore do README. Overlay local do host (`stockfy-repos-autorizacao` e similares) **não** mora neste repo. `mcp-cli-toolkit` é repo irmão **privado** — ausência aqui não é achado.
 
 Para cada um registre:
 
@@ -90,7 +94,7 @@ Têm de contar a **mesma** coleção, com papéis distintos:
 
 | Superfície | Contém |
 |------------|--------|
-| Árvore do README | toda pasta com `SKILL.md`, inclusive pontes |
+| Árvore do README | toda pasta com `SKILL.md`, inclusive pontes; e `rules/`, `hooks/` |
 | Tabelas «Quando» do README | skills de execução (não pontes) |
 | `architecture` «Onde mora» | capacidades de **produto** → skill canônica. Não lista pontes nem audits de catálogo (`skills-audit`, `principles-audit`, `security-audit`) |
 | Constituição §3 (lista de skills) | HOW de produto. Não é inventário desta auditoria |

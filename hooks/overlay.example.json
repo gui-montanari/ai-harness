@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "exemplo-cliente": {
+      "script": "exemplo.sh",
+      "runtime": "bash",
+      "timeout": 5,
+      "events": {
+        "PreToolUse": { "matcher": "Bash" }
+      },
+      "cursor": { "event": "beforeShellExecution" },
+      "antigravityMatcher": "run_command",
+      "windsurfEvent": "pre_run_command"
+    }
+  }
+}
