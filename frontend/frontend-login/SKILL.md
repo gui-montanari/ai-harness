@@ -40,6 +40,7 @@ Card: padding `clamp(1.5rem, 4vw, 2.5rem)`, border `--border`, radius 20px, `--s
 - Input 100%, **min-height 48px**, padding `.75rem .9rem`, radius 11px, fundo `--bg`, borda `--border`.
 - Foco: `border-color: var(--action)` + anel `0 0 0 3px color-mix(in srgb, var(--action) 12%, transparent)`. Sem segundo retângulo (`outline: 0` no campo; o anel é o único).
 - `autocomplete="username"` / `email` e `current-password` / `new-password`. `autocorrect="off"` na senha.
+- `maxLength` em e-mail, senha e MFA (os mesmos tetos do schema HTTP). Sem teto no login é achado.
 - Ordem dos campos **é** a jornada: identificador, senha, **depois** MFA. Código TOTP no meio (antes da senha) é achado.
 - Erro do campo sob o input; erro de credencial no topo, `role="alert"`. Texto uniforme no miss (não “usuário não existe”).
 - Link “Esqueci a senha” discreto, antes do submit.
@@ -66,6 +67,7 @@ Reset de senha e “conta criada” reutilizam o **mesmo** layout e os mesmos to
 - Mensagem “email não cadastrado”
 - MFA antes da senha
 - Login sem voltar para a home pública
+- Campo de acesso sem `maxLength`
 
 ## Conferência
 
@@ -78,3 +80,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Seta `→` no CTA; i18n PT/EN; tema herdado do header
 - [ ] Cookie interno não atravessa a home; `fetch` só em `lib/api.ts`
 - [ ] Link voltar à home pública no chrome do login (`VITE_PUBLIC_URL`)
+- [ ] E-mail, senha e MFA com `maxLength` igual ao contrato

@@ -49,14 +49,14 @@ Lista, detalhe e ação chamam o **mesmo** use case que o worker de watchdog. SP
 | Protocolo, status, fila, aging/SLA, updated_at, assignee opaco | sim | — |
 | Relato integral, PII de canal, nota interna, identidade do cofre | — | nunca na lista |
 
-Filtros no **servidor**: status, fila (`needs_reply` / `waiting` / `all`), assignee, aging. Paginação estável a um instante. Ordem: quem espera resposta primeiro, depois `updated_at`.
+Filtros no **servidor**: status, fila (`needs_reply` / `waiting` / `all`), assignee, aging. **`all` / Todos inclui triagem**. O filtro `triage` restringe à coleta em andamento, sem responsável. Paginação estável a um instante. Ordem: quem espera resposta primeiro, depois `updated_at`. Confirmação da coleta promove o item a aberto (`open`) na fila institucional, ainda sem dono.
 
 Toda listagem possui teto e cursor/página estável. `list_all()` na rota operacional é achado,
 mesmo que o volume inicial seja pequeno.
 
 Detalhe: timeline de **fatos** (atribuído, respondido, aguardando, resolvido). Composer de resposta só se `can_reply`. Encerrar/resolver é transição, não delete.
 
-Atribuição: exclusiva por item; autor, motivo, instante. Automática (worker single-flight) **depois** da triagem e do impedimento — nunca para “não deixar vazio” em alguém inelegível. Reatribuição manual prevalece. Watchdog: item sem dono ou parado além do SLA alerta e escala (`background-workers`).
+Atribuição: exclusiva por item; autor, motivo, instante. Atribuir a um responsável **move o status para Em atendimento** (`in_progress`) no servidor. Automática (worker single-flight) **depois** da triagem e do impedimento — nunca para “não deixar vazio” em alguém inelegível. Reatribuição manual prevalece. Watchdog: item sem dono ou parado além do SLA alerta e escala (`background-workers`).
 
 Resposta visível ao titular: se o domínio exige four-eyes, o autor **não** publica; fica pendente de revisor distinto. Ausência de revisor não libera publicação.
 

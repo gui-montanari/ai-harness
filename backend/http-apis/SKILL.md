@@ -48,6 +48,10 @@ Factory ASGI (`--factory`): tenant, CORS e título vêm do env no start (`TENANT
 
 Host de LLM não ganha regra própria. Servidor: `mcp-servers`. Cada tool ou jornada: `mcp-tools` (o mesmo use case). Auth: skill `auth`.
 
+## Teto de campo
+
+Toda string de **request** (body e query) declara `Field(max_length=)` / `Query(max_length=)`. Os números vivem num SSOT de limites da borda, espelhado no cliente. `maxLength` no input não substitui o schema. Payload sem teto é achado da categoria input/abuso.
+
 ## Auth
 
 Skill `auth`. Borda HTTP autentica, converte para `Principal`, chama o use case. Tenant do contexto, nunca do body.
@@ -63,6 +67,7 @@ Skill `auth`. Borda HTTP autentica, converte para `Principal`, chama o use case.
 - rota `publico-intencional` sem requisito/ADR e consumidor aprovado
 - cliente escolhe identidade de canal, tenant, ator ou revisor
 - CORS, título ou token cravados no `app.py`
+- `str` de request sem `max_length`
 
 ## Conferência
 
@@ -75,3 +80,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Toda rota pública cita a fonte que a autoriza e tem testes negativos; nenhuma rota de teste sobe em produção
 - [ ] OpenAPI do schema; cliente gerado ou nenhum cliente artesanal
 - [ ] CORS/título/tenant na factory via env; sem literal de produto
+- [ ] Body e query de texto com `max_length`; teto igual ao do cliente

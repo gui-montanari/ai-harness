@@ -49,6 +49,8 @@ Selecione as skills pelo que o recorte **contém**, não só pelo pedido origina
 
 Vista mental (indústria, sem diagrama obrigatório): contexto → limites (containers) → módulos (hexagonais) → adapters. Não comece pelo controller nem pela tela.
 
+**Entrada hostil tem teto.** Campo escrito por humano — login, busca, catálogo, contato, compositor — nasce com limite. `maxLength` na UI **não** autoriza: o schema HTTP (`Field(max_length=)` / `Query(max_length=)`) é o gate. Os números são os mesmos nas duas pontas (teste de architecture). Sem teto = achado. Download em massa e ação irreversível pedem confirmação (modal), não clique único.
+
 Pacote `packages/platform` (no monorepo com UI: `backend/packages/platform`): mecânica **sem domínio**. Porto + Memory fake + adapter do provider. **SRP: uma pasta por capacidade**, nunca `.py` solto na raiz (só `__init__.py`):
 
 ```
@@ -114,6 +116,8 @@ Sem `|| true`, sem achar ignorado por nome. Exceção só por ADR com prazo.
 - SQL ou evento de um bounded context no pacote de plataforma
 - `logs.py` / `postgres.py` / `ports.py` na raiz do pacote de plataforma (a capacidade é pasta)
 - `reject(requeue=True)` como se incrementasse `x-death` (não incrementa; teto de retry nunca dispara)
+- Input/textarea sem `maxLength` ou schema HTTP sem `max_length` (teto só no cliente não conta)
+- Download em massa ou exclusão no primeiro clique, sem confirmação
 
 ## Conferência
 
@@ -127,3 +131,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Skills adicionais selecionadas pelas capacidades presentes no diff
 - [ ] Sem microsserviço/segundo agente sem o critério da constituição
 - [ ] Gates canônicos + manifesto de deploy verdes; `/principles-audit` e `/security-audit` em zero achados
+- [ ] Campos escritos por humano com teto iguais na UI e no schema HTTP

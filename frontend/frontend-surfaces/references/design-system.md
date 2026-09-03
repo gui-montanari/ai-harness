@@ -52,7 +52,7 @@ Nativo, desde o primeiro commit de UI. Tudo herda: home, legal, login, canal, ch
 | Superfície | Controle |
 |------------|----------|
 | Não autenticada | ícone no `PublicHeader` (sol/lua ou ◐), **depois** do CTA e do idioma. `aria-pressed`, `aria-label` i18n |
-| Autenticada | item do `UserMenu` (skill `frontend-shell`). Sem segundo botão no topbar |
+| Autenticada | tema **e** idioma no `UserMenu` (skill `frontend-shell`). Sem topbar de chrome; sem segundo controle no conteúdo |
 
 **Como funciona de verdade**
 

@@ -54,12 +54,15 @@ frontend/
 - Header público, ações à direita: **CTA do canal → idioma → tema**. Idioma/tema não ficam à esquerda do botão primário.
 - Dev Vite escuta IPv4 e IPv6 (`server.host: true`). Só `[::1]` faz `http://127.0.0.1:<porta>` recusar conexão.
 - Tema: `data-theme=light|dark` no `html` desde o primeiro commit. Ícone no header público; item do `UserMenu` na área logada. Tudo herda tokens — chat, login, shell inclusos.
+- Idioma autenticado: PT e EN na **mesma linha** do `UserMenu` (skill `frontend-shell`), separados por divisor das opções de conta. A pílula `LanguageSwitch` (listbox) fica no header público, não no chrome do cockpit.
 - Área pública, shell autenticado, chat, estados vazios/erro, mobile/tablet/desktop e i18n seguem a gramática deste skill. Não copiar implementação, paleta, rotas, HITL, SSE ou domínio de outro produto.
 - Hex só em `tokens.css` / `tenants/<id>.css` (os dois temas). Página e componente usam `var(--token)`.
 - Primitivo (tabela, badge, empty, flash) nasce em `ui/` e é **o** vocabulário. Segunda tabela “só desta tela” é achado.
 - Controle, copy e ícone de capacidade externa (áudio, upload, canal, exportação) só aparecem
   quando o contrato da superfície e o capability check do servidor confirmam caminho ativo.
   Mock visual não anuncia feature que o backend rejeita.
+- Todo `<input>` / `<textarea>` gravável tem `maxLength` alinhado ao contrato HTTP. Sem teto é achado.
+  Esconder o limite só na UI não conta: o servidor recusa o mesmo tamanho.
 - Home pública é full-bleed. `site-shell` envolve o conteúdo interno, não o hero nem a faixa de métricas.
 - Hero tem **um** visual reativo (órbita com nós que escalam no hover, **ou** quadro de jornada). CSS, 180ms. `prefers-reduced-motion` zera movimento.
 - Chat: skill `frontend-chat`. Lista à esquerda + thread; primitivos em `ui/src/chat/`; a página dona o fetch.
@@ -83,6 +86,7 @@ frontend/
 - copiar HTML/CSS de outro produto (paleta, typeface, hex de chat, SSE, markdown)
 - tabela com hex, sem hover, sem `scope="col"`, ou copiada numa página só
 - UI anuncia áudio/upload/canal que não possui adapter e teste de ponta a ponta ativos
+- Input gravável sem `maxLength`
 
 ## Conferência
 
@@ -100,3 +104,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Tabela/badge/empty/flash no `ui/`, só token; hover e foco conferidos nos dois temas
 - [ ] `ui/` sem `fetch` nem domínio
 - [ ] Capacidades anunciadas pela UI existem no contrato, capability check e teste e2e
+- [ ] Inputs graváveis com `maxLength` igual ao schema HTTP
