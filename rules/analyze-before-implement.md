@@ -21,6 +21,7 @@ Antes da primeira edição, no chat (2–4 linhas):
 
 Sem invariante clara: plano ou pergunta — não código.
 Defeito, falha, regressão ou teste vermelho: rule e skill `debug-hypotheses` **antes** de qualquer patch.
+Contrato publicado, breaking change ou trava nova: rule `ask-before-contract` — explique e espere o “pode” deste turno.
 Leia a constituição: `~/.local/share/ai-harness/AGENTS.md`.
 
 ## Gate 2 — Confirmar skill
@@ -43,6 +44,7 @@ Onde olhar: skills listadas na sessão; `~/.grok/skills/`, `~/.cursor/skills/`,
 | auditar o catálogo de skills | `skills-audit` |
 | auditar o diff do produto | `principles-audit` + `security-audit` (`architecture` manda no gate de entrega) |
 | CI, workflow, Compose, coverage | `cicd` |
+| contrato publicado, breaking, trava/guarda nova na borda | pare — rule `ask-before-contract`; não edite sem o “pode” |
 
 ### Produto — backend
 

@@ -133,6 +133,8 @@ Cada par tem de dizer, dos dois lados, o que **não** é desta skill. Ausência 
 | `debug-hypotheses` | `analyze-before-implement` | causa de um defeito ≠ pedido/skill antes de implementar |
 | `debug-hypotheses` | `observability` | refutar hipótese ≠ como logar/tracar |
 | `debug-hypotheses` | `git-activity` | diagnosticar ≠ worktree/PR |
+| `ask-before-contract` | `analyze-before-implement` | contrato/trava pede “pode” ≠ kit de skill do recorte |
+| `ask-before-contract` | `git-discipline` | validar mudança de contrato com o humano ≠ commit/push a pedido |
 
 Description YAML que dispara a skill errada (ex.: “ticket” em `frontend-chat`) é `bloqueante`.
 

@@ -44,6 +44,7 @@ class RulesSyncTest(unittest.TestCase):
             names,
             {
                 "analyze-before-implement",
+                "ask-before-contract",
                 "complete-until-done",
                 "debug-hypotheses",
                 "git-activity",

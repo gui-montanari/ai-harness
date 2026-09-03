@@ -34,6 +34,7 @@ Só o que é verdade em **qualquer** repositório desta máquina:
 | [`git-discipline.md`](./git-discipline.md) | Commit/push só a pedido; sem skip de hook; sem segredo no git |
 | [`git-activity.md`](./git-activity.md) | Atividade a partir da produção, worktree, dual delivery, PR green |
 | [`debug-hypotheses.md`](./debug-hypotheses.md) | Defeito: hipóteses concorrentes, refutar, causa antes do patch |
+| [`ask-before-contract.md`](./ask-before-contract.md) | Contrato publicado, breaking ou trava: pergunte antes, com o quê e o porquê |
 
 Não entra: HOW de recorte (skill), IDs de um produto, autorização de um cliente, atalho de uma skill de um host (`/graphify`).
 
@@ -47,6 +48,6 @@ Grok e o Code CLI ignoram o bloco; o modelo lê o corpo.
 ## Conferência
 
 - [ ] `python3 rules/test_sync.py` verde
-- [ ] Cinco gates globais; overlay fora deste repo
+- [ ] Seis gates globais; overlay fora deste repo
 - [ ] Grok `compat.cursor` e `compat.claude`: rules/hooks/agents/skills/mcps = false
 - [ ] Claude `CLAUDE.md` sem bloco duplicado do harness
