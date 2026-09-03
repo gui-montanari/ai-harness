@@ -35,7 +35,8 @@ superfície correta. Campo coletado e descartado, capacidade anunciada sem adapt
 rota sem consumidor aprovado e teste que valida comportamento contrário ao requisito são
 falhas de completude, mesmo com cobertura alta.
 
-Selecione as skills pelo que o recorte **contém**, não só pelo pedido original:
+Selecione as skills pelo que o recorte **contém**, não só pelo pedido original.
+Kits de **processo** (debug, worktree, harness de cliente, auditar catálogo): tabela do Gate 2 em `analyze-before-implement`. Esta tabela é produto.
 
 | Sinal no diff | Conferência adicional obrigatória |
 |---------------|-----------------------------------|

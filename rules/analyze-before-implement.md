@@ -25,17 +25,30 @@ Leia a constituição: `~/.local/share/ai-harness/AGENTS.md`.
 
 ## Gate 2 — Confirmar skill
 
-Procure a skill do recorte. Não confie na memória.
+Procure a skill do recorte. Não confie na memória. Leia o `SKILL.md` inteiro; não anuncie o nome e siga de memória.
 
-Onde olhar: skills listadas na sessão; `~/.cursor/skills/`, `~/.grok/skills/`,
+Onde olhar: skills listadas na sessão; `~/.grok/skills/`, `~/.cursor/skills/`,
 `~/.codex/skills/`; pasta de skills do Code CLI; e as pastas `skills/` do repo.
-Recortes: `architecture`, `http-apis`, `auth`, `cicd`, `frontend-surfaces`, `git-activity`, `debug-hypotheses`, `client-harness`, …
 
-- `name` ou `description` cobre o recorte → **é a skill**. Leia a `SKILL.md` inteira antes de editar.
+**Kit de trabalho** (processo — esta tabela é o dono). Recorte de **produto** (HTTP, auth, fila, UI…): tabela «Selecione as skills» em `architecture`. Não copie produto aqui.
+
+| Trabalho | Ler |
+|----------|-----|
+| defeito, falha, regressão, teste vermelho | `debug-hypotheses` (evidência de log/Azure: skill de cliente, se houver) |
+| worktree, branch, dual delivery, PR | `git-activity` |
+| desenhar ou analisar o desenvolvimento | `architecture` — ela puxa o resto pelo que o recorte contém |
+| agente, turno, specs, runtime | `agent-orchestration` + `orchestration-runtime` |
+| harness de cliente, overlay | `client-harness` |
+| auditar o catálogo de skills | `skills-audit` |
+| auditar o diff do produto | `principles-audit` + `security-audit` (architecture já manda no gate de entrega) |
+
+- `name` ou `description` cobre o recorte → **é a skill**.
 - Duas candidatas → leia as duas; fique com a do recorte.
 - Nenhuma → diga em uma frase e implemente só com o que o repo já faz.
+- Kit novo: **uma linha nesta tabela** ou na de `architecture`, um dono só. Rule nova por kit é over.
 
 Não invente HOW que já tem skill. Não copie o harness para dentro do produto.
+Não copie o Superpowers (`using-superpowers`: skill antes de qualquer frase, inclusive pergunta). Aqui a skill entra **antes de editar**; pergunta sem implementação pula este gate.
 Entrega: conferência da skill + `/principles-audit` e `/security-audit` até zero achados.
 
 ## Exceções (pula Gate 2, não o Gate 1)
