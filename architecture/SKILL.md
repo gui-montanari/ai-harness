@@ -10,7 +10,7 @@ description: >
 
 # Arquitetura
 
-**REQUIRED BACKGROUND:** constituição `AGENTS.md` (princípios, hexagonal, dimensões §5). Esta skill é o **desenho** e o **gate de entrega**. Skills de pasta (`http-apis`, `auth`, `agent-orchestration`, `frontend-surfaces`, `cicd`, …) executam o recorte. Abrir worktree/PR: `git-activity`. Harness de cliente: `client-harness`.
+**REQUIRED BACKGROUND:** constituição `AGENTS.md` (princípios, hexagonal, dimensões §5). Esta skill é o **desenho** e o **gate de entrega**. Skills de pasta (`http-apis`, `auth`, `agent-orchestration`, `frontend-surfaces`, `cicd`, …) executam o recorte. Abrir worktree/PR: `git-activity`. Defeito: `debug-hypotheses`. Harness de cliente: `client-harness`.
 
 ## Como desenhar
 
@@ -47,6 +47,7 @@ Selecione as skills pelo que o recorte **contém**, não só pelo pedido origina
 | tabela, PII, concorrência de escrita | `persistence-ports` + `sql-migrations` |
 | Makefile, Compose, workflow, gate | `cicd` |
 | worktree, branch de atividade, PR de entrega | `git-activity` |
+| teste vermelho, regressão, comportamento inesperado | `debug-hypotheses` |
 
 Vista mental (indústria, sem diagrama obrigatório): contexto → limites (containers) → módulos (hexagonais) → adapters. Não comece pelo controller nem pela tela.
 

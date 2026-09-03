@@ -20,6 +20,7 @@ Antes da primeira edição, no chat (2–4 linhas):
 4. O que não se inventa (HOW, padrão, fluxo).
 
 Sem invariante clara: plano ou pergunta — não código.
+Defeito, falha, regressão ou teste vermelho: rule e skill `debug-hypotheses` **antes** de qualquer patch.
 Leia a constituição: `~/.local/share/ai-harness/AGENTS.md`.
 
 ## Gate 2 — Confirmar skill
@@ -28,7 +29,7 @@ Procure a skill do recorte. Não confie na memória.
 
 Onde olhar: skills listadas na sessão; `~/.cursor/skills/`, `~/.grok/skills/`,
 `~/.codex/skills/`; pasta de skills do Code CLI; e as pastas `skills/` do repo.
-Recortes: `architecture`, `http-apis`, `auth`, `cicd`, `frontend-surfaces`, `git-activity`, `client-harness`, …
+Recortes: `architecture`, `http-apis`, `auth`, `cicd`, `frontend-surfaces`, `git-activity`, `debug-hypotheses`, `client-harness`, …
 
 - `name` ou `description` cobre o recorte → **é a skill**. Leia a `SKILL.md` inteira antes de editar.
 - Duas candidatas → leia as duas; fique com a do recorte.

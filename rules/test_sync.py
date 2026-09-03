@@ -45,6 +45,7 @@ class RulesSyncTest(unittest.TestCase):
             {
                 "analyze-before-implement",
                 "complete-until-done",
+                "debug-hypotheses",
                 "git-activity",
                 "git-discipline",
             },
