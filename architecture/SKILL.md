@@ -36,19 +36,7 @@ rota sem consumidor aprovado e teste que valida comportamento contrário ao requ
 falhas de completude, mesmo com cobertura alta.
 
 Selecione as skills pelo que o recorte **contém**, não só pelo pedido original.
-Kits de **processo** (debug, worktree, harness de cliente, auditar catálogo): tabela do Gate 2 em `analyze-before-implement`. Esta tabela é produto.
-
-| Sinal no diff | Conferência adicional obrigatória |
-|---------------|-----------------------------------|
-| sessão, token, papel, superfície pública | `auth` |
-| fila, outbox, inbox, consumer | `reliable-messaging` + `background-workers` |
-| caso, atribuição, SLA, revisão | `ops-backoffice` |
-| LLM, prompt, guarda, turno | `agent-orchestration` + `orchestration-runtime` |
-| webhook/canal/identidade de remetente | `whatsapp-channel` + `http-apis` |
-| tabela, PII, concorrência de escrita | `persistence-ports` + `sql-migrations` |
-| Makefile, Compose, workflow, gate | `cicd` |
-| worktree, branch de atividade, PR de entrega | `git-activity` |
-| teste vermelho, regressão, comportamento inesperado | `debug-hypotheses` |
+**Kit (uma tabela):** Gate 2 de `analyze-before-implement`. Se o diff tiver sinal que o pedido não citou, acrescente essa linha do kit e marque a conferência dela. Não copie a tabela para cá.
 
 Vista mental (indústria, sem diagrama obrigatório): contexto → limites (containers) → módulos (hexagonais) → adapters. Não comece pelo controller nem pela tela.
 

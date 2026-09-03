@@ -30,22 +30,56 @@ Procure a skill do recorte. Não confie na memória. Leia o `SKILL.md` inteiro; 
 Onde olhar: skills listadas na sessão; `~/.grok/skills/`, `~/.cursor/skills/`,
 `~/.codex/skills/`; pasta de skills do Code CLI; e as pastas `skills/` do repo.
 
-**Kit de trabalho** (processo — esta tabela é o dono). Recorte de **produto** (HTTP, auth, fila, UI…): tabela «Selecione as skills» em `architecture`. Não copie produto aqui.
+**Kit de trabalho** — esta tabela é o dono (processo **e** produto). Constituição e `architecture` **apontam**; não copiam. O pedido mente: se o recorte **contém** o sinal, a linha entra mesmo que o humano não a tenha citado. Pontes (`oauth-connectors`, `langgraph-agents`, `channel-evolution`) não competem aqui.
+
+### Processo
 
 | Trabalho | Ler |
 |----------|-----|
-| defeito, falha, regressão, teste vermelho | `debug-hypotheses` (evidência de log/Azure: skill de cliente, se houver) |
+| defeito, falha, regressão, teste vermelho | `debug-hypotheses` (log/Azure/WMS: skill de cliente, se houver) |
 | worktree, branch, dual delivery, PR | `git-activity` |
-| desenhar ou analisar o desenvolvimento | `architecture` — ela puxa o resto pelo que o recorte contém |
-| agente, turno, specs, runtime | `agent-orchestration` + `orchestration-runtime` |
+| desenhar ou analisar o desenvolvimento | `architecture` — depois as linhas de produto que o recorte contém |
 | harness de cliente, overlay | `client-harness` |
 | auditar o catálogo de skills | `skills-audit` |
-| auditar o diff do produto | `principles-audit` + `security-audit` (architecture já manda no gate de entrega) |
+| auditar o diff do produto | `principles-audit` + `security-audit` (`architecture` manda no gate de entrega) |
+| CI, workflow, Compose, coverage | `cicd` |
+
+### Produto — backend
+
+| Trabalho | Ler |
+|----------|-----|
+| REST, OpenAPI, webhook HTTP | `http-apis` |
+| sessão, JWT, OAuth, HMAC, papel | `auth` |
+| MCP transporte `/mcp` | `mcp-servers` |
+| MCP tool, jornada, perfil | `mcp-tools` |
+| schema SQL, migration | `sql-migrations` |
+| dois SGBD / DSN | `sql-dialects` |
+| repositório, RLS, tenant no SQL | `persistence-ports` + `sql-migrations` |
+| cache Redis | `cache-ports` |
+| upload, blob, URL assinada | `object-storage` |
+| log, trace, métrica | `observability` |
+| outbox, evento, consumer | `reliable-messaging` + `background-workers` |
+| worker, job, scheduler | `background-workers` |
+| agente, turno, specs, guarda | `agent-orchestration` + `orchestration-runtime` |
+| WhatsApp | `whatsapp-channel` (+ `http-apis` no webhook) |
+| fila, atribuição, SLA, protocolo | `ops-backoffice` (+ UI: linha backoffice) |
+
+### Produto — frontend
+
+Toda UI herda `frontend-surfaces` (tokens, tema, PT/EN, viewport). Some a skill da **superfície** tocada:
+
+| Trabalho | Ler |
+|----------|-----|
+| tokens, tema, i18n, home pública, primitivos | `frontend-surfaces` |
+| página / formulário de login | `frontend-login` + `frontend-surfaces` |
+| shell autenticado, sidebar, UserMenu | `frontend-shell` + `frontend-surfaces` |
+| chat de produto (lista + thread) | `frontend-chat` + `frontend-shell` + `frontend-surfaces` |
+| inbox / fila na UI | `frontend-backoffice` + `frontend-shell` + `ops-backoffice` + `frontend-surfaces` |
 
 - `name` ou `description` cobre o recorte → **é a skill**.
 - Duas candidatas → leia as duas; fique com a do recorte.
 - Nenhuma → diga em uma frase e implemente só com o que o repo já faz.
-- Kit novo: **uma linha nesta tabela** ou na de `architecture`, um dono só. Rule nova por kit é over.
+- Kit novo: **uma linha nesta tabela**. Rule nova por kit é over. `architecture` «Onde mora» mapeia capacidade; não é segundo kit.
 
 Não invente HOW que já tem skill. Não copie o harness para dentro do produto.
 Não copie o Superpowers (`using-superpowers`: skill antes de qualquer frase, inclusive pergunta). Aqui a skill entra **antes de editar**; pergunta sem implementação pula este gate.

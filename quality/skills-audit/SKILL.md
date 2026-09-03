@@ -97,7 +97,7 @@ Têm de contar a **mesma** coleção, com papéis distintos:
 |------------|--------|
 | Árvore do README | toda pasta com `SKILL.md`, inclusive pontes; e `rules/`, `hooks/` |
 | Tabelas «Quando» do README | skills de execução (não pontes) |
-| `architecture` «Onde mora» | capacidades de **produto** → skill canônica. Não lista pontes, audits de catálogo (`skills-audit`, `principles-audit`, `security-audit`) nem processo do harness (`git-activity`, `debug-hypotheses`, `client-harness`) |
+| `architecture` «Onde mora» | capacidades de **produto** → skill canônica. Não lista pontes, audits de catálogo (`skills-audit`, `principles-audit`, `security-audit`) nem processo do harness (`git-activity`, `debug-hypotheses`, `client-harness`). Kit de disparo (trabalho → ler): Gate 2 de `analyze-before-implement`, não esta tabela |
 | Constituição §3 (lista de skills) | HOW de produto. Não é inventário desta auditoria |
 
 Skill no disco fora da árvore ou da tabela de execução = `material`. Tabela apontando para pasta inexistente = `material`. `name` ≠ pasta = `bloqueante` (o host carrega pelo `name`).
