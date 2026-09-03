@@ -2,15 +2,15 @@
 name: architecture
 description: >
   Use when designing a system, choosing bounded contexts, drawing module
-  boundaries, writing an ADR, starting a feature, or deciding where a
-  capability lives. Also when the user mentions architecture, hexagonal
-  layout, or /architecture. After implementation, run principles-audit and
-  security-audit until zero findings.
+  boundaries, writing an ADR, or deciding where a capability lives. Also
+  when the user mentions architecture, hexagonal layout, or /architecture.
+  After implementation, run principles-audit and security-audit until zero
+  findings. Worktree, branch and PR: git-activity.
 ---
 
 # Arquitetura
 
-**REQUIRED BACKGROUND:** constituição `AGENTS.md` (princípios, hexagonal, dimensões §5). Esta skill é o **desenho** e o **gate de entrega**. Skills de pasta (`http-apis`, `auth`, `agent-orchestration`, `frontend-surfaces`, `cicd`, …) executam o recorte.
+**REQUIRED BACKGROUND:** constituição `AGENTS.md` (princípios, hexagonal, dimensões §5). Esta skill é o **desenho** e o **gate de entrega**. Skills de pasta (`http-apis`, `auth`, `agent-orchestration`, `frontend-surfaces`, `cicd`, …) executam o recorte. Abrir worktree/PR: `git-activity`. Harness de cliente: `client-harness`.
 
 ## Como desenhar
 
@@ -46,6 +46,7 @@ Selecione as skills pelo que o recorte **contém**, não só pelo pedido origina
 | webhook/canal/identidade de remetente | `whatsapp-channel` + `http-apis` |
 | tabela, PII, concorrência de escrita | `persistence-ports` + `sql-migrations` |
 | Makefile, Compose, workflow, gate | `cicd` |
+| worktree, branch de atividade, PR de entrega | `git-activity` |
 
 Vista mental (indústria, sem diagrama obrigatório): contexto → limites (containers) → módulos (hexagonais) → adapters. Não comece pelo controller nem pela tela.
 

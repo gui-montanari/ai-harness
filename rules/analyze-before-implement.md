@@ -28,7 +28,7 @@ Procure a skill do recorte. Não confie na memória.
 
 Onde olhar: skills listadas na sessão; `~/.cursor/skills/`, `~/.grok/skills/`,
 `~/.codex/skills/`; pasta de skills do Code CLI; e as pastas `skills/` do repo.
-Recortes: `architecture`, `http-apis`, `auth`, `cicd`, `frontend-surfaces`, …
+Recortes: `architecture`, `http-apis`, `auth`, `cicd`, `frontend-surfaces`, `git-activity`, `client-harness`, …
 
 - `name` ou `description` cobre o recorte → **é a skill**. Leia a `SKILL.md` inteira antes de editar.
 - Duas candidatas → leia as duas; fique com a do recorte.

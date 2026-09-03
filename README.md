@@ -48,6 +48,8 @@ frontend/
   frontend-backoffice/
 quality/
   cicd/
+  git-activity/
+  client-harness/
   skills-audit/
   principles-audit/
   security-audit/
@@ -75,6 +77,8 @@ Skills `mcp-servers` e `mcp-tools` continuam sendo o HOW da **borda MCP de um pr
 |-------|--------|
 | [`architecture`](./architecture/) | Desenhar limites, ADRs, onde mora cada capacidade. Gate: audits até zero. `/architecture` |
 | [`cicd`](./quality/cicd/) | Workflows seguros, jobs, ruff/mypy/eslint, coverage, deploy por SHA. `/cicd` |
+| [`git-activity`](./quality/git-activity/) | Worktree a partir da produção, dual delivery, PR green. `/git-activity` |
+| [`client-harness`](./quality/client-harness/) | Repo privado `{cliente}-harness`; overlay; skills no workspace. `/client-harness` |
 | [`skills-audit`](./quality/skills-audit/) | Coerência do catálogo; só achado com valor; veredito 10/10. `/skills-audit` |
 | [`principles-audit`](./quality/principles-audit/) | Varredura hexagonal / TDD / `/api/v1`. `/principles-audit` |
 | [`security-audit`](./quality/security-audit/) | Tenant, IDOR, XSS, segredos. `/security-audit` |
@@ -126,8 +130,10 @@ O `install.sh` liga skills, [rules](./rules/), [hooks](./hooks/) e [mcp](./mcp/)
 Gemini/Antigravity, Windsurf, OpenCode). Cada host recebe **um** canal nativo;
 o Grok não varre rules/hooks/skills/MCP/`CLAUDE.md` de Cursor ou Claude.
 Overlay de cliente fica em `~/.config/ai-harness/overlay/{rules,hooks,mcp}/` e
-não entra neste repo.
-Em outro notebook: o mesmo clone + `install.sh` (ou `git pull && ./install.sh`).
+não entra neste repo. O SSOT é o `{cliente}-harness` privado (skill `client-harness`);
+o `install.sh` dele projeta o overlay.
+Em outro notebook: o mesmo clone + `install.sh` (ou `git pull && ./install.sh`),
+depois o `{cliente}-harness` de cada cliente em que for trabalhar.
 
 O produto tem o **próprio** `AGENTS.md` (domínio, ADR, fase). Cada skill termina em **Conferência**.
 Depois: `/principles-audit` e `/security-audit` até **zero** achados (`architecture`).

@@ -75,7 +75,7 @@ ls hooks/catalog.json hooks/sync.py hooks/scripts
 ls mcp/catalog/mcp-catalog.json mcp/mcp_toolkit.py mcp/wrappers
 ```
 
-`rules/`, `hooks/` e `mcp/` **não** são skill (não têm `SKILL.md`). Têm de aparecer na árvore do README. Overlay local do host (`~/.config/ai-harness/overlay/{rules,hooks,mcp}/`) **não** mora neste repo. Segredo só em `secrets.example` + cópia local; valor real no git é achado. Rule de cliente no git público é achado.
+`rules/`, `hooks/` e `mcp/` **não** são skill (não têm `SKILL.md`). Têm de aparecer na árvore do README. Overlay local do host (`~/.config/ai-harness/overlay/{rules,hooks,mcp}/`) **não** mora neste repo — o SSOT de cliente é `{cliente}-harness` (skill `client-harness`). Segredo só em `secrets.example` + cópia local; valor real no git é achado. Rule de cliente no git público é achado.
 
 Para cada um registre:
 
@@ -97,7 +97,7 @@ Têm de contar a **mesma** coleção, com papéis distintos:
 |------------|--------|
 | Árvore do README | toda pasta com `SKILL.md`, inclusive pontes; e `rules/`, `hooks/` |
 | Tabelas «Quando» do README | skills de execução (não pontes) |
-| `architecture` «Onde mora» | capacidades de **produto** → skill canônica. Não lista pontes nem audits de catálogo (`skills-audit`, `principles-audit`, `security-audit`) |
+| `architecture` «Onde mora» | capacidades de **produto** → skill canônica. Não lista pontes, audits de catálogo (`skills-audit`, `principles-audit`, `security-audit`) nem processo do harness (`git-activity`, `client-harness`) |
 | Constituição §3 (lista de skills) | HOW de produto. Não é inventário desta auditoria |
 
 Skill no disco fora da árvore ou da tabela de execução = `material`. Tabela apontando para pasta inexistente = `material`. `name` ≠ pasta = `bloqueante` (o host carrega pelo `name`).
@@ -126,6 +126,10 @@ Cada par tem de dizer, dos dois lados, o que **não** é desta skill. Ausência 
 | `cicd` | `sql-migrations` | job de CI ≠ regra de filename |
 | `observability` | `http-apis` | log/trace ≠ `/health`/`/ready` |
 | `cicd` | `principles-audit` / `security-audit` | pipeline ≠ varredura humana do diff |
+| `git-activity` | `git-discipline` | worktree/delivery/PR ≠ permissão de commit/push |
+| `git-activity` | `cicd` | como a atividade entra no git ≠ arquivos de pipeline do produto |
+| `client-harness` | `mcp-servers` | overlay/MCP da máquina de um cliente ≠ borda MCP de um produto |
+| `architecture` | `git-activity` | desenho de capacidade ≠ abrir worktree/PR |
 
 Description YAML que dispara a skill errada (ex.: “ticket” em `frontend-chat`) é `bloqueante`.
 

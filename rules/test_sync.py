@@ -37,12 +37,17 @@ class RulesSyncTest(unittest.TestCase):
             patch.stop()
         self.temp.cleanup()
 
-    def test_catalog_is_the_three_global_gates_not_readme_or_example(self):
+    def test_catalog_is_the_global_gates_not_readme_or_example(self):
         items = sync.catalog()
         names = {item.name for item in items}
         self.assertEqual(
             names,
-            {"analyze-before-implement", "complete-until-done", "git-discipline"},
+            {
+                "analyze-before-implement",
+                "complete-until-done",
+                "git-activity",
+                "git-discipline",
+            },
         )
         for item in items:
             self.assertTrue(item.path.is_file())
