@@ -66,7 +66,7 @@ Vive neste repo, em [`mcp/`](./mcp/). Clone + `./install.sh` em qualquer noteboo
 3. catálogo universal sincronizado nos hosts;
 4. `mcp/secrets.example/*.env.example` copiados para `~/.config/ai-harness/secrets/` se ainda não existirem — preencha as chaves lá.
 
-OAuth (Cloudflare, Make, Stripe) grava refresh token em `~/.mcp-auth` na primeira autorização; as sessões seguintes reusam. Servidor que é só desta máquina (VPS, cliente) entra em `~/.config/ai-harness/overlay/mcp/` — o git público não leva IP nem subscription.
+OAuth (Cloudflare, Make, Stripe) entra no catálogo como HTTP nativo. O host (Grok: `~/.grok/mcp_credentials.json`) grava o token na primeira autorização e as sessões seguintes reusam. Servidor que é só desta máquina (VPS, cliente) entra em `~/.config/ai-harness/overlay/mcp/` — o git público não leva IP nem subscription.
 
 Skills `mcp-servers` e `mcp-tools` continuam sendo o HOW da **borda MCP de um produto**. O catálogo em `mcp/` é o que o **host do agente** carrega.
 

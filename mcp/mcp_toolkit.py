@@ -73,7 +73,45 @@ def uses_browser_oauth(cfg) -> bool:
     return uses_mcp_remote(cfg) and not uses_bearer_header(cfg)
 
 
+def mcp_remote_server_url(cfg):
+    for part in cfg.get("args") or []:
+        text = str(part)
+        if text.startswith("https://"):
+            return text
+    return None
+
+
+def remote_url(cfg):
+    if "url" in cfg:
+        return cfg["url"]
+    if uses_browser_oauth(cfg):
+        return mcp_remote_server_url(cfg)
+    return None
+
+
+def oauth_scopes(cfg):
+    scopes = (cfg.get("oauth") or {}).get("scopes")
+    if scopes:
+        return list(scopes)
+    args = [str(a) for a in (cfg.get("args") or [])]
+    try:
+        index = args.index("--static-oauth-client-metadata")
+    except ValueError:
+        return None
+    if index + 1 >= len(args):
+        return None
+    path = Path(args[index + 1].removeprefix("@"))
+    if not path.is_file():
+        return None
+    scope = load_json(path).get("scope")
+    if not isinstance(scope, str) or not scope.strip():
+        return None
+    return scope.split()
+
+
 def oauth_timeout_sec(cfg):
+    if remote_url(cfg):
+        return None
     if "oauthTimeoutSec" in cfg:
         timeout = cfg["oauthTimeoutSec"]
         return int(timeout) if timeout else None
@@ -91,9 +129,6 @@ def command_config(cfg):
         command = "bash"
     return command, args, cfg.get("env", {})
 
-def is_remote(cfg):
-    return "url" in cfg
-
 def managed_names():
     previous = set(load_json(MANAGED_STATE, {"names": []}).get("names", []))
     current = set(catalog())
@@ -108,7 +143,7 @@ def sync_claude(enabled):
     active=data.setdefault("mcpServers",{}); disabled=data.setdefault("mcpServersDisabled",{})
     for name in managed_names(): active.pop(name,None); disabled.pop(name,None)
     for name,cfg in catalog().items():
-        if is_remote(cfg): item={"type":"http","url":cfg["url"]}
+        if url := remote_url(cfg): item={"type":"http","url":url}
         else:
             cmd,args,env=command_config(cfg); item={"command":cmd,"args":args}
             if env: item["env"]=env
@@ -129,7 +164,7 @@ def sync_codex(enabled):
     for name,cfg in catalog().items():
         if name not in enabled: continue
         lines.append(f"[mcp_servers.{name}]")
-        if is_remote(cfg): lines.append(f"url = {toml_value(cfg['url'])}")
+        if url := remote_url(cfg): lines.append(f"url = {toml_value(url)}")
         else:
             cmd,args,env=command_config(cfg); lines += [f"command = {toml_value(cmd)}",f"args = {toml_value(args)}"]
             if env: lines.append(f"env = {toml_value(env)}")
@@ -143,7 +178,7 @@ def sync_opencode(enabled):
     path=opencode_path(); data=load_json(path,{"$schema":"https://opencode.ai/config.json","mcp":{}}); servers=data.setdefault("mcp",{})
     for name in managed_names(): servers.pop(name,None)
     for name,cfg in catalog().items():
-        if is_remote(cfg): item={"type":"remote","url":cfg["url"],"enabled":name in enabled}
+        if url := remote_url(cfg): item={"type":"remote","url":url,"enabled":name in enabled}
         else:
             cmd,args,env=command_config(cfg); item={"type":"local","command":[cmd,*args],"enabled":name in enabled}
             if env:item["environment"]=env
@@ -154,7 +189,7 @@ def sync_agy(enabled):
     path=HOME/".gemini/config/mcp_config.json"; data=load_json(path,{"mcpServers":{}}); servers=data.setdefault("mcpServers",{})
     for name in managed_names(): servers.pop(name,None)
     for name,cfg in catalog().items():
-        if is_remote(cfg): item={"$typeName":AGY_REMOTE_TYPE,"serverUrl":cfg["url"],"disabled":name not in enabled}
+        if url := remote_url(cfg): item={"$typeName":AGY_REMOTE_TYPE,"serverUrl":url,"disabled":name not in enabled}
         else:
             cmd,args,env=command_config(cfg); item={"$typeName":AGY_TYPE,"command":cmd,"args":args,"disabled":name not in enabled}
             if env:item["env"]=env
@@ -178,12 +213,15 @@ def sync_grok(enabled):
     lines=[text,"",GROK_MCP_MARKER,""]
     for name,cfg in catalog().items():
         lines.append(f"[mcp_servers.{name}]")
-        if is_remote(cfg): lines.append(f"url = {toml_value(cfg['url'])}")
+        if url := remote_url(cfg):
+            lines.append(f"url = {toml_value(url)}")
+            if scopes := oauth_scopes(cfg):
+                lines.append(f"oauth_scopes = {toml_value(scopes)}")
         else:
             cmd,args,env=command_config(cfg); lines += [f"command = {toml_value(cmd)}",f"args = {toml_value(args)}"]
             if env: lines.append(f"env = {toml_value(env)}")
-        if timeout := oauth_timeout_sec(cfg):
-            lines.append(f"startup_timeout_sec = {timeout}")
+            if timeout := oauth_timeout_sec(cfg):
+                lines.append(f"startup_timeout_sec = {timeout}")
         lines += [f"enabled = {toml_value(name in enabled)}",""]
     path.parent.mkdir(parents=True,exist_ok=True); path.write_text("\n".join(lines).lstrip()+"\n"); path.chmod(0o600)
 
@@ -192,7 +230,7 @@ def sync_cursor(enabled):
     for name in managed_names(): servers.pop(name,None)
     for name,cfg in catalog().items():
         if name not in enabled: continue
-        if is_remote(cfg): item={"url":cfg["url"]}
+        if url := remote_url(cfg): item={"url":url}
         else:
             cmd,args,env=command_config(cfg); item={"command":cmd,"args":args}
             if env: item["env"]=env
@@ -256,8 +294,8 @@ def doctor(profile, all_servers=False):
     failures=0
     for name,cfg in catalog().items():
         if name not in enabled: continue
-        if is_remote(cfg):
-            failures += doctor_remote(name, cfg["url"])
+        if url := remote_url(cfg):
+            failures += doctor_remote(name, url)
             continue
         if secret:=cfg.get("secretFile"):
             if not (SECRETS_DIR/secret).exists(): print(f"⚠️  {name}: segredo ausente ({secret})"); failures+=1; continue

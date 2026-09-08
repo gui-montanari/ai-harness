@@ -185,22 +185,73 @@ class RemoteServerSyncTest(unittest.TestCase):
         self.assertIn("extra-local", toolkit.catalog())
         self.assertEqual(toolkit.catalog()["extra-local"]["command"], "printf")
 
-    def test_grok_oauth_proxy_keeps_auth_timeout_long_enough_to_persist_tokens(self):
+    def test_grok_browser_oauth_uses_native_http_and_host_token_store(self):
         self.catalog_path.write_text(json.dumps({
             "servers": {
                 "cloudflare-api": {
-                    "command": "npx",
-                    "args": ["-y", "mcp-remote@0.1.38", "https://mcp.cloudflare.com/mcp"],
+                    "url": "https://mcp.cloudflare.com/mcp",
+                    "oauth": {"scopes": ["user:read", "offline_access", "account:read"]},
                 }
             }
         }))
         toolkit.sync_grok({"cloudflare-api"})
         grok = tomllib.loads((self.home / ".grok/config.toml").read_text())
         server = grok["mcp_servers"]["cloudflare-api"]
-        self.assertEqual(server["startup_timeout_sec"], 300)
-        self.assertIn("--auth-timeout", server["args"])
-        timeout_at = server["args"].index("--auth-timeout")
-        self.assertEqual(server["args"][timeout_at + 1], "300")
+        self.assertEqual(server["url"], "https://mcp.cloudflare.com/mcp")
+        self.assertEqual(server["oauth_scopes"], ["user:read", "offline_access", "account:read"])
+        self.assertNotIn("command", server)
+        self.assertNotIn("args", server)
+        self.assertNotIn("startup_timeout_sec", server)
+
+    def test_browser_oauth_mcp_remote_is_promoted_to_native_http_on_every_host(self):
+        self.catalog_path.write_text(json.dumps({
+            "servers": {
+                "make": {
+                    "command": "npx",
+                    "args": [
+                        "-y",
+                        "mcp-remote@0.1.38",
+                        "https://mcp.make.com",
+                        "--static-oauth-client-metadata",
+                        str(self.root / "make-client-metadata.json"),
+                    ],
+                }
+            }
+        }))
+        (self.root / "make-client-metadata.json").write_text(json.dumps({
+            "scope": "mcp:use scenarios:read"
+        }))
+        enabled = {"make"}
+        toolkit.sync_claude(enabled)
+        toolkit.sync_codex(enabled)
+        with mock.patch.object(toolkit, "opencode_path", return_value=self.home / ".config/opencode/opencode.json"):
+            toolkit.sync_opencode(enabled)
+        toolkit.sync_agy(enabled)
+        toolkit.sync_grok(enabled)
+        toolkit.sync_cursor(enabled)
+
+        claude = json.loads((self.home / ".claude.json").read_text())
+        self.assertEqual(claude["mcpServers"]["make"], {"type": "http", "url": "https://mcp.make.com"})
+
+        codex = tomllib.loads((self.home / ".codex-cli/config.toml").read_text())
+        self.assertEqual(codex["mcp_servers"]["make"]["url"], "https://mcp.make.com")
+        self.assertNotIn("command", codex["mcp_servers"]["make"])
+
+        opencode = json.loads((self.home / ".config/opencode/opencode.json").read_text())
+        self.assertEqual(opencode["mcp"]["make"]["type"], "remote")
+        self.assertEqual(opencode["mcp"]["make"]["url"], "https://mcp.make.com")
+
+        agy = json.loads((self.home / ".gemini/config/mcp_config.json").read_text())
+        self.assertEqual(agy["mcpServers"]["make"]["serverUrl"], "https://mcp.make.com")
+
+        grok = tomllib.loads((self.home / ".grok/config.toml").read_text())
+        self.assertEqual(grok["mcp_servers"]["make"]["url"], "https://mcp.make.com")
+        self.assertEqual(grok["mcp_servers"]["make"]["oauth_scopes"], ["mcp:use", "scenarios:read"])
+        self.assertNotIn("command", grok["mcp_servers"]["make"])
+        self.assertNotIn("startup_timeout_sec", grok["mcp_servers"]["make"])
+
+        cursor = json.loads((self.home / ".cursor/mcp.json").read_text())
+        self.assertEqual(cursor["mcpServers"]["make"], {"url": "https://mcp.make.com"})
 
     def test_mcp_remote_bearer_header_is_not_treated_as_browser_oauth(self):
         self.catalog_path.write_text(json.dumps({

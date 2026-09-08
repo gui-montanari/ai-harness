@@ -33,7 +33,7 @@ Repo **privado**. Clone ao lado do harness universal:
   skills/            # debug, deploy, domínio — NÃO globais
 ```
 
-Segredo continua em `~/.config/ai-harness/secrets/*.env`. OAuth em `~/.mcp-auth`. Nem um nem outro neste git.
+Segredo continua em `~/.config/ai-harness/secrets/*.env`. OAuth no store do host (Grok: `~/.grok/mcp_credentials.json`). Nem um nem outro neste git.
 
 MCP/hook/rule que é **só desta máquina** e de vários clientes (VPS, AWS pessoal) permanece no overlay local, fora de qualquer `{cliente}-harness`.
 
