@@ -46,7 +46,7 @@ In-process já cumpre o primeiro lançamento com guardas, HITL e persistência n
 
 Ordem no startup — falha fechada:
 
-1. Ler manifests dos agentes (`agent-orchestration`). `AgentRegistry.explicit`. Composition chama `registry.get("conversational.<job>")` — id desconhecido não sobe o use case.
+1. Ler manifests dos agentes (`agent-orchestration`). `AgentRegistry.explicit` (1..N). Composition chama `registry.get("conversational.<job>")` — id desconhecido não sobe o use case. Sem `primary` como único caminho.
 2. Declarar `RuntimeCapabilities` **exigidas** pelo agente (checkpoint, HITL, tool calling, pause/resume, **turn_idempotency**). Conversacional nasce com `turn_idempotency=True`.
 3. Instanciar **um** adapter no composition root via factory `build_orchestration(...)`. Ele declara as capacidades **oferecidas**. Sem locator global.
 4. Se exigido ⊄ oferecido: **não sobe**. Log sem PII. Sem fallback silencioso para outro motor.
