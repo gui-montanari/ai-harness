@@ -8,8 +8,11 @@ description: >
   prompt, LLM protocol, provider, model, tencent, openai, deepseek,
   LLM-driven turn, specialist/sub-agent, agent config.py,
   LLM_API_KEY, LLM_BASE_URL, getenv, guards, guardrails, output guard,
-  state guard, or reflection. Activating Make/LangGraph/in-process:
-  orchestration-runtime. LangGraph mention: langgraph-agents.
+  state guard, or reflection. Also AgentRegistry, registry.get, UnknownAgent,
+  build_orchestration, CancelConversation, turn_idempotency, conversation_turns,
+  executable agent HTTP endpoint, route_factory.
+  Activating Make/LangGraph/in-process: orchestration-runtime. MCP /mcp:
+  mcp-servers + mcp-tools. LangGraph mention: langgraph-agents.
 ---
 
 # Orquestração de agentes
@@ -40,14 +43,17 @@ Segundo agente só com bounded context próprio (ex.: copiloto autenticado inter
 
 Mesmo commit. Ordem abaixo. Conferência vazia = não pronto.
 
-1. **Identidade.** `conversational.<job>` (v1: exatamente um) + pasta `specs/<job>/` com `graph.py`, `node.py`, `edge.py`. Operacional: bounded context + ADR. `AgentRegistry.explicit`. Sem auto-discovery. Manifest conversacional nasce com `requires_output_guard` (ou equivalente); `False` não registra.
+1. **Identidade e registry.** `conversational.<job>` (v1: exatamente um) + pasta `specs/<job>/` com `graph.py`, `node.py`, `edge.py`. Operacional: bounded context + ADR. `AgentRegistry.explicit((SPEC,))` — sem auto-discovery. API: `get(agent_id)` e `keys()`; id desconhecido **falha fechado** (não `None`). Composition: `spec = registry.get("conversational.<job>")`. Manifest conversacional nasce com `requires_output_guard`; `False` não registra.
 2. **Slots de prompt.** Em `specs/<job>/prompts/`: `guardrails.md` e `reflection.md` (H1 mínimo). Conversacional: `understand_turn.md` + `ask_*.md` por fase. Catálogo **não carrega** se faltar `guardrails` ou `reflection`. O catálogo **não** tem pasta default de um job — `register.py` passa o diretório.
 3. **Duas casas.** Semântica nos `.md`. Legal / recusa / recap no domínio. Schema/enum no domínio. `PromptCatalog` é porta; core não lê disco; versão no trace.
 4. **Guardas no caminho.** Estado (schema) + `inspect_outbound` / `approve_outbound` no texto **gerado**. Recusa canônica no domínio. Sem a chamada de saída, o agente não ativa.
 5. **Sensibilizar.** A jornada chama `active("guardrails")` e `active("reflection")`. Vazio = no-op. Ausente = não sobe. Reflection nunca substitui a saída; revisão **reentra** em `inspect_outbound`.
 6. **Config de LLM — protocolo, provider, modelo.** Três camadas. `protocol` é o **nome do dialeto** (`openai`, `tencent`, `deepseek`) — não um apelido genérico (`openai_chat_completions`) nem um `Callable`. Cada dialeto tem adapter próprio; Tencent não reusa a classe OpenAI. `provider` é quem hospeda (catálogo → URL default + protocolo esperado). `model_name` é o deployment. Protocolo incompatível com o provider **falha fechado**. Chave injetada no composition. `complete()` vazio é falha.
-7. **Runtime.** Um adapter (`orchestration-runtime`). Capabilities exigidas ⊂ oferecidas. Mesmo builder na API e no worker.
-8. **Testes de nascimento** (senão é teatro): catálogo falha sem cada slot; heading-only → `active` é `None`; bloqueia reivindicação e permite abertura canônica; recap intacto **e** montado das labels do spec; registro rejeita segundo agente no v1 e rejeita conversacional sem guarda de saída; engine não importa spec concreto nem copy canônica; composição: `execute_turn` chama a guarda no gerado; `config.py` existe no spec; adapter de LLM sem `getenv` e sem prefixo da marca.
+7. **Runtime.** Um adapter (`orchestration-runtime`). Factory `build_orchestration(...)` — sem locator global. Porta: `execute_turn` / `pause` / `resume` / `cancel`. `CancelConversation`: status `cancelled`; **não** publica nem fecha o fato oficial (caso, pedido, protocolo). Conversacional nasce com `turn_idempotency=True`; `ensure_compatible` no startup. Capabilities exigidas ⊂ oferecidas. Mesmo builder na API e no worker.
+8. **Idempotência de turno.** Tabela `<bc>.conversation_turns` no serviço dono (em geral schema `agents`), RLS `FORCE`, PK `(tenant_id, conversation_id, idempotency_key)`. Replay pela key devolve o resultado gravado — não reexecuta o motor. A abertura (`prefix`) segue no reply ao canal; o turno **persistido** grava `prefix` vazio para o retry do canal não reenviar o opening. Porta `get_turn` / `save_turn`. HOW SQL: `persistence-ports` + `sql-migrations`.
+9. **Superfície acionável.** Registro ≠ publicação. Se o agente é **executável** (alguém fora do grafo chama: humano, M2M, widget, host MCP, canal), o mesmo commit liga **pelo menos um** driving adapter escrito na apresentação — não `route_factory` no descriptor. Escolha a superfície do requisito: HTTP `/api/v1/...` (`http-apis`), MCP (`mcp-servers` + `mcp-tools`), canal (`whatsapp-channel`), consumer de evento (`reliable-messaging` + `background-workers`). `include_router` / publicação / inscrição **explícitos** no composition. Specialist só-tool do hub (o LLM chama; ninguém de fora) **não** ganha REST próprio. Sem isso o spec é teatro.
+10. **Borda MCP no mesmo composition** se o produto tem (ou o requisito pede) conector. Não é fase 2. Streamable HTTP em `/mcp` no mesmo FastAPI (`mcp-servers`). Catálogo ≠ perfil (`mcp-tools`). `MCP_ENABLED` default off (lista vazia). Ligado: `MCP_BEARER` + `MCP_TENANT_ID` obrigatórios no startup; sem token → 401; `tenant_id` no body rejeitado. Binding = use case de turno (`open_conversation` + `execute_turn`). Sem canal WhatsApp, sem fato oficial. Se o requisito **nega** conector, não nasça `/mcp` teatro — registre a negação no ADR.
+11. **Testes de nascimento** (senão é teatro): catálogo falha sem cada slot; heading-only → `active` é `None`; bloqueia reivindicação e permite abertura canônica; recap intacto **e** montado das labels do spec; registro rejeita segundo agente no v1 e rejeita conversacional sem guarda de saída; `get` de id desconhecido falha; `cancel` não fecha fato oficial; mesma `idempotency_key` replay idêntico e `prefix` persistido vazio; engine não importa spec concreto nem copy canônica; composição: `execute_turn` chama a guarda no gerado; `config.py` existe no spec; adapter de LLM sem `getenv` e sem prefixo da marca; se executável: a superfície (HTTP/MCP/canal/evento) responde no TestClient/consumer; se houver `/mcp`: 401 sem Bearer, `tools/list` só o perfil, `tenant_id` no body 400.
 
 Ausência ou indisponibilidade de LLM/runtime é erro recuperável do turno: persiste pendência e
 retoma idempotentemente. Nunca avança a coleta por formulário, regex ou pergunta canônica como
@@ -97,7 +103,7 @@ Arquivo só existe com corpo. `node.py` / `edge.py` / `graph.py` **vazios**, `sp
 
 `ConversationalEngine` segue arestas (`token` ou incondicional). Labels, opening e completed **vivem no spec**. O engine não importa `canonical_texts` nem `specs.<job>`.
 
-`tools/` do grafo **não** entram em `tools/list` do MCP. Publicar capacidade ou jornada: skill `mcp-tools`.
+`tools/` do grafo **não** entram em `tools/list` do MCP. Publicar capacidade ou jornada: skill `mcp-tools`. Rota REST do agente executável: skill `http-apis` — o spec **não** conhece FastAPI.
 
 Quem **liga o processo** (in-process / Make / LangGraph) é `orchestration-runtime`. O motor conversacional interpreta o grafo no turno.
 
@@ -125,9 +131,9 @@ v1 registra exatamente um. A árvore já admite o segundo; o registro é que tra
 
 1. Pasta `specs/<job>/` com `graph.py`, `node.py`, `edge.py`, slots, config, register.
 2. ADR se for o **segundo** conversacional (bounded context próprio).
-3. Append na tuple de `AgentRegistry.explicit`.
-4. Composition escolhe o spec. Sem auto-discovery.
-5. O motor já existe — **não** copie `engine.py`.
+3. Append na tuple de `AgentRegistry.explicit` (v1 continua `len == 1` até o ADR do segundo).
+4. Composition resolve com `registry.get("conversational.<job>")`. Sem auto-discovery. Sem importar `SPEC` no use case.
+5. O motor já existe — **não** copie `engine.py`. Factory e `ensure_compatible` já ligam o runtime.
 
 ### Um runtime, um canal — não throwaway
 
@@ -359,6 +365,16 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 - Retry de modelo após bloqueio de segurança
 - SDK `guardrails` no `core/` / `application/`
 - Agente declarado pronto sem a receita de nascimento completa
+- `AgentRegistry.get` que devolve `None`; composition que importa `SPEC` em vez de `registry.get`
+- Locator / singleton global no lugar de `build_orchestration`
+- `cancel` que apaga conversa ou fecha o fato oficial
+- `turn_idempotency=False` no conversacional; replay em `set()` na RAM
+- Retry do canal reenvia opening (`prefix` regravado no turno persistido)
+- MCP “numa fase 2” depois do spec “já funcionar”
+- `route_factory` / `m2m_handler_factory` no descriptor (domínio conhecendo HTTP)
+- Agente executável sem `include_router`, publicação MCP, canal ou inscrição de evento no composition
+- Auto-discovery de rota por pasta do spec
+- `MCP_ENABLED=true` sem `MCP_BEARER` + `MCP_TENANT_ID` no startup
 - `graph.py` / `node.py` / `edge.py` **vazios**, ou um `spec.py` único misturando nó+aresta+copy
 - Pasta `nodes/` / `specialists/` sem função que corre
 - Stub de fala / porta / `presentation/` sem caminho de execução
@@ -397,8 +413,12 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 
 Antes de declarar pronto, copie e marque. Caixa vazia = o agente **não nasceu**.
 
-- [ ] Identidade: um conversacional no v1 (ou operacional + ADR); pasta `specs/<job>/`; registro explícito; `requires_output_guard`
+- [ ] Identidade: um conversacional no v1 (ou operacional + ADR); pasta `specs/<job>/`; `AgentRegistry.explicit`; `get` falha fechado; composition via `registry.get`; `requires_output_guard`
 - [ ] Motor em `conversational/` recebe spec; job com `graph.py` + `node.py` + `edge.py` **com corpo**; engine sem import de job nem de copy canônica
+- [ ] Factory `build_orchestration`; porta com `cancel`; `CancelConversation` não fecha fato oficial; `turn_idempotency=True`; `ensure_compatible` no startup
+- [ ] `<bc>.conversation_turns` com RLS; replay pela key; `prefix` persistido vazio
+- [ ] Borda MCP no mesmo commit **ou** ADR que nega conector; conferências `mcp-servers` + `mcp-tools` se `/mcp` existir
+- [ ] Executável: um driving adapter explícito (HTTP / MCP / canal / evento) no mesmo commit; sem `route_factory` no spec
 - [ ] Sem stub, porta ou presentation sem consumidor; sem segundo runtime/canal throwaway
 - [ ] `specs/<job>/prompts/guardrails.md` e `reflection.md` no mesmo commit; catálogo falha sem qualquer um; catálogo sem pasta default de um job
 - [ ] Duas casas: semântica nos `.md`; legal/recusa/recap e schema no domínio
@@ -406,8 +426,8 @@ Antes de declarar pronto, copie e marque. Caixa vazia = o agente **não nasceu**
 - [ ] Falha/ausência de LLM persiste turno pendente; nenhum fallback de formulário avança estado
 - [ ] `active("guardrails")` e `active("reflection")` sensibilizados; vazio = no-op; reflection nunca substitui a saída
 - [ ] `config.py` com protocol + provider + model_name por node; catálogo de providers na infra; adapter sem `getenv`
-- [ ] Runtime: um adapter da porta (`in-process` ou `langgraph`); SDK LangGraph só em `adapters/langgraph/`; capabilities no startup
-- [ ] Testes de nascimento verdes (slots, `active`, bloqueio, abertura, recap, registro, composição, config LLM)
+- [ ] Um adapter da porta (`in-process` ou `langgraph`); SDK LangGraph só em `adapters/langgraph/`
+- [ ] Testes de nascimento verdes (slots, `active`, bloqueio, abertura, recap, `get` desconhecido, cancel, replay/`prefix`, MCP 401/perfil se houver `/mcp`, composição, config LLM)
 - [ ] Guardas críticas têm matriz adversarial + teste de mutação; capacidades anunciadas possuem adapter e caminho e2e ativos
 - [ ] Título de conversa (se houver lista): use case após a 1ª resposta, ≤6 palavras
 - [ ] Roteamento determinístico vs modelo explícito; opção “parecida” não vira clique

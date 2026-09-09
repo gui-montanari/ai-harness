@@ -43,6 +43,20 @@ Dois bounded contexts = dois schemas/roles. Mesmo cluster Postgres **não** auto
 - Blob: skill `object-storage`. Fila/eventos: `reliable-messaging`. Cache: `cache-ports`.
 - Trocar SGBD sem tocar `core/`/`application/`: skill `sql-dialects`.
 
+## Turnos de agente
+
+Com `turn_idempotency` (`orchestration-runtime`), a conversa **não** basta. No mesmo PR da tabela de conversas (ou no arquivo do dia se ainda não está no ledger):
+
+| Peça | Contrato |
+|------|----------|
+| Tabela | `<bc>.conversation_turns` (schema do dono, em geral `agents`) |
+| PK | `(tenant_id, conversation_id, idempotency_key)` |
+| RLS | `ENABLE` + `FORCE`; policy pela session `app.tenant_id` |
+| Porta | `get_turn` / `save_turn`; `ON CONFLICT DO NOTHING` |
+| Opening | `prefix` persistido **vazio** — retry do canal não reenvia a abertura |
+
+`processed_ids` em RAM, turno só no agregado da conversa, ou schema `workspace` dono do turno = achado.
+
 ## Red flags
 
 - `asyncpg.connect` no use case ou no `graph.py`
@@ -58,6 +72,7 @@ Dois bounded contexts = dois schemas/roles. Mesmo cluster Postgres **não** auto
 - PII/identidade de canal/relato em claro sem decisão de classificação e proteção
 - UPDATE de agregado usando só `id`, apesar de o comando carregar `version`
 - Mapper aceita campo e não o persiste nem rejeita
+- Turno de agente sem `<bc>.conversation_turns` / RLS, ou `prefix` regravado no replay
 
 ## Conferência
 
@@ -72,3 +87,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Campos do contrato rastreados até persistência/projeção, ou rejeitados explicitamente
 - [ ] Dialeto pela DSN (`sql-dialects`); blob = `object-storage`; cache = `cache-ports`
 - [ ] Um DSN e um schema por dono; composition injeta o pool; adapter sem `getenv`
+- [ ] Se o recorte tem agente com `turn_idempotency`: `<bc>.conversation_turns` + RLS + replay; `prefix` persistido vazio

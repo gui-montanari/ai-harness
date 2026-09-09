@@ -39,6 +39,7 @@ Não crie `_02`, `_03`, `_04` no mesmo PR porque “cada ALTER merece um arquivo
 - Idempotente na medida do dialeto (`IF NOT EXISTS`, ledger no-op). DDL específico de Postgres/SQL Server no **mesmo** arquivo, com `dialect.name` — skill `sql-dialects`.
 - Sem senha, token, PII.
 - RLS + `tenant_id` nascem com a tabela tenant-scoped.
+- Ledger de turno de agente: `<bc>.conversation_turns` no serviço dono, no mesmo arquivo do dia se `conversations` ainda não está no ledger compartilhado.
 - Role de app não é owner; sem `BYPASSRLS` em request/worker.
 - Schema e arquivo vivem no **dono** (bounded context): `agents.conversations` no serviço agents. Nunca `workspace.conversations` nem pasta `workspace/migrations` como dono de conversa/caso.
 - Destrutiva: outro deploy, depois que o último leitor sumiu.
@@ -60,6 +61,7 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Filename `YYYYMMDD_VV__snake.sql`; um runner
 - [ ] Mesmo dia ainda não no ledger: acrescente no arquivo, não `_02`
 - [ ] `tenant_id` + RLS na tabela tenant-scoped
+- [ ] Se o recorte tem agente: `<bc>.conversation_turns` no serviço dono (mesmo arquivo do dia se o ledger ainda não viu)
 - [ ] Schema = bounded context dono; arquivo no serviço dono; sem schema de artefato
 - [ ] Sem senha/PII no SQL; sem dump no entrypoint
 - [ ] Dialeto extra no mesmo arquivo (`sql-dialects`), não segundo runner

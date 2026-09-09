@@ -115,6 +115,7 @@ Cada par tem de dizer, dos dois lados, o que **não** é desta skill. Ausência 
 | `object-storage` | `persistence-ports` | blob ≠ linha SQL |
 | `ops-backoffice` | `frontend-backoffice` | domínio da fila ≠ UI |
 | `http-apis` | `mcp-servers` | REST ≠ transporte MCP |
+| `http-apis` | `agent-orchestration` | router `/api/v1` ≠ spec/engine; sem `route_factory` no descriptor |
 | `mcp-servers` | `mcp-tools` | processo/transporte ≠ o que entra em `tools/list` |
 | `mcp-tools` | `agent-orchestration` | publicação MCP ≠ `tools/` interno do grafo |
 | `auth` | `oauth-connectors` | um catálogo; ponte só dispara OAuth de host |

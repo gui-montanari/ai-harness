@@ -3,7 +3,8 @@ name: mcp-tools
 description: >
   Use when adding or changing an MCP tool, publishing a capability or agent
   journey on a connector, choosing a specific tool versus a complete agent on
-  the MCP server, allowlist, catalog, server profile, tool scopes, or run_agent.
+  the MCP server, allowlist, catalog vs profile, internal_probe, tool scopes,
+  tenant_id in arguments, open_conversation, execute_turn, or run_agent.
   For the MCP server itself (transport, /mcp, initialize) use mcp-servers.
   Internal graph tools: agent-orchestration.
 ---
@@ -45,6 +46,8 @@ processo       env só habilita perfis já aprovados no código
 
 Registrar o agente ou o use case **não** publica. Sem auto-discovery por pasta, convenção de nome ou “todas as tools do grafo”.
 
+O catálogo pode conter capacidades que o perfil **não** lista (ex.: `internal_probe` existe e **não** aparece em `tools/list`). Perfil da jornada de coleta = só a tool nomeada pelo resultado. `run_agent` não entra em nenhum dos dois.
+
 Escala: **N tools, poucos perfis, um processo**. Servidor novo só com fronteira operacional real (audiência, auth, ciclo de vida). Host `allowed_tools` **e** perfil no servidor — os dois. Tool nova = contrato versionado, não processo novo.
 
 A mesma capacidade pode estar em HTTP e em um ou mais perfis MCP **sem** copiar o use case. Binding por superfície; regra uma vez.
@@ -52,11 +55,13 @@ A mesma capacidade pode estar em HTTP e em um ou mais perfis MCP **sem** copiar 
 ## Binding
 
 - Args → command de `application/`. Zero regra nova no handler MCP.
-- IDs do payload confrontam o `Principal`. Tenant do token, nunca do body.
+- Jornada de agente: o binding chama o use case de turno (`open_conversation` + `OrchestrationRuntimePort.execute_turn`). Sem WhatsApp, sem criar fato oficial.
+- IDs do payload confrontam o `Principal`. Tenant do token (`MCP_TENANT_ID` / claim), **nunca** do body — se `tenant_id` vier no arguments, rejeite (400), não ignore.
+- `idempotency_key` obrigatória no schema da jornada; mesma key = replay do runtime.
 - Escrita ou efeito sensível: o host precisa poder exigir aprovação (`approval_required` ou equivalente).
 - Assíncrono: resultado estruturado + `operation_id` (ou o correlator do produto). Não relatar o grafo.
 - Timeout, retry e idempotência **herdados**. Sem `for _ in range` no binding.
-- Retorno sem PII, token, path interno, prompt ou stack.
+- Retorno: `conversation_id`, `reply` já passado na guarda, flags. Sem draft, relato, prompt, path interno ou PII.
 
 ## Red flags
 
@@ -67,14 +72,18 @@ A mesma capacidade pode estar em HTTP e em um ou mais perfis MCP **sem** copiar 
 - Tool sem schema, sem scope, sem tenant
 - Jornada que deixa o request MCP aberto
 - Um perfil “deus” com o catálogo inteiro para todo host
+- `internal_probe` (ou equivalente de catálogo) vazando em `tools/list`
+- Binding que dispara canal ou cria caso oficial
+- Aceitar `tenant_id` no arguments
 
 ## Conferência
 
 Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
 - [ ] Grão certo: atômica **ou** início de jornada nomeada pelo resultado; nunca `run_agent`
-- [ ] Use case já existe; binding só traduz; tenant do `Principal`
-- [ ] No catálogo explícito **e** no perfil da audiência; env não inventa tool
+- [ ] Use case já existe; binding = `open_conversation` + `execute_turn` na jornada; tenant do `Principal`
+- [ ] Catálogo ≠ perfil; capacidade só de catálogo **não** entra em `tools/list`; env não inventa tool
+- [ ] `tenant_id` no body rejeitado; `idempotency_key` obrigatória na jornada
 - [ ] Schema estreito; scopes da capacidade; escrita com aprovação do host
-- [ ] Jornada: aceite + id; trabalho no worker; retorno sem PII
+- [ ] Retorno sem draft/PII; jornada não segura o request até o agente “terminar”
 - [ ] Conferência de `mcp-servers` marcada se o servidor/transporte também mudou
