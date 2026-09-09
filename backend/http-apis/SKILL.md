@@ -51,7 +51,7 @@ Host de LLM não ganha regra própria. Servidor: `mcp-servers` (`/mcp` no mesmo 
 
 ## Agente executável
 
-Registrar o spec **não** cria rota. Se o agente é invocável de fora do grafo, o router `/api/v1/...` (ou o webhook do canal) nasce **no mesmo commit**: schema, use case, `include_router` explícito na factory. Sem `route_factory` no descriptor. HOW do spec: `agent-orchestration`. MCP: `mcp-tools`. Evento: `reliable-messaging`.
+Registrar o spec **não** cria rota. Schema de nó ANALYSIS (`specs/<job>/schemas.py`) **não** é schema HTTP. Se o agente é invocável de fora do grafo, o router `/api/v1/...` (ou o webhook do canal) nasce **no mesmo commit**: schema, use case, `include_router` explícito na factory. Sem `route_factory` no descriptor. HOW do spec: `agent-orchestration`. MCP: `mcp-tools`. Evento: `reliable-messaging`.
 
 ## Teto de campo
 
