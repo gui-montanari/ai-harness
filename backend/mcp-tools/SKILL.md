@@ -46,7 +46,7 @@ processo       env só habilita perfis já aprovados no código
 
 Registrar o agente ou o use case **não** publica. Sem auto-discovery por pasta, convenção de nome ou “todas as tools do grafo”.
 
-O catálogo pode conter capacidades que o perfil **não** lista (ex.: `internal_probe` existe e **não** aparece em `tools/list`). Perfil da jornada de coleta = só a tool nomeada pelo resultado. `run_agent` não entra em nenhum dos dois.
+O catálogo pode conter capacidades que o perfil **não** lista (ex.: `internal_probe` existe e **não** aparece em `tools/list`). Perfil da jornada de coleta = só a tool nomeada pelo resultado. `run_agent` não entra em nenhum dos dois. `allowed_specialist_keys` do conversacional **não** é perfil MCP — tools internas do grafo continuam fora de `tools/list`.
 
 Escala: **N tools, poucos perfis, um processo**. Servidor novo só com fronteira operacional real (audiência, auth, ciclo de vida). Host `allowed_tools` **e** perfil no servidor — os dois. Tool nova = contrato versionado, não processo novo.
 

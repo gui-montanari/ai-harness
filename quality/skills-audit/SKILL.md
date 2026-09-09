@@ -117,7 +117,7 @@ Cada par tem de dizer, dos dois lados, o que **não** é desta skill. Ausência 
 | `http-apis` | `mcp-servers` | REST ≠ transporte MCP |
 | `http-apis` | `agent-orchestration` | router `/api/v1` ≠ spec/engine; sem `route_factory` no descriptor |
 | `mcp-servers` | `mcp-tools` | processo/transporte ≠ o que entra em `tools/list` |
-| `mcp-tools` | `agent-orchestration` | publicação MCP ≠ `tools/` interno do grafo |
+| `mcp-tools` | `agent-orchestration` | publicação MCP ≠ `tools/` interno do grafo nem `allowed_specialist_keys` |
 | `auth` | `oauth-connectors` | um catálogo; ponte só dispara OAuth de host |
 | `agent-orchestration` | `orchestration-runtime` | ConversationalEngine + specs/<job> ≠ adapter de processo |
 | `orchestration-runtime` | `background-workers` | execute_turn ≠ supervisor de processo |

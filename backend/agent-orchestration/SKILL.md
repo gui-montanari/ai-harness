@@ -10,7 +10,8 @@ description: >
   LLM_API_KEY, LLM_BASE_URL, getenv, guards, guardrails, output guard,
   state guard, or reflection. Also AgentRegistry, registry.get, UnknownAgent,
   build_orchestration, CancelConversation, turn_idempotency, conversation_turns,
-  executable agent HTTP endpoint, route_factory.
+  executable agent HTTP endpoint, route_factory, allowed_specialist_keys,
+  HubResolver.
   Activating Make/LangGraph/in-process: orchestration-runtime. MCP /mcp:
   mcp-servers + mcp-tools. LangGraph mention: langgraph-agents.
 ---
@@ -37,13 +38,30 @@ Comece com **um** agente conversacional, identificado pela capacidade (`conversa
 
 Escalonar para humano: `PendingInteraction` / atribuição de operador, não um segundo manifest. Depois do fato oficial: fila institucional, não agente.
 
-Segundo agente só com bounded context próprio (ex.: copiloto autenticado interno) + ADR + porta de invocação com allowlist. Sem pasta `specialists/` vazia.
+Segundo **conversacional** só com bounded context próprio (ex.: copiloto autenticado interno vs visitor) + ADR. Cada um declara a própria allowlist de specialists. Sem pasta `specialists/` vazia.
+
+## Allowlist por conversacional (hub)
+
+Quando o produto tem o segundo gênero (pipeline operacional: documento, lote, wave), o conversacional **não** ganha todos os specialists. O descriptor do conversacional nasce com `allowed_specialist_keys: frozenset[...]` explícito.
+
+| Peça | Contrato |
+|------|----------|
+| v1 sem specialist | `allowed_specialist_keys=frozenset()` — o LLM não recebe tool operacional |
+| Specialist operacional | pasta própria (`specs/<job>/` ou `specialists/<domínio>/<key>/`); **não** é segundo conversacional |
+| Allowlist | o conversacional lista as keys (ou padrão fechado) que **aquele** hub pode invocar |
+| Resolver (application) | tools = allowlist do conversacional ∩ scopes do `Principal` ∩ allowlist do tenant (se o produto tiver capabilities por tenant) |
+| Fora da lista | falha fechado — não vaza por prompt |
+| Vários conversacionais | cada um com a **sua** lista (visitor ≠ general: onboarding não entra no hub interno) |
+| Boot | literal para specialist inexistente/deprecated aborta; ciclo / profundidade acima do teto aborta; wildcard sem match = warning |
+| Publicação | estar na allowlist **não** publica MCP/REST (`mcp-tools` / `http-apis`) |
+
+`conversational.general` + `specialists/support` para a **mesma** jornada de coleta continua proibido. Hub + specialist operacional (outro bounded context, outro efeito) é o padrão escalável. Sem auto-discovery “todo specialist em todo hub”.
 
 ## Receita de nascimento
 
 Mesmo commit. Ordem abaixo. Conferência vazia = não pronto.
 
-1. **Identidade e registry.** `conversational.<job>` (v1: exatamente um) + pasta `specs/<job>/` com `graph.py`, `node.py`, `edge.py`. Operacional: bounded context + ADR. `AgentRegistry.explicit((SPEC,))` — sem auto-discovery. API: `get(agent_id)` e `keys()`; id desconhecido **falha fechado** (não `None`). Composition: `spec = registry.get("conversational.<job>")`. Manifest conversacional nasce com `requires_output_guard`; `False` não registra.
+1. **Identidade e registry.** `conversational.<job>` (v1: exatamente um) + pasta `specs/<job>/` com `graph.py`, `node.py`, `edge.py`. Operacional: bounded context + ADR. `AgentRegistry.explicit((SPEC,))` — sem auto-discovery. API: `get(agent_id)` e `keys()`; id desconhecido **falha fechado** (não `None`). Composition: `spec = registry.get("conversational.<job>")`. Manifest conversacional nasce com `requires_output_guard`; `False` não registra. `allowed_specialist_keys` no descriptor: vazio no v1 sem pipeline; explícito assim que existir specialist.
 2. **Slots de prompt.** Em `specs/<job>/prompts/`: `guardrails.md` e `reflection.md` (H1 mínimo). Conversacional: `understand_turn.md` + `ask_*.md` por fase. Catálogo **não carrega** se faltar `guardrails` ou `reflection`. O catálogo **não** tem pasta default de um job — `register.py` passa o diretório.
 3. **Duas casas.** Semântica nos `.md`. Legal / recusa / recap no domínio. Schema/enum no domínio. `PromptCatalog` é porta; core não lê disco; versão no trace.
 4. **Guardas no caminho.** Estado (schema) + `inspect_outbound` / `approve_outbound` no texto **gerado**. Recusa canônica no domínio. Sem a chamada de saída, o agente não ativa.
@@ -53,7 +71,7 @@ Mesmo commit. Ordem abaixo. Conferência vazia = não pronto.
 8. **Idempotência de turno.** Tabela `<bc>.conversation_turns` no serviço dono (em geral schema `agents`), RLS `FORCE`, PK `(tenant_id, conversation_id, idempotency_key)`. Replay pela key devolve o resultado gravado — não reexecuta o motor. A abertura (`prefix`) segue no reply ao canal; o turno **persistido** grava `prefix` vazio para o retry do canal não reenviar o opening. Porta `get_turn` / `save_turn`. HOW SQL: `persistence-ports` + `sql-migrations`.
 9. **Superfície acionável.** Registro ≠ publicação. Se o agente é **executável** (alguém fora do grafo chama: humano, M2M, widget, host MCP, canal), o mesmo commit liga **pelo menos um** driving adapter escrito na apresentação — não `route_factory` no descriptor. Escolha a superfície do requisito: HTTP `/api/v1/...` (`http-apis`), MCP (`mcp-servers` + `mcp-tools`), canal (`whatsapp-channel`), consumer de evento (`reliable-messaging` + `background-workers`). `include_router` / publicação / inscrição **explícitos** no composition. Specialist só-tool do hub (o LLM chama; ninguém de fora) **não** ganha REST próprio. Sem isso o spec é teatro.
 10. **Borda MCP no mesmo composition** se o produto tem (ou o requisito pede) conector. Não é fase 2. Streamable HTTP em `/mcp` no mesmo FastAPI (`mcp-servers`). Catálogo ≠ perfil (`mcp-tools`). `MCP_ENABLED` default off (lista vazia). Ligado: `MCP_BEARER` + `MCP_TENANT_ID` obrigatórios no startup; sem token → 401; `tenant_id` no body rejeitado. Binding = use case de turno (`open_conversation` + `execute_turn`). Sem canal WhatsApp, sem fato oficial. Se o requisito **nega** conector, não nasça `/mcp` teatro — registre a negação no ADR.
-11. **Testes de nascimento** (senão é teatro): catálogo falha sem cada slot; heading-only → `active` é `None`; bloqueia reivindicação e permite abertura canônica; recap intacto **e** montado das labels do spec; registro rejeita segundo agente no v1 e rejeita conversacional sem guarda de saída; `get` de id desconhecido falha; `cancel` não fecha fato oficial; mesma `idempotency_key` replay idêntico e `prefix` persistido vazio; engine não importa spec concreto nem copy canônica; composição: `execute_turn` chama a guarda no gerado; `config.py` existe no spec; adapter de LLM sem `getenv` e sem prefixo da marca; se executável: a superfície (HTTP/MCP/canal/evento) responde no TestClient/consumer; se houver `/mcp`: 401 sem Bearer, `tools/list` só o perfil, `tenant_id` no body 400.
+11. **Testes de nascimento** (senão é teatro): catálogo falha sem cada slot; heading-only → `active` é `None`; bloqueia reivindicação e permite abertura canônica; recap intacto **e** montado das labels do spec; registro rejeita segundo agente no v1 e rejeita conversacional sem guarda de saída; `get` de id desconhecido falha; `cancel` não fecha fato oficial; mesma `idempotency_key` replay idêntico e `prefix` persistido vazio; engine não importa spec concreto nem copy canônica; composição: `execute_turn` chama a guarda no gerado; `config.py` existe no spec; adapter de LLM sem `getenv` e sem prefixo da marca; se executável: a superfície (HTTP/MCP/canal/evento) responde no TestClient/consumer; se houver `/mcp`: 401 sem Bearer, `tools/list` só o perfil, `tenant_id` no body 400; se houver specialist: tool fora da allowlist do conversacional não resolve; boot falha com literal quebrado.
 
 Ausência ou indisponibilidade de LLM/runtime é erro recuperável do turno: persiste pendência e
 retoma idempotentemente. Nunca avança a coleta por formulário, regex ou pergunta canônica como
@@ -71,7 +89,7 @@ Não abra PR / não declare pronto com item da conferência vazio.
 | LLM | conduz a conversa | um node; o resto determinístico |
 | Exemplo de pasta | `specs/intake/` | `specs/document_extract/` |
 
-Não invente árvore `specialists/` só para ter “cara de multi-agent”. O segundo conversacional é **outra pasta em `specs/`** + ADR, não um specialist vazio.
+Não invente árvore `specialists/` só para ter “cara de multi-agent”. Specialist operacional entra na **allowlist do conversacional** que pode invocá-lo. O segundo conversacional é **outra pasta em `specs/`** + ADR + a **própria** `allowed_specialist_keys`.
 
 ## Motor + specs (indústria)
 
@@ -131,8 +149,8 @@ v1 registra exatamente um. A árvore já admite o segundo; o registro é que tra
 
 1. Pasta `specs/<job>/` com `graph.py`, `node.py`, `edge.py`, slots, config, register.
 2. ADR se for o **segundo** conversacional (bounded context próprio).
-3. Append na tuple de `AgentRegistry.explicit` (v1 continua `len == 1` até o ADR do segundo).
-4. Composition resolve com `registry.get("conversational.<job>")`. Sem auto-discovery. Sem importar `SPEC` no use case.
+3. Append na tuple de `AgentRegistry.explicit` (v1 continua `len == 1` até o ADR do segundo). Se for specialist operacional, **também** acrescente a key na `allowed_specialist_keys` do conversacional que pode chamá-lo — não no hub “por se acaso”.
+4. Composition resolve com `registry.get("conversational.<job>")`. Sem auto-discovery. Sem importar `SPEC` no use case. Resolver de tools honra a allowlist no boot.
 5. O motor já existe — **não** copie `engine.py`. Factory e `ensure_compatible` já ligam o runtime.
 
 ### Um runtime, um canal — não throwaway
@@ -353,6 +371,9 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 - SQL no `graph.py`
 - Dois agentes conversacionais para o mesmo usuário no primeiro lançamento
 - Pasta `specialists/support` sem segundo domínio
+- Todo specialist visível em todo conversacional (sem `allowed_specialist_keys`)
+- Auto-discovery de specialist no hub; tool fora da allowlist que o LLM ainda chama
+- Allowlist do conversacional confundida com perfil MCP / `tools/list`
 - LLM decidindo escalonamento crítico, criação de registro oficial ou confirmação
 - Cenário do orquestrador como dono da regra
 - `canonical_texts` (ou equivalente) misturando abertura legal com pergunta semântica
@@ -413,7 +434,8 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 
 Antes de declarar pronto, copie e marque. Caixa vazia = o agente **não nasceu**.
 
-- [ ] Identidade: um conversacional no v1 (ou operacional + ADR); pasta `specs/<job>/`; `AgentRegistry.explicit`; `get` falha fechado; composition via `registry.get`; `requires_output_guard`
+- [ ] Identidade: um conversacional no v1 (ou operacional + ADR); pasta `specs/<job>/`; `AgentRegistry.explicit`; `get` falha fechado; composition via `registry.get`; `requires_output_guard`; `allowed_specialist_keys` explícito (vazio se não há specialist)
+- [ ] Se há specialist: resolver ∩ scopes (± tenant); fora da lista falha; boot valida literal/ciclo; allowlist ≠ publicação MCP
 - [ ] Motor em `conversational/` recebe spec; job com `graph.py` + `node.py` + `edge.py` **com corpo**; engine sem import de job nem de copy canônica
 - [ ] Factory `build_orchestration`; porta com `cancel`; `CancelConversation` não fecha fato oficial; `turn_idempotency=True`; `ensure_compatible` no startup
 - [ ] `<bc>.conversation_turns` com RLS; replay pela key; `prefix` persistido vazio
