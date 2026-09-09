@@ -30,6 +30,7 @@ Repo **privado**. Clone ao lado do harness universal:
   rules/             # gates só deste cliente (autorização de repo alheio, …)
   hooks/             # catalog.json + scripts/
   mcp/               # catalog.json só dos servidores deste cliente + código
+  subagents/         # subagentes só deste cliente (opcional; `agents/` legado ainda mergeia)
   skills/            # debug, deploy, domínio — NÃO globais
 ```
 
@@ -39,7 +40,7 @@ MCP/hook/rule que é **só desta máquina** e de vários clientes (VPS, AWS pess
 
 ## install.sh (contrato)
 
-1. **Rules/hooks/MCP → overlay por merge.** Escreve em `~/.config/ai-harness/overlay/{rules,hooks,mcp}/`. Upsert das chaves deste cliente. **Não** apaga entradas de outro cliente nem do overlay de máquina.
+1. **Rules/hooks/MCP/subagents → overlay por merge.** Escreve em `~/.config/ai-harness/overlay/{rules,hooks,mcp,subagents}/`. Upsert das chaves deste cliente. **Não** apaga entradas de outro cliente nem do overlay de máquina. `overlay/agents` legado é migrado no `install.sh` do harness.
 2. **Skills → workspace do cliente, nunca `~/.grok/skills`.** Symlink `skills/` para `~/projetos/{cliente}/.agents/skills` e para o repo de produto principal (`…/{produto}/.agents/skills`), para o Grok achar com CWD no git do produto. O symlink do produto entra em `.git/info/exclude` (local), **não** no `.gitignore` commitado.
 3. Chama `~/projetos/ferramentas/ai-harness/install.sh` no fim, para projetar overlay nos hosts.
 4. Idempotente. Sem `.venv` nem `__pycache__` no git.
@@ -72,4 +73,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Symlink no produto está no exclude local, não no `.gitignore` versionado
 - [ ] Overlay merge (outro cliente / VPS intactos)
 - [ ] Segredo fora do git; `install.sh` idempotente
-- [ ] `./install.sh` + `ai-harness/install.sh` projetam rules/hooks/MCP nos hosts
+- [ ] `./install.sh` + `ai-harness/install.sh` projetam rules/hooks/MCP/subagents nos hosts

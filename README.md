@@ -1,6 +1,6 @@
 # ai-harness
 
-Harness de desenvolvimento com IA: constituição, skills, rules e hooks.
+Harness de desenvolvimento com IA: constituição, skills, rules, hooks e subagents.
 Vale em qualquer produto. O produto **não** copia este repositório — só o `AGENTS.md` local.
 
 | Camada | Pasta | O que é |
@@ -9,6 +9,7 @@ Vale em qualquer produto. O produto **não** copia este repositório — só o `
 | Skills | `architecture/` `backend/` `frontend/` `quality/` | HOW de um recorte ([Agent Skills](https://agentskills.io)) |
 | Rules | [`rules/`](./rules/) | Gate **sempre ligado** em todo projeto e todo host |
 | Hooks | [`hooks/`](./hooks/) | Enforcement no host (o modelo não escolhe obedecer) |
+| Subagents | [`subagents/`](./subagents/) | Papel despachado pelo host (Cursor / Claude) |
 | MCP | [`mcp/`](./mcp/) | Catálogo da máquina, wrappers, OAuth persistente |
 
 Cada skill é uma pasta com `SKILL.md`. O `name` no YAML **é o nome da pasta da skill**, não o agrupador `backend/` / `frontend/`.
@@ -18,6 +19,7 @@ Cada skill é uma pasta com `SKILL.md`. O `name` no YAML **é o nome da pasta da
 ```
 rules/                     # gates de processo (sempre ligados)
 hooks/                     # catálogo + sync (Grok/Cursor/Claude/Agy/Gemini/Windsurf)
+subagents/                 # papéis despachados pelo host (Cursor / Claude)
 mcp/                       # catálogo MCP da máquina + wrappers (`grok-cli`, …)
 architecture/              # desenho do sistema + gate de entrega
 backend/
@@ -127,11 +129,11 @@ git clone git@github.com:gui-montanari/ai-harness.git ~/projetos/ferramentas/ai-
 
 O clone de trabalho é esse diretório. `install.sh` aponta `~/.local/share/ai-harness` para ele (hosts e wrappers leem o caminho canônico). Não trabalhe em `~/.local/share`.
 
-O `install.sh` liga skills, [rules](./rules/), [hooks](./hooks/) e [mcp](./mcp/) em
+O `install.sh` liga skills, [rules](./rules/), [hooks](./hooks/), [subagents](./subagents/) e [mcp](./mcp/) em
 **todos** os hosts conhecidos (Grok, Cursor, Claude Code, Codex, Agents,
 Gemini/Antigravity, Windsurf, OpenCode). Cada host recebe **um** canal nativo;
 o Grok não varre rules/hooks/skills/MCP/`CLAUDE.md` de Cursor ou Claude.
-Overlay de cliente fica em `~/.config/ai-harness/overlay/{rules,hooks,mcp}/` e
+Overlay de cliente fica em `~/.config/ai-harness/overlay/{rules,hooks,mcp,subagents}/` e
 não entra neste repo. O SSOT é o `{cliente}-harness` privado (skill `client-harness`);
 o `install.sh` dele projeta o overlay.
 Em outro notebook: o mesmo clone + `install.sh` (ou `git pull && ./install.sh`),

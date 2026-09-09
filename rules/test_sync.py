@@ -74,6 +74,21 @@ class RulesSyncTest(unittest.TestCase):
         self.assertEqual(grok.resolve(), (self.canon / "rules" / "git-discipline.md").resolve())
         self.assertEqual(cursor.resolve(), grok.resolve())
 
+    def test_overlay_without_yaml_still_always_applies_in_cursor(self):
+        self.overlay.mkdir(parents=True)
+        (self.overlay / "stockfy-repos-autorizacao.md").write_text(
+            "# Stockfy — autorização de repositórios\n\nVale na Stockfy.\n"
+        )
+        sync.sync()
+        grok = self.home / ".grok" / "rules" / "stockfy-repos-autorizacao.md"
+        cursor = self.home / ".cursor" / "rules" / "stockfy-repos-autorizacao.mdc"
+        self.assertTrue(grok.is_symlink())
+        self.assertFalse(cursor.is_symlink())
+        body = cursor.read_text()
+        self.assertIn("alwaysApply: true", body)
+        self.assertIn("# Stockfy — autorização de repositórios", body)
+        self.assertIn("Vale na Stockfy.", body)
+
     def test_codex_agents_md_gets_rule_bodies_claude_md_does_not(self):
         claude_md = self.home / ".claude" / "CLAUDE.md"
         claude_md.parent.mkdir(parents=True)

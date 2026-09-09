@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Google Chrome
+GenericName=Web Browser
+Comment=MCP OAuth — perfil em overlay/mcp/browser.env
+Exec=open-oauth-browser %U
+Terminal=false
+StartupNotify=true
+MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;
+Categories=Network;WebBrowser;

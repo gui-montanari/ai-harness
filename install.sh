@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Instala o harness neste usuário: skills, rules, hooks e MCP da máquina.
+# Instala o harness neste usuário: skills, rules, hooks, subagents e MCP da máquina.
 # Idempotente. Não apaga overlay local (stockfy-repos-autorizacao, hooks de cliente, …).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CANON="$HOME/.local/share/ai-harness"
 
-if [[ ! -f "$ROOT/AGENTS.md" || ! -d "$ROOT/architecture" || ! -d "$ROOT/rules" || ! -d "$ROOT/hooks" || ! -d "$ROOT/mcp" ]]; then
+if [[ ! -f "$ROOT/AGENTS.md" || ! -d "$ROOT/architecture" || ! -d "$ROOT/rules" || ! -d "$ROOT/hooks" || ! -d "$ROOT/mcp" || ! -d "$ROOT/subagents" ]]; then
   echo "rode da raiz do clone: git clone git@github.com:gui-montanari/ai-harness.git" >&2
   exit 1
 fi
@@ -55,6 +55,10 @@ rule_count="$(python3 -c "import importlib.util; from pathlib import Path; p=Pat
 python3 "$ROOT/hooks/sync.py"
 hook_count="$(python3 -c "import importlib.util; from pathlib import Path; p=Path('$ROOT/hooks/sync.py'); s=importlib.util.spec_from_file_location('hs', p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(len(m.catalog()))")"
 
+# Subagents: papéis no host (Cursor / Claude). Overlay em ~/.config/ai-harness/overlay/subagents/.
+python3 "$ROOT/subagents/sync.py"
+agent_count="$(python3 -c "import importlib.util; from pathlib import Path; p=Path('$ROOT/subagents/sync.py'); s=importlib.util.spec_from_file_location('ags', p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(len(m.catalog()))")"
+
 MCP="$ROOT/mcp"
 mkdir -p "$HOME/bin" "$HOME/.config/ai-harness/secrets" "$HOME/.config/ai-harness/selections"
 python3 "$MCP/scripts/migrate-selections.py"
@@ -77,16 +81,23 @@ for example in "$MCP"/secrets.example/*.env.example; do
     chmod 600 "$dest"
   fi
 done
-chmod +x "$MCP"/wrappers/* "$MCP"/scripts/*.sh "$MCP/mcp_toolkit.py" "$MCP/mcp_servers/gdrive/start.sh" 2>/dev/null || true
+chmod +x "$MCP"/wrappers/* "$MCP"/scripts/* "$MCP/mcp_toolkit.py" "$MCP/mcp_servers/gdrive/start.sh" 2>/dev/null || true
+if [[ -f "$MCP/mcp_servers/gdrive/package-lock.json" ]]; then
+  (cd "$MCP/mcp_servers/gdrive" && npm ci --omit=dev)
+fi
+if [[ -f "$MCP/mcp_servers/hostinger/package-lock.json" ]]; then
+  (cd "$MCP/mcp_servers/hostinger" && npm ci --omit=dev)
+fi
 for wrapper in claude-cli codex-cli opencode-cli agy-cli grok-cli cursor-cli; do
   ln -sfn "$MCP/wrappers/$wrapper" "$HOME/bin/$wrapper"
 done
+python3 "$MCP/scripts/repair_npx_shebang_bins.py"
 python3 "$MCP/mcp_toolkit.py" sync --client all --profile default
 mcp_count="$(python3 -c "import importlib.util; from pathlib import Path; p=Path('$MCP/mcp_toolkit.py'); s=importlib.util.spec_from_file_location('mt', p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(len(m.catalog()))")"
 
-echo "Instaladas $count skills + $rule_count rules + $hook_count hooks + $mcp_count MCP(s) (catálogo+overlay) + constituição em:"
+echo "Instaladas $count skills + $rule_count rules + $hook_count hooks + $agent_count subagents + $mcp_count MCP(s) (catálogo+overlay) + constituição em:"
 echo "  clone:  $ROOT  (canônico: $CANON)"
-echo "  hosts:  grok, cursor, claude, agents, codex, gemini/antigravity, windsurf, opencode"
-echo "  overlay: $HOME/.config/ai-harness/overlay/{rules,hooks,mcp} (opcional, não vai no git público)"
+echo "  hosts:  grok, cursor, claude, subagents, codex, gemini/antigravity, windsurf, opencode"
+echo "  overlay: $HOME/.config/ai-harness/overlay/{rules,hooks,mcp,subagents} (opcional, não vai no git público)"
 echo "  secrets: $HOME/.config/ai-harness/secrets/*.env"
 echo "Outro notebook: git clone git@github.com:gui-montanari/ai-harness.git ~/projetos/ferramentas/ai-harness && ~/projetos/ferramentas/ai-harness/install.sh"

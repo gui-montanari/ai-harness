@@ -72,10 +72,11 @@ Raiz = repositório `skills` **ou** a pasta `skills/` vendorizada num produto. I
 find architecture backend frontend quality -name SKILL.md | sort
 ls rules/*.md rules/sync.py | grep -v README
 ls hooks/catalog.json hooks/sync.py hooks/scripts
+ls subagents/*.md subagents/sync.py | grep -v README
 ls mcp/catalog/mcp-catalog.json mcp/mcp_toolkit.py mcp/wrappers
 ```
 
-`rules/`, `hooks/` e `mcp/` **não** são skill (não têm `SKILL.md`). Têm de aparecer na árvore do README. Overlay local do host (`~/.config/ai-harness/overlay/{rules,hooks,mcp}/`) **não** mora neste repo — o SSOT de cliente é `{cliente}-harness` (skill `client-harness`). Segredo só em `secrets.example` + cópia local; valor real no git é achado. Rule de cliente no git público é achado.
+`rules/`, `hooks/`, `subagents/` e `mcp/` **não** são skill (não têm `SKILL.md`). Têm de aparecer na árvore do README. Overlay local do host (`~/.config/ai-harness/overlay/{rules,hooks,mcp,subagents}/`) **não** mora neste repo — o SSOT de cliente é `{cliente}-harness` (skill `client-harness`). Segredo só em `secrets.example` + cópia local; valor real no git é achado. Rule de cliente no git público é achado.
 
 Para cada um registre:
 

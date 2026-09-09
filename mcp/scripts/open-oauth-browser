@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Abre URL OAuth no Chrome do perfil desta máquina (overlay), não no último perfil ativo.
+set -euo pipefail
+
+CONF="${AI_HARNESS_OAUTH_BROWSER_ENV:-$HOME/.config/ai-harness/overlay/mcp/browser.env}"
+CHROME_BIN="${CHROME_BIN:-google-chrome-stable}"
+
+if [[ -f "$CONF" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$CONF"
+  set +a
+fi
+
+url="${1:-}"
+if [[ -n "${CHROME_PROFILE_DIRECTORY:-}" && -n "$url" ]]; then
+  exec "$CHROME_BIN" --profile-directory="$CHROME_PROFILE_DIRECTORY" --new-window "$url"
+fi
+exec "$CHROME_BIN" "$@"

@@ -44,35 +44,27 @@ class CatalogContractTest(unittest.TestCase):
                     continue
                 self.assertIsNone(pattern.search(text), str(path))
 
-    def test_cloudflare_uses_mcp_remote_oauth_proxy(self):
+    def test_cloudflare_uses_native_http_oauth(self):
         cloudflare = self.catalog["servers"]["cloudflare-api"]
-        self.assertEqual(cloudflare["command"], "npx")
-        self.assertIn("mcp-remote@0.1.38", cloudflare["args"])
-        self.assertIn("https://mcp.cloudflare.com/mcp", cloudflare["args"])
-        self.assertIn("--static-oauth-client-metadata", cloudflare["args"])
-        metadata = Path(cloudflare["args"][-1].removeprefix("@").replace("{toolkit}", str(ROOT)))
-        self.assertTrue(metadata.is_file(), metadata)
-        scopes = json.loads(metadata.read_text())["scope"].split()
+        self.assertEqual(cloudflare["url"], "https://mcp.cloudflare.com/mcp")
+        self.assertNotIn("command", cloudflare)
+        scopes = cloudflare["oauth"]["scopes"]
         self.assertEqual(scopes, ["user:read", "offline_access", "account:read"])
         self.assertNotIn("openid", scopes)
         self.assertNotIn("oauthTimeoutSec", cloudflare)
-        self.assertNotIn("--auth-timeout", cloudflare["args"])
 
-    def test_stripe_uses_mcp_remote_oauth_proxy(self):
+    def test_stripe_uses_native_http_oauth(self):
         stripe = self.catalog["servers"]["stripe"]
-        self.assertEqual(stripe["command"], "npx")
-        self.assertIn("mcp-remote@0.1.38", stripe["args"])
-        self.assertIn("https://mcp.stripe.com", stripe["args"])
+        self.assertEqual(stripe, {"url": "https://mcp.stripe.com"})
         self.assertNotIn("oauthTimeoutSec", stripe)
 
     def test_make_uses_the_official_oauth_endpoint(self):
         make = self.catalog["servers"]["make"]
-        self.assertEqual(make["command"], "npx")
-        self.assertIn("https://mcp.make.com", make["args"])
-        self.assertIn("mcp-remote@0.1.38", make["args"])
-        self.assertIn("--static-oauth-client-metadata", make["args"])
-        metadata = Path(make["args"][-1].removeprefix("@").replace("{toolkit}", str(ROOT)))
-        self.assertTrue(metadata.is_file(), metadata)
+        self.assertEqual(make["url"], "https://mcp.make.com")
+        self.assertNotIn("command", make)
+        scopes = make["oauth"]["scopes"]
+        self.assertIn("mcp:use", scopes)
+        self.assertNotIn("openid", scopes)
         self.assertNotIn("oauthTimeoutSec", make)
 
     def test_mcp_remote_browser_oauth_timeout_is_inferred_not_copied_per_server(self):

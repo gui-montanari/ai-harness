@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "dependencies": {
+    "hostinger-api-mcp": "1.5.1"
+  }
+}

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+PKG="$ROOT/mcp_servers/hostinger"
+group="${1:-}"
+case "$group" in
+  hosting|wordpress|domains|dns|billing|reach|ecommerce|vps) ;;
+  *)
+    echo "grupo Hostinger inválido: ${group:-<vazio>}" >&2
+    exit 1
+    ;;
+esac
+cd "$PKG"
+if [[ ! -f "node_modules/hostinger-api-mcp/src/servers/${group}.js" ]]; then
+  npm ci
+fi
+exec node "./node_modules/hostinger-api-mcp/src/servers/${group}.js"
