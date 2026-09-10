@@ -15,6 +15,7 @@ description: >
   output contract, FieldPatch, packages/contracts event from a graph.
   Activating Make/LangGraph/in-process: orchestration-runtime. MCP /mcp:
   mcp-servers + mcp-tools. LangGraph mention: langgraph-agents.
+  Make.com scenario/blueprint: make-scenarios.
 ---
 
 # Orquestração de agentes
@@ -204,7 +205,7 @@ Grafo (LangGraph, StateGraph, cenário Make): **node** = unidade de trabalho; **
 
 `token=None` = aresta linear (depois de coletar o campo). `token="continuar"` / `"sim"` = aresta condicional. Nó sem `field` e sem aresta de saída = terminal.
 
-Quando LangGraph é o runtime escolhido: `infrastructure/adapters/langgraph/` lê o **mesmo** `ConversationalSpec` (`nodes` + `edges`) e compila `StateGraph`. Um turno de usuário = um `ainvoke` (aresta para END). Banco do serviço continua SSOT — checkpointer do LangGraph não substitui `ConversationStore`. Não copie o grafo para um segundo `graph.py` com SDK. `from langgraph.graph import StateGraph` no spec, no engine ou no use case é defeito. Ponte: `langgraph-agents`.
+Quando LangGraph é o runtime escolhido: `infrastructure/adapters/langgraph/` lê o **mesmo** `ConversationalSpec` (`nodes` + `edges`) e compila `StateGraph`. Um turno de usuário = um `ainvoke` (aresta para END). Banco do serviço continua SSOT — checkpointer do LangGraph não substitui `ConversationStore`. Não copie o grafo para um segundo `graph.py` com SDK. `from langgraph.graph import StateGraph` no spec, no engine ou no use case é defeito. Ponte: `langgraph-agents`. Montar cenário **na conta Make** (blueprint, módulo, IML) não é spec — ponte `make-scenarios`.
 
 Não crie `nodes/` extra “para quando o LangGraph chegar”. Função de node LLM só nasce com o adapter e o `LlmPort` ligados.
 

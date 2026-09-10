@@ -39,6 +39,7 @@ backend/
   agent-orchestration/
   orchestration-runtime/
   langgraph-agents/        # ponte → orchestration-runtime
+  make-scenarios/          # ponte → orchestration-runtime ou skills oficiais Make
   ops-backoffice/
   whatsapp-channel/
   channel-evolution/       # ponte → whatsapp-channel

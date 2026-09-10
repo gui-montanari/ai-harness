@@ -86,7 +86,7 @@ pasta  name(yaml)  ponte?  conferência?  no README árvore?  no README tabela? 
 
 `name` no YAML **é** o basename da pasta. Agrupador `backend/` / `frontend/` / `quality/` não entra no `name`.
 
-**Ponte** (hoje): `oauth-connectors` → `auth`; `langgraph-agents` → `orchestration-runtime` (+ spec em `agent-orchestration`); `channel-evolution` → `whatsapp-channel`. Ponte: SKILL.md curto, redireciona na primeira tela, `REQUIRED SUB-SKILL` da canônica. Não compete na tabela «Quando».
+**Ponte** (hoje): `oauth-connectors` → `auth`; `langgraph-agents` → `orchestration-runtime` (+ spec em `agent-orchestration`); `make-scenarios` → `orchestration-runtime` (adapter) **ou** Agent Skills oficiais do Make (cenário na conta; não vivem neste git); `channel-evolution` → `whatsapp-channel`. Ponte: SKILL.md curto, redireciona na primeira tela, `REQUIRED SUB-SKILL` da canônica. Não compete na tabela «Quando».
 
 `shared/` não é skill.
 
@@ -124,6 +124,8 @@ Cada par tem de dizer, dos dois lados, o que **não** é desta skill. Ausência 
 | `agent-orchestration` | `orchestration-runtime` | ConversationalEngine + specs/<job> ≠ adapter de processo |
 | `orchestration-runtime` | `background-workers` | execute_turn ≠ supervisor de processo |
 | `orchestration-runtime` | `langgraph-agents` | porta/capabilities ≠ StateGraph no adapter |
+| `orchestration-runtime` | `make-scenarios` | porta/capabilities ≠ cenário na conta Make |
+| `make-scenarios` | `langgraph-agents` | conta Make / adapter Make ≠ StateGraph |
 | `whatsapp-channel` | `agent-orchestration` | envelope de canal ≠ turno do agente |
 | `channel-evolution` | `whatsapp-channel` | ponte Evolution ≠ skill canônica do canal |
 | `cicd` | `sql-migrations` | job de CI ≠ regra de filename |
