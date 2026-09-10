@@ -45,6 +45,31 @@ while IFS= read -r -d '' f; do
   count=$((count + 1))
 done < <(find "$ROOT/architecture" "$ROOT/backend" "$ROOT/frontend" "$ROOT/quality" -name SKILL.md -print0)
 
+# Agent Skills oficiais do Make (MIT, integromat/make-skills). Não são HOW deste harness.
+# Cache na máquina; symlink só no Cursor e no protocolo Open Agent Skills — não no Grok,
+# para o HOW hexagonal ganhar quando o recorte é adapter de produto.
+MAKE_SKILLS_CACHE="$HOME/.local/share/make-skills"
+make_skill_count=0
+mkdir -p "$(dirname "$MAKE_SKILLS_CACHE")"
+if [[ -d "$MAKE_SKILLS_CACHE/.git" ]]; then
+  if ! git -C "$MAKE_SKILLS_CACHE" fetch --depth 1 origin || ! git -C "$MAKE_SKILLS_CACHE" reset --hard FETCH_HEAD; then
+    echo "aviso: Make Agent Skills não atualizadas (rede ou git). Ponte make-scenarios continua." >&2
+  fi
+elif ! git clone --depth 1 https://github.com/integromat/make-skills.git "$MAKE_SKILLS_CACHE"; then
+  echo "aviso: Make Agent Skills não clonadas (rede ou git). Ponte make-scenarios continua." >&2
+fi
+if [[ -f "$MAKE_SKILLS_CACHE/skills.publish.json" ]]; then
+  mkdir -p "$HOME/.cursor/skills" "$HOME/.agents/skills"
+  while IFS= read -r skill_name; do
+    [[ -n "$skill_name" ]] || continue
+    src="$MAKE_SKILLS_CACHE/skills/$skill_name"
+    [[ -f "$src/SKILL.md" ]] || continue
+    ln -sfn "$src" "$HOME/.cursor/skills/$skill_name"
+    ln -sfn "$src" "$HOME/.agents/skills/$skill_name"
+    make_skill_count=$((make_skill_count + 1))
+  done < <(python3 -c "import json,sys; print('\n'.join(json.load(open(sys.argv[1]))))" "$MAKE_SKILLS_CACHE/skills.publish.json")
+fi
+
 # Rules: catálogo em $ROOT/rules + overlay em ~/.config/ai-harness/overlay/rules.
 # Grok lê só ~/.grok/rules (compat vendor off). Codex/Agents recebem o corpo em AGENTS.md.
 python3 "$ROOT/rules/sync.py"
@@ -95,7 +120,7 @@ python3 "$MCP/scripts/repair_npx_shebang_bins.py"
 python3 "$MCP/mcp_toolkit.py" sync --client all --profile default
 mcp_count="$(python3 -c "import importlib.util; from pathlib import Path; p=Path('$MCP/mcp_toolkit.py'); s=importlib.util.spec_from_file_location('mt', p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(len(m.catalog()))")"
 
-echo "Instaladas $count skills + $rule_count rules + $hook_count hooks + $agent_count subagents + $mcp_count MCP(s) (catálogo+overlay) + constituição em:"
+echo "Instaladas $count skills + $make_skill_count Make Agent Skills (Cursor/.agents, cache $MAKE_SKILLS_CACHE) + $rule_count rules + $hook_count hooks + $agent_count subagents + $mcp_count MCP(s) (catálogo+overlay) + constituição em:"
 echo "  clone:  $ROOT  (canônico: $CANON)"
 echo "  hosts:  grok, cursor, claude, subagents, codex, gemini/antigravity, windsurf, opencode"
 echo "  overlay: $HOME/.config/ai-harness/overlay/{rules,hooks,mcp,subagents} (opcional, não vai no git público)"

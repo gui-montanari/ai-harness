@@ -31,7 +31,7 @@ Procure a skill do recorte. Não confie na memória. Leia o `SKILL.md` inteiro; 
 Onde olhar: skills listadas na sessão; `~/.grok/skills/`, `~/.cursor/skills/`,
 `~/.codex/skills/`; pasta de skills do Code CLI; e as pastas `skills/` do repo.
 
-**Kit de trabalho** — esta tabela é o dono (processo **e** produto). Constituição e `architecture` **apontam**; não copiam. O pedido mente: se o recorte **contém** o sinal, a linha entra mesmo que o humano não a tenha citado. Pontes (`oauth-connectors`, `langgraph-agents`, `channel-evolution`) não competem aqui.
+**Kit de trabalho** — esta tabela é o dono (processo **e** produto). Constituição e `architecture` **apontam**; não copiam. O pedido mente: se o recorte **contém** o sinal, a linha entra mesmo que o humano não a tenha citado. Pontes (`oauth-connectors`, `langgraph-agents`, `make-scenarios`, `channel-evolution`) não competem aqui.
 
 ### Processo
 

@@ -10,7 +10,7 @@ description: >
 
 **REQUIRED SUB-SKILL:** `agent-orchestration` (spec) e `orchestration-runtime` (ativação).
 
-LangGraph compila `GraphSpec` em `infrastructure/adapters/langgraph`. Não desenhe o produto em `StateGraph`. Make.com ou in-process é outro adapter da **mesma** porta — skill `orchestration-runtime` pergunta qual, e implementa **um**. Não instale LangGraph “para depois trocar por Make”.
+LangGraph compila `GraphSpec` em `infrastructure/adapters/langgraph`. Não desenhe o produto em `StateGraph`. Make.com ou in-process é outro adapter da **mesma** porta — skill `orchestration-runtime` pergunta qual, e implementa **um**. Não instale LangGraph “para depois trocar por Make”. Cenário na conta Make: ponte `make-scenarios`.
 
 O spec continua em `specs/<job>/` (`agent-orchestration`). `graph.py` do spec monta `NodeSpec`/`EdgeSpec` **sem** SDK. Funções de node só existem se têm corpo. `StateGraph.add_node` / `add_edge` ficam no adapter.
 

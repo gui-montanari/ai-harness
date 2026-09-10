@@ -7,7 +7,8 @@ description: >
   cancel, CancelConversation, build_orchestration, turn_idempotency,
   conversation_turns, checkpointer, runtime activation, or /orchestration-runtime.
   Spec of the agent: agent-orchestration. Worker process: background-workers.
-  LLM text generation is a different port.
+  LLM text generation is a different port. Make.com scenario/blueprint in the
+  Make account: make-scenarios.
 ---
 
 # Ativação do runtime de orquestração
@@ -83,7 +84,7 @@ LLM é `LlmPort` (gerar texto / structured). O runtime **chama** a porta nos **t
 
 **In-process:** o use case de turno chama o `ConversationalEngine` com o spec obtido no registry (`agent-orchestration`). Sem pasta `adapters/langgraph`. Sem `StateGraph`. Persistência, HITL e `cancel` já no domínio. Ativação = `build_orchestration` no composition root + capabilities que ele de fato oferece (`turn_idempotency` sim).
 
-**Make.com:** só depois da capability matrix. Cenário no adapter; regra canônica no serviço. Callback autenticado, idempotente, correlacionado. Make não escolhe tenant nem guarda saída.
+**Make.com:** só depois da capability matrix. Cenário no adapter; regra canônica no serviço. Callback autenticado, idempotente, correlacionado. Make não escolhe tenant nem guarda saída. Montar/deployar blueprint **na conta Make** (módulo, IML, webhook) não é esta skill — ponte `make-scenarios`.
 
 **LangGraph:** `infrastructure/adapters/langgraph/`. Compila `ConversationalSpec.nodes/edges` → `StateGraph`. Um turno = um `ainvoke`; persistência no `ConversationStore`, não no checkpointer. `interrupt` vira HITL no domínio. Ponte: `langgraph-agents`.
 
