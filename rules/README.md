@@ -30,7 +30,7 @@ Só o que é verdade em **qualquer** repositório desta máquina:
 | Arquivo | Gate |
 |---------|------|
 | [`analyze-before-implement.md`](./analyze-before-implement.md) | Analisar + constituição + kit de skills **antes** de editar |
-| [`complete-until-done.md`](./complete-until-done.md) | Não encerrar o turno com trabalho aberto; provar que funciona |
+| [`complete-until-done.md`](./complete-until-done.md) | Não encerrar com trabalho aberto; erro visto na verificação impede pronto |
 | [`git-discipline.md`](./git-discipline.md) | Commit/push só a pedido; sem skip de hook; sem segredo no git |
 | [`git-activity.md`](./git-activity.md) | Atividade a partir da produção, worktree datada, delivery efêmera, índice de PR |
 | [`debug-hypotheses.md`](./debug-hypotheses.md) | Defeito: hipóteses concorrentes, refutar, causa antes do patch |

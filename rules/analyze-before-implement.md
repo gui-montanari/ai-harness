@@ -20,7 +20,7 @@ Antes da primeira edição, no chat (2–4 linhas):
 4. O que não se inventa (HOW, padrão, fluxo).
 
 Sem invariante clara: plano ou pergunta — não código.
-Defeito, falha, regressão ou teste vermelho: rule e skill `debug-hypotheses` **antes** de qualquer patch.
+Defeito, falha, regressão, teste vermelho, **ou erro/gap visto na verificação** (mesmo com UI “ok”): rule e skill `debug-hypotheses` **antes** de qualquer patch e **antes** de declarar pronto.
 Contrato publicado, breaking change ou trava nova: rule `ask-before-contract` — explique e espere o “pode” deste turno.
 Leia a constituição: `~/.local/share/ai-harness/AGENTS.md`.
 
@@ -37,7 +37,7 @@ Onde olhar: skills listadas na sessão; `~/.grok/skills/`, `~/.cursor/skills/`,
 
 | Trabalho | Ler |
 |----------|-----|
-| defeito, falha, regressão, teste vermelho | `debug-hypotheses` (log/Azure/WMS: skill de cliente, se houver) |
+| defeito, falha, regressão, teste vermelho, erro visto na verificação | `debug-hypotheses` (log/Azure/WMS: skill de cliente, se houver) |
 | worktree, branch, dual delivery, PR | `git-activity` |
 | desenhar ou analisar o desenvolvimento | `architecture` — depois as linhas de produto que o recorte contém |
 | harness de cliente, overlay | `client-harness` |

@@ -2,10 +2,12 @@
 name: debug-hypotheses
 description: >
   Use when debugging a defect, test failure, regression, unexpected behavior,
-  or production incident; when forming or refuting hypotheses; or when the
-  user mentions debug, root cause, /debug-hypotheses. Not analyze-before-implement
-  (pedido/skill). Not observability (how to log). Not a client `debug` skill
-  (how to fetch Azure/WMS logs).
+  or production incident; when forming or refuting hypotheses; when verification
+  (browser, log, Langfuse, API) shows an exception, KeyError, persistence/gravação
+  failure, or a process step that did not occur — even if the UI looks ok or
+  “não bloqueia o clique”; or when the user mentions debug, root cause,
+  /debug-hypotheses. Not analyze-before-implement (pedido/skill). Not observability
+  (how to log). Not a client `debug` skill (how to fetch Azure/WMS logs).
 ---
 
 # Debug por hipóteses
@@ -52,6 +54,10 @@ A hipótese que sobrevive é a causa de trabalho. Declare-a em uma frase. Aí:
 
 Retry, timeout maior, `except: pass`, flag, “tratar o erro na UI” sem a causa = sintoma.
 
+## 5. Verificação que acha falha
+
+Se o teste como usuário, o log, o Langfuse ou a API revelar exceção, `KeyError`, falha de gravação ou passo do processo que não ocorreu: **pare de declarar pronto.** Isto é o sintoma. Volte ao passo 1. Rule `complete-until-done`: conferência com gap observado não fecha.
+
 ## Red flags
 
 - Patch na primeira impressão (“deve ser o Redis”)
@@ -59,6 +65,8 @@ Retry, timeout maior, `except: pass`, flag, “tratar o erro na UI” sem a caus
 - Hipótese única sem teste de morte
 - Skill de log do cliente usada como se já fosse a causa
 - Corrigir o caller porque o dono do fato é difícil
+- “Observação (não bloqueia o clique)” com exception no log
+- Conferência `complete-until-done` toda `[x]` com falha vista na sessão
 
 ## Conferência
 
@@ -69,3 +77,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Refutações rodadas; mortas riscadas; sem shotgun
 - [ ] Causa sobrevivente em uma frase; teste que falha nela; patch no dono
 - [ ] Sem conserto de sintoma no lugar da causa
+- [ ] Falha vista na verificação não ficou como “observação”; conferência `complete-until-done` só fecha depois da correção
