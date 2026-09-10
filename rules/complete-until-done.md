@@ -1,5 +1,5 @@
 ---
-description: Não encerrar o turno com trabalho aberto; provar que a solicitação ficou pronta.
+description: Não encerrar o turno com trabalho aberto; erro visto na verificação impede pronto.
 alwaysApply: true
 ---
 
@@ -22,6 +22,16 @@ Exceção única: o usuário pediu explicitamente um recorte, um plano, ou para 
 
 “Pronto” só vale quando todos os itens explícitos estão feitos, verificados e sem ponta solta: TODO, placeholder, teste pulado, documento divergente, subagente cujo resultado não foi incorporado.
 
+## Erro visto não é observação
+
+Se a verificação (browser, log, Langfuse, API, teste, gate) mostrar exceção, traceback, `KeyError`, falha de gravação/persistência, HTTP da chamada crítica fora do esperado, `uncaught`, promise rejection, ou um passo do processo que falhou — isso é **defeito**, não “observação”.
+
+Não é isenção: “não bloqueia o clique”, “a análise completed”, “o fallback preservou o estado”, “o contrato de não apagar sugeridas passou”. O humano não precisa perguntar “por que falhou?”. Zero gaps.
+
+Não marque green. Não declare pronto. Rule e skill `debug-hypotheses` **neste turno**: hipóteses, causa, correção, reteste. Fallback que esconde o erro não autoriza `[x]` em caminho feliz nem em comportamento green. O passo que a feature promete (incluindo gravação) tem de ter ocorrido.
+
+`uncaught`, 5xx e 4xx que o fluxo não prevê como vazio impedem o checkbox de console até serem corrigidos ou citados como esperado-por-contrato com fonte (requisito/ADR).
+
 ## Conferência obrigatória
 
 Toda atividade concluída precisa desta lista na resposta final, com `[x]` só no que foi de fato feito nesta sessão. Item não aplicável vira `[x]` com uma frase do porquê; item aplicável não feito impede declarar pronto.
@@ -29,17 +39,18 @@ Toda atividade concluída precisa desta lista na resposta final, com `[x]` só n
 - [ ] Pedido original relido; cada item explícito está feito
 - [ ] Nenhum todo da solicitação ficou `pending` ou `in_progress`
 - [ ] Testes, gates ou comando de verificação pertinentes rodaram nesta sessão; saída lida; exit 0
-- [ ] Caminho feliz exercitado de ponta a ponta — não só compilou ou renderizou
+- [ ] Caminho feliz exercitado de ponta a ponta — não só compilou ou renderizou; persistência/gravação do processo ocorreu
 - [ ] Estados de erro, vazio e borda verificados quando a mudança os toca
 - [ ] Sem TODO, placeholder, teste pulado, documento divergente ou resultado de subagente não incorporado
+- [ ] Nenhum erro/gap observado na verificação ficou sem causa e correção
 
 ## Teste como usuário (quando for possível)
 
 Se a mudança for visível ou usável por uma pessoa — UI, fluxo no browser, formulário, navegação, tela, widget, página, estado da aplicação — o teste no browser da sessão é obrigatório, não opcional. Use as ferramentas de browser disponíveis (`chrome-devtools` ou `cursor-ide-browser`) e aja como o usuário: abrir, clicar, digitar, submeter, navegar.
 
 - [ ] Fluxo exercitado no browser como um usuário faria, ponta a ponta
-- [ ] Comportamento observado ficou green: o que deveria acontecer aconteceu
-- [ ] Console sem erro bloqueante; rede das chamadas críticas no status esperado
+- [ ] Comportamento observado ficou green: o que deveria acontecer aconteceu — nenhum passo do processo falhou
+- [ ] Console sem erro (uncaught/4xx inesperado/5xx); rede das chamadas críticas no status esperado
 - [ ] Rotas e páginas que compartilham o estado/componente continuam consistentes
 - [ ] Desktop e mobile quando layout ou estilo mudou
 
