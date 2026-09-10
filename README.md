@@ -81,7 +81,7 @@ Skills `mcp-servers` e `mcp-tools` continuam sendo o HOW da **borda MCP de um pr
 |-------|--------|
 | [`architecture`](./architecture/) | Desenhar limites, ADRs, onde mora cada capacidade. Gate: audits até zero. `/architecture` |
 | [`cicd`](./quality/cicd/) | Workflows seguros, jobs, ruff/mypy/eslint, coverage, deploy por SHA. `/cicd` |
-| [`git-activity`](./quality/git-activity/) | Worktree a partir da produção, dual delivery, PR green. `/git-activity` |
+| [`git-activity`](./quality/git-activity/) | Worktree datada a partir da produção, delivery efêmera, índice `ATIVIDADES.md`, PR green. `/git-activity` |
 | [`debug-hypotheses`](./quality/debug-hypotheses/) | Defeito: hipóteses, refutar, causa, só então o patch. `/debug-hypotheses` |
 | [`client-harness`](./quality/client-harness/) | Repo privado `{cliente}-harness`; overlay; skills no workspace. `/client-harness` |
 | [`skills-audit`](./quality/skills-audit/) | Coerência do catálogo; só achado com valor; veredito 10/10. `/skills-audit` |
