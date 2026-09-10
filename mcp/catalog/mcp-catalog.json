@@ -2,29 +2,32 @@
   "schemaVersion": 1,
   "servers": {
     "cloudflare-api": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote@0.1.38",
-        "https://mcp.cloudflare.com/mcp",
-        "--static-oauth-client-metadata",
-        "@{toolkit}/oauth/cloudflare-client-metadata.json"
-      ]
+      "url": "https://mcp.cloudflare.com/mcp",
+      "oauth": {
+        "scopes": ["user:read", "offline_access", "account:read"]
+      }
     },
     "make": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote@0.1.38",
-        "https://mcp.make.com",
-        "--static-oauth-client-metadata",
-        "@{toolkit}/oauth/make-client-metadata.json"
-      ]
+      "url": "https://mcp.make.com",
+      "oauth": {
+        "scopes": [
+          "mcp:use",
+          "scenarios:read",
+          "scenarios:write",
+          "scenarios:run",
+          "connections:read",
+          "connections:write",
+          "hooks:read",
+          "hooks:write",
+          "datastores:read",
+          "datastores:write",
+          "organizations:read",
+          "organizations:write",
+          "teams:read"
+        ]
+      }
     },
-    "stripe": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote@0.1.38", "https://mcp.stripe.com"]
-    },
+    "stripe": {"url": "https://mcp.stripe.com"},
     "twilio-docs": {"url": "https://mcp.twilio.com/docs"},
     "twilio": {"command": "bash", "args": ["{toolkit}/mcp_servers/twilio/start.sh"], "secretFile": "twilio.env"},
     "openai-complete": {"command": "npx", "args": ["-y", "@robinson_ai_systems/openai-mcp"], "secretFile": "openai-complete.env"},

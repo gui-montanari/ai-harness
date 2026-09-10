@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -28,6 +29,7 @@ SYMLINK_HOSTS = (
 INJECT_RELATIVE = (".codex/AGENTS.md", ".agents/AGENTS.md")
 STRIP_RELATIVE = (".claude/CLAUDE.md",)
 NATIVE_KEYS = ("rules", "hooks", "agents", "skills", "mcps")
+FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.S)
 
 
 class Rule:
@@ -111,6 +113,35 @@ def migrate_stray_copies() -> None:
             path.unlink()
 
 
+def _has_always_apply(text: str) -> bool:
+    match = FRONTMATTER_RE.match(text)
+    if not match:
+        return False
+    return bool(re.search(r"^alwaysApply:\s*true\s*$", match.group(1), re.M))
+
+
+def _heading(text: str, fallback: str) -> str:
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("# "):
+            return stripped[2:].strip()
+    return fallback
+
+
+def _with_always_apply(item: Rule) -> str:
+    text = item.path.read_text()
+    if _has_always_apply(text):
+        return text
+    description = _heading(text, item.name)
+    return (
+        "---\n"
+        f"description: {json.dumps(description, ensure_ascii=False)}\n"
+        "alwaysApply: true\n"
+        "---\n\n"
+        f"{text.lstrip()}"
+    )
+
+
 def _symlink_hosts(items: list[Rule]) -> None:
     for rel, ext in SYMLINK_HOSTS:
         dest_dir = HOME / rel
@@ -119,7 +150,11 @@ def _symlink_hosts(items: list[Rule]) -> None:
             dest = dest_dir / f"{item.name}{ext}"
             if dest.exists() or dest.is_symlink():
                 dest.unlink()
-            dest.symlink_to(item.path)
+            source = item.path.read_text()
+            if ext == ".mdc" and not _has_always_apply(source):
+                dest.write_text(_with_always_apply(item))
+            else:
+                dest.symlink_to(item.path)
         stale = dest_dir / "constituicao-e-skills.md"
         if stale.exists() or stale.is_symlink():
             stale.unlink()

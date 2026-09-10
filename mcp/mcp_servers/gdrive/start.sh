@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")"
+if [[ ! -d node_modules/@modelcontextprotocol/sdk ]]; then
+  npm ci
+fi
 export CLIENT_ID="${CLIENT_ID:-$GDRIVE_CLIENT_ID}"
 export CLIENT_SECRET="${CLIENT_SECRET:-$GDRIVE_CLIENT_SECRET}"
 GDRIVE_CREDS_DIR="${GDRIVE_CREDS_DIR:-$HOME/.config/ai-harness/gdrive}"
