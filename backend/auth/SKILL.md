@@ -3,7 +3,7 @@ name: auth
 description: >
   Use when adding or changing login, JWT, OAuth2, OIDC, SSO, MFA, session
   cookies, client_credentials, service-to-service tokens, webhook HMAC,
-  visitor/public tokens, MCP connector OAuth, PKCE, or authorization of a
+  visitor/public tokens, MCP connector OAuth, MCP_BEARER, MCP_TENANT_ID, PKCE, or authorization of a
   principal. Replaces inventing a new auth flavor per surface.
 ---
 
@@ -59,11 +59,9 @@ Assinatura sobre a representação original. Falha → 401, sem parse de negóci
 
 Host autoriza **uma vez**, depois Bearer.
 
-1. Sem token → `401` + `WWW-Authenticate: Bearer FAKESECRET_g3h4i5j6k7l8m9n0o1p2="https://<api>/.well-known/oauth-protected-resource"`.
-2. RFC 9728 e RFC 8414 (`S256` em `code_challenge_methods_supported`).
-3. `redirect_uri` allowlist (URI fixo do host). Code de um uso, TTL minutos. Refresh rotaciona.
-4. `audience` = URL do MCP. Token de outro `aud` não passa.
-5. Scope `mcp:tools`. **Não** reutilizar o JWT interno.
+1. Sem token → `401` + `WWW-Authenticate: Bearer`. Host público (grok.com/connectors): acrescente `resource_metadata` (RFC 9728) quando o PKCE estiver no recorte.
+2. Primeiro corte de conector de serviço / lab: Bearer compartilhado `MCP_BEARER` + tenant `MCP_TENANT_ID`, `auth_source=connector`, `compare_digest`. `MCP_ENABLED` sem os dois env = o processo **não sobe**. Settings no composition; o adapter **recebe** o par esperado — não é um sexto grant.
+3. Host público: RFC 9728 e RFC 8414 (`S256` em `code_challenge_methods_supported`), `redirect_uri` allowlist, code de um uso, refresh rotaciona, `audience` = URL do MCP, scope `mcp:tools`. **Não** reutilizar o JWT interno.
 
 DCR (RFC 7591) só se o host exigir. Implicit e password grant: proibidos.
 
@@ -86,6 +84,7 @@ presentation/http/v1/auth/   # token + well-known; sem regra de caso
 - Um JWT / um cookie para público **e** interno
 - `tenant_id` no body autorizando
 - Secret na query string
+- `MCP_ENABLED` sem `MCP_BEARER`/`MCP_TENANT_ID`
 - Capability token permanecendo na URL após a troca inicial
 - Access token eterno; redirect URI coringa
 - Bearer de sessão do browser em Web Storage; sessão sem expiração/revogação/rotação
@@ -103,5 +102,5 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Público e interno com cookie/audience distintos
 - [ ] Sessão interna expira, rotaciona e revoga; browser não guarda Bearer em Web Storage
 - [ ] Token público é trocado por sessão curta e a URL fica limpa; miss uniforme e rate-limited
-- [ ] Webhook assina o body cru; MCP usa PKCE S256 se o host exigir
+- [ ] Webhook assina o body cru; MCP: 401 sem token; Bearer+tenant injetados no primeiro corte; PKCE S256 se o host público exigir
 - [ ] Segredo fora de git, log e URL

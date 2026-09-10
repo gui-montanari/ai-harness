@@ -63,7 +63,7 @@ platform/
 | Identidade | `auth` |
 | MCP (servidor / transporte) | `mcp-servers` |
 | MCP (tool / jornada / perfil) | `mcp-tools` |
-| Agente (motor conversacional, specs/<job>, guardas) | `agent-orchestration` |
+| Agente (motor conversacional, specs/<job>, NodeType, contratos de ANALYSIS) | `agent-orchestration` |
 | Runtime de orquestração (ativação) | `orchestration-runtime` |
 | Persistência | `persistence-ports` + `sql-migrations` + `sql-dialects` |
 | Eventos / outbox | `reliable-messaging` |
@@ -101,6 +101,7 @@ Sem `|| true`, sem achar ignorado por nome. Exceção só por ADR com prazo.
 - Começar pelo provider (Make, LangGraph, Auth SaaS) e encaixar o domínio depois
 - Runtime ou canal throwaway (“LangGraph agora, Make depois”; “Evolution agora, provider oficial depois”)
 - Porta/stub/`node.py` sem caminho de execução
+- Grafo com nó ANALYSIS sem tipo de saída em `schemas.py` (JSON/`dict` no use case)
 - Pular o loop de auditoria
 - Declarar capacidade na UI/contrato sem caminho ativo até o adapter e teste de ponta a ponta
 - Marcar rota pública como intencional sem requisito/ADR aceito que autorize a superfície

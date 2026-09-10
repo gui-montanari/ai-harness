@@ -4,9 +4,10 @@ description: >
   Use when activating or swapping an agent orchestration runtime, wiring
   OrchestrationRuntimePort, checking RuntimeCapabilities at startup, choosing
   in-process vs Make vs LangGraph, or when the user mentions execute_turn,
-  checkpointer, runtime activation, or /orchestration-runtime. Spec of the
-  agent: agent-orchestration. Worker process: background-workers. LLM text
-  generation is a different port.
+  cancel, CancelConversation, build_orchestration, turn_idempotency,
+  conversation_turns, checkpointer, runtime activation, or /orchestration-runtime.
+  Spec of the agent: agent-orchestration. Worker process: background-workers.
+  LLM text generation is a different port.
 ---
 
 # Ativação do runtime de orquestração
@@ -23,7 +24,7 @@ Três coisas distintas — não misture:
 | Runtime de orquestração | executa turno / pausa / retoma | o worker do SO |
 | Processo | API ou worker (`background-workers`) | o grafo |
 
-O mesmo composition root monta o runtime **uma vez**. API e worker **herdam**. Dois `LangGraphOrchestrator()` soltos (um na app, um no consumer) = drift.
+O mesmo composition root monta o runtime **uma vez**. API, worker e borda MCP **herdam**. Dois `LangGraphOrchestrator()` soltos (um na app, um no consumer) = drift. Locator global (`get_orchestration()`) = segundo dono.
 
 ## Antes de implementar — pergunte
 
@@ -45,17 +46,18 @@ In-process já cumpre o primeiro lançamento com guardas, HITL e persistência n
 
 Ordem no startup — falha fechada:
 
-1. Ler manifests dos agentes (`agent-orchestration`). Registro **explícito**.
-2. Declarar `RuntimeCapabilities` **exigidas** pelo agente (checkpoint, HITL, tool calling, pause/resume, idempotência de turno).
-3. Instanciar **um** adapter no composition root. Ele declara as capacidades **oferecidas**.
+1. Ler manifests dos agentes (`agent-orchestration`). `AgentRegistry.explicit` (1..N). Composition chama `registry.get("conversational.<job>")` — id desconhecido não sobe o use case. Sem `primary` como único caminho.
+2. Declarar `RuntimeCapabilities` **exigidas** pelo agente (checkpoint, HITL, tool calling, pause/resume, **turn_idempotency**). Conversacional nasce com `turn_idempotency=True`.
+3. Instanciar **um** adapter no composition root via factory `build_orchestration(...)`. Ele declara as capacidades **oferecidas**. Sem locator global.
 4. Se exigido ⊄ oferecido: **não sobe**. Log sem PII. Sem fallback silencioso para outro motor.
-5. API e worker recebem a mesma instância (ou o mesmo builder).
+5. API, worker e MCP recebem a mesma instância (ou o mesmo builder).
 
 ```
 application  →  OrchestrationRuntimePort
                 execute_turn / pause / resume / cancel
 core         →  spec + AgentTurnRequest / AgentTurnResult
 infrastructure/adapters/<runtime>/  →  SDK
+infrastructure/di/                  →  build_orchestration
 ```
 
 Porta pequena:
@@ -67,7 +69,11 @@ resume(conversation_id, payload)
 cancel(conversation_id)
 ```
 
-`AgentTurnRequest` traz tenant, conversation_id, message_ref, idempotency key, sequence. Resultado tipado: reply aprovado pela guarda de **saída**, flags (HITL, intake_completed), sem objeto do SDK.
+`cancel` chama o use case `CancelConversation`: status da conversa `cancelled`; **não** fecha o fato oficial. Idempotente se já cancelled.
+
+`AgentTurnRequest` traz tenant, conversation_id, message_ref, idempotency key, sequence. Resultado tipado: reply aprovado pela guarda de **saída**, flags (HITL, intake_completed), `prefix` de abertura **só na resposta ao canal**, sem objeto do SDK.
+
+Turno com `turn_idempotency`: persistir em `<bc>.conversation_turns` (`persistence-ports`). Replay pela key. O registro do turno **não** regrava o opening — senão o retry do canal manda a abertura de novo.
 
 Checkpointer do provider (thread id, memory saver) **não** é SSOT. O banco do serviço de agentes é. Crash: retoma pelo estado persistido, não pela memória do grafo.
 
@@ -75,7 +81,7 @@ LLM é `LlmPort` (gerar texto / structured). O runtime **chama** a porta nos **t
 
 ## Adapters (quando escolhidos)
 
-**In-process:** o use case de turno chama o `ConversationalEngine` com o spec registrado (`agent-orchestration`). Sem pasta `adapters/langgraph`. Sem `StateGraph`. Persistência e HITL já no domínio. Ativação = registrar o use case no composition root + capabilities que ele de fato oferece (HITL sim, tool calling do modelo talvez não).
+**In-process:** o use case de turno chama o `ConversationalEngine` com o spec obtido no registry (`agent-orchestration`). Sem pasta `adapters/langgraph`. Sem `StateGraph`. Persistência, HITL e `cancel` já no domínio. Ativação = `build_orchestration` no composition root + capabilities que ele de fato oferece (`turn_idempotency` sim).
 
 **Make.com:** só depois da capability matrix. Cenário no adapter; regra canônica no serviço. Callback autenticado, idempotente, correlacionado. Make não escolhe tenant nem guarda saída.
 
@@ -95,7 +101,11 @@ O runtime de orquestração **não** é o supervisor de filas. Consumidor, drain
 - Capabilities declaradas e não verificadas no startup
 - Checkpointer do provider como única cópia do estado
 - LLM contornando guarda de estado ou de saída
-- Dois builders (API vs worker) com configs diferentes
+- Dois builders (API vs worker vs MCP) com configs diferentes
+- Locator global / `get_runtime()` no lugar da factory
+- `cancel` que remove a conversa ou fecha caso/pedido
+- `turn_idempotency` declarado e turno só na RAM
+- Replay que reenvia o opening (`prefix` gravado de novo)
 - Pasta `runtimes/` com regra de negócio
 - Wrappers pass-through de porta sem o segundo adapter **e** sem check de capability — aí não há fronteira, só teatro
 
@@ -103,10 +113,10 @@ O runtime de orquestração **não** é o supervisor de filas. Consumidor, drain
 
 Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
-- [ ] Runtime perguntado (ou já no ADR); **um** adapter
+- [ ] Runtime perguntado (ou já no ADR); **um** adapter; factory `build_orchestration`; sem locator
 - [ ] In-process aceito se a capability matrix do outro motor não fechou / não foi pedida
-- [ ] `OrchestrationRuntimePort` no core; SDK só no adapter
-- [ ] Capabilities exigidas ⊂ oferecidas; senão o processo não sobe
-- [ ] Mesmo builder na API e no worker
-- [ ] Banco do serviço é SSOT; checkpointer não é
+- [ ] `OrchestrationRuntimePort` no core; SDK só no adapter; `cancel` → `CancelConversation` (não fecha fato oficial)
+- [ ] Capabilities exigidas ⊂ oferecidas (`turn_idempotency` no conversacional); senão o processo não sobe
+- [ ] Mesmo builder na API, no worker e no MCP
+- [ ] Banco do serviço é SSOT; `<bc>.conversation_turns` + replay; checkpointer não é
 - [ ] Spec e guardas continuam em `agent-orchestration`; worker em `background-workers`

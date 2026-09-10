@@ -5,14 +5,14 @@ description: >
   Redis Streams or Azure Service Bus, dual-write, outbox, inbox, DLQ,
   at-least-once delivery, or when a use case would call a broker inside the
   same transaction as SQL. Worker process: background-workers. Cache is
-  cache-ports — not this skill.
+  cache-ports — not this skill. Graph ANALYSIS schemas and spec: agent-orchestration.
 ---
 
 # Mensageria confiável
 
 O domínio **não** conhece fila, exchange, ACK nem cliente do broker. Publica um fato via porto. A entrega é **at-least-once**. Exactly-once não se promete.
 
-**REQUIRED BACKGROUND:** `AGENTS.md` (eventos, outbox, RPO). Consumer: `background-workers`. Cache/TTL: `cache-ports` (mesmo Redis ≠ o mesmo porto).
+**REQUIRED BACKGROUND:** `AGENTS.md` (eventos, outbox, RPO). Consumer: `background-workers`. Cache/TTL: `cache-ports` (mesmo Redis ≠ o mesmo porto). Spec/ANALYSIS do grafo: `agent-orchestration` — esta skill é o fato **publicado**.
 
 ## Antes de implementar — pergunte
 
@@ -112,6 +112,7 @@ I/O **async**. Segredo na URL/connection string: env, não git. Startup falha se
 - SQL de inbox / fábrica de evento de BC no pacote de plataforma
 - `envelope.py` / `ports.py` / `inbox.py` na raiz do platform (a capacidade é pasta)
 - Retry por `requeue=True` confiando em `x-death` (teto nunca dispara; sem jitter vira tempestade)
+- Spec/`schemas.py` de ANALYSIS no lugar do envelope (HOW: `agent-orchestration`)
 
 ## Conferência
 

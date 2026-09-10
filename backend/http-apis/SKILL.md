@@ -2,7 +2,8 @@
 name: http-apis
 description: >
   Use when creating or changing a REST/HTTP API, FastAPI/Nest route, OpenAPI
-  contract, /api/v1 endpoint, webhook, health/ready probe, or when Pydantic/Zod
+  contract, /api/v1 endpoint, webhook, health/ready probe, agent executable
+  HTTP surface, route_factory, or when Pydantic/Zod
   would sit next to a handler. For the MCP server use mcp-servers; for each MCP
   tool or agent journey use mcp-tools; for OAuth of LLM connectors use auth.
 ---
@@ -46,7 +47,11 @@ Factory ASGI (`--factory`): tenant, CORS e título vêm do env no start (`TENANT
 
 ## MCP
 
-Host de LLM não ganha regra própria. Servidor: `mcp-servers`. Cada tool ou jornada: `mcp-tools` (o mesmo use case). Auth: skill `auth`.
+Host de LLM não ganha regra própria. Servidor: `mcp-servers` (`/mcp` no mesmo app, `MCP_ENABLED` default off). Cada tool ou jornada: `mcp-tools` (o mesmo use case). Auth: skill `auth`.
+
+## Agente executável
+
+Registrar o spec **não** cria rota. Schema de nó ANALYSIS (`specs/<job>/schemas.py`) **não** é schema HTTP. Se o agente é invocável de fora do grafo, o router `/api/v1/...` (ou o webhook do canal) nasce **no mesmo commit**: schema, use case, `include_router` explícito na factory. Sem `route_factory` no descriptor. HOW do spec: `agent-orchestration`. MCP: `mcp-tools`. Evento: `reliable-messaging`.
 
 ## Teto de campo
 
@@ -68,6 +73,7 @@ Skill `auth`. Borda HTTP autentica, converte para `Principal`, chama o use case.
 - cliente escolhe identidade de canal, tenant, ator ou revisor
 - CORS, título ou token cravados no `app.py`
 - `str` de request sem `max_length`
+- `route_factory` no descriptor do agente; rota “porque o registry listou”
 
 ## Conferência
 
@@ -77,6 +83,7 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Use case um verbo, com teste RED primeiro
 - [ ] Rota de negócio em `/api/v1`; `/health` `/ready` na raiz
 - [ ] Handler só traduz; authz no use case; tenant do contexto
+- [ ] Agente executável: router explícito no mesmo commit que o spec; conferência `agent-orchestration` se o recorte nasceu o agente
 - [ ] Toda rota pública cita a fonte que a autoriza e tem testes negativos; nenhuma rota de teste sobe em produção
 - [ ] OpenAPI do schema; cliente gerado ou nenhum cliente artesanal
 - [ ] CORS/título/tenant na factory via env; sem literal de produto

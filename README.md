@@ -103,7 +103,7 @@ Skills `mcp-servers` e `mcp-tools` continuam sendo o HOW da **borda MCP de um pr
 | [`object-storage`](./backend/object-storage/) | Upload, bucket privado, URL assinada. `/object-storage` |
 | [`observability`](./backend/observability/) | Log, trace, métrica, sem PII. `/observability` |
 | [`background-workers`](./backend/background-workers/) | API ≠ worker; drain; job single-flight. `/background-workers` |
-| [`agent-orchestration`](./backend/agent-orchestration/) | Motor conversacional + specs/<job>, guardas. `/agent-orchestration` |
+| [`agent-orchestration`](./backend/agent-orchestration/) | Motor + specs/<job>, NodeType, contratos de ANALYSIS, guardas. `/agent-orchestration` |
 | [`orchestration-runtime`](./backend/orchestration-runtime/) | Ativar o runtime de processo: in-process / Make / LangGraph. `/orchestration-runtime` |
 | [`ops-backoffice`](./backend/ops-backoffice/) | Fila, atribuição, SLA, protocolo. `/ops-backoffice` |
 | [`whatsapp-channel`](./backend/whatsapp-channel/) | WhatsApp: porta de canal; Evolution e Twilio são adapters. `/whatsapp-channel` |
