@@ -60,6 +60,7 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 5. **Não reescreva o sistema no relatório.** Achado + correção mínima. Refatoração heroica só se o humano pedir.
 6. **Zero achados é uma conclusão, não um input.** Só é válido com gates reais verdes,
    sinais do inventário dispostos e superfícies públicas ligadas a requisito/ADR aceito.
+7. **Simplificar não é reescrever.** Testes verdes e comportamento idêntico. Não apague o que não entende.
 
 ## Desculpas que não valem
 
@@ -226,6 +227,12 @@ Corrija defeito visual e regenere.
 6. Quantas issues no PDF.
 
 Não abra issues no GitHub a menos que o humano peça.
+
+## Quando não usar
+
+- Exploits (IDOR, XSS, segredo): `security-audit`.
+- Coerência do catálogo de skills: `skills-audit`.
+- Review rápido do diff (5 eixos, sem PDF): gate `architecture` — isto aqui é inventário do repo.
 
 ## Red flags — PARE
 

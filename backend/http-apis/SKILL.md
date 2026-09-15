@@ -61,6 +61,24 @@ Toda string de **request** (body e query) declara `Field(max_length=)` / `Query(
 
 Skill `auth`. Borda HTTP autentica, converte para `Principal`, chama o use case. Tenant do contexto, nunca do body.
 
+## Contrato estável
+
+Toda superfície pública obedece Hyrum: o observável (status, corpo de erro, ordem, timing) vira compromisso. Um envelope de erro no repo inteiro (`code`, `message`, `details?`). Uma versão da API de cada vez — estenda, não forque. DELETE / mutação que já aconteceu: **200/204**, não 404.
+
+## Quando não usar
+
+- Transporte MCP `/mcp`: `mcp-servers`.
+- JWT/sessão/HMAC: `auth`.
+- Spec/engine do agente: `agent-orchestration` (schema HTTP ≠ `schemas.py` de ANALYSIS).
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| Schema no handler é mais rápido | Schema em `presentation/schemas/`; Command em `application/commands/`. |
+| Observável no cliente já é contrato | Lei de Hyrum: o quirk vira contrato. Envelope de erro é um. |
+| DELETE que 404 se já apagou | DELETE idempotente. |
+
 ## Red flags
 
 - `BaseModel` no mesmo arquivo que o `@router`
@@ -88,3 +106,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] OpenAPI do schema; cliente gerado ou nenhum cliente artesanal
 - [ ] CORS/título/tenant na factory via env; sem literal de produto
 - [ ] Body e query de texto com `max_length`; teto igual ao do cliente
+- [ ] Um envelope de erro; DELETE idempotente

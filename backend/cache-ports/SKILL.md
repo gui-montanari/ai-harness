@@ -54,6 +54,18 @@ Streams (`XADD`) **não** passam por este porto. Pub/sub de SSE, se existir, é 
 
 `MemoryCache` no teste de use case (dict + TTL pelo `Clock`). Contract test contra Redis em container.
 
+## Quando não usar
+
+- Redis Streams / outbox: `reliable-messaging`.
+- Linha SQL: `persistence-ports`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| Cache é a fonte da verdade | Cache é derivado. O dono escreve no domínio. |
+| Sem TTL, fica mais simples | Sem TTL o dado apodrece. |
+
 ## Red flags
 
 - `redis.get` no use case / handler / grafo

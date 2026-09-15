@@ -44,7 +44,9 @@ Se a mudança for visível ou usável por uma pessoa — UI, fluxo no browser, f
 - [ ] Desktop e mobile quando layout ou estilo mudou
 
 Screenshot de render não conta. Confirme comportamento, não aparência.
+Perfil **isolado** (MCP DevTools em perfil dedicado / `--isolated`). Não a sessão pessoal (e-mail, banco, GitHub).
 Se o teste encontrar problema: corrija e reteste no browser antes de encerrar.
+
 Se as ferramentas de browser não estiverem disponíveis, use o substituto mais próximo (testes, curl, script de render) e declare o que não pôde verificar.
 
 Para mudança só de backend/CLI/docs sem superfície de usuário, o checkbox de browser é `[x]` com “não aplicável: …” e os testes/gates da seção anterior continuam obrigatórios.

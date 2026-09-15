@@ -19,8 +19,23 @@ Antes da primeira edição, no chat (2–4 linhas):
 3. O que o repo já tem para reutilizar.
 4. O que não se inventa (HOW, padrão, fluxo).
 
-Sem invariante clara: plano ou pergunta — não código.
-Defeito, falha, regressão ou teste vermelho: rule e skill `debug-hypotheses` **antes** de qualquer patch.
+Se o pedido não-trivial deixa requisito, arquitetura ou escopo implícitos, **não preencha em silêncio**. Escreva:
+
+```
+ASSUMPTIONS I'M MAKING:
+1. …
+→ Corrija agora ou sigo com isto.
+```
+
+Sem invariante clara: **uma** pergunta por vez, com palpite — não um questionário, não código.
+
+```
+Q: …
+GUESS: …
+CONFIDENCE: ~N% — falta: …
+```
+
+Pergunta sem implementação **pula o Gate 2**, não este. Defeito, falha, regressão ou teste vermelho: rule e skill `debug-hypotheses` **antes** de qualquer patch.
 Contrato publicado, breaking change ou trava nova: rule `ask-before-contract` — explique e espere o “pode” deste turno.
 Leia a constituição: `~/.local/share/ai-harness/AGENTS.md`.
 
@@ -84,8 +99,12 @@ Toda UI herda `frontend-surfaces` (tokens, tema, PT/EN, viewport). Some a skill 
 - Kit novo: **uma linha nesta tabela**. Rule nova por kit é over. `architecture` «Onde mora» mapeia capacidade; não é segundo kit.
 
 Não invente HOW que já tem skill. Não copie o harness para dentro do produto.
+API de framework que a skill não cobre: docs oficiais da **versão no repo**, não memória.
 Não copie o Superpowers (`using-superpowers`: skill antes de qualquer frase, inclusive pergunta). Aqui a skill entra **antes de editar**; pergunta sem implementação pula este gate.
-Entrega: conferência da skill + `/principles-audit` e `/security-audit` até zero achados.
+Não seja máquina de sim: se a abordagem tem problema concreto, diga o downside e uma alternativa; o humano manda.
+Toque só o recorte. Sem “limpar” o vizinho, sem feature fora do spec.
+Confusão (spec × código, dois requisitos): **pare**, nomeie o conflito, espere.
+Entrega: conferência da skill + gate `architecture` (fan-out dos audits) até zero achados.
 
 ## Exceções (pula Gate 2, não o Gate 1)
 
@@ -98,3 +117,5 @@ Entrega: conferência da skill + `/principles-audit` e `/security-audit` até ze
 - Implementar e “ver skill depois”.
 - Resumir skill de memória.
 - Ignorar skill porque “é mais rápido do meu jeito”.
+- Assumir o requisito e seguir.
+- “Of course!” em ideia que quebra invariante.

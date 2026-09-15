@@ -88,6 +88,19 @@ frontend/
 - UI anuncia áudio/upload/canal que não possui adapter e teste de ponta a ponta ativos
 - Input gravável sem `maxLength`
 
+## Quando não usar
+
+- Login: `frontend-login`. Shell: `frontend-shell`. Chat: `frontend-chat`. Inbox: `frontend-backoffice`.
+- Esta skill é tokens, tema, i18n, home, primitivos — não a jornada autenticada.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| Hex no componente | Token. |
+| Segunda tabela só desta tela | Primitivo em `ui/`. |
+| WCAG depois | Teclado, foco, contraste, `prefers-reduced-motion` neste diff. |
+
 ## Conferência
 
 Antes de declarar pronto, copie e marque. Caixa vazia = falta.
@@ -105,3 +118,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] `ui/` sem `fetch` nem domínio
 - [ ] Capacidades anunciadas pela UI existem no contrato, capability check e teste e2e
 - [ ] Inputs graváveis com `maxLength` igual ao schema HTTP
+- [ ] Teclado e foco em todo controle; contraste AA; `prefers-reduced-motion` no movimento

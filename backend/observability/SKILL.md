@@ -51,6 +51,20 @@ Proibido: `logger.info(request.body)`, `print(token)`, exception com query strin
 
 Auditoria de negócio (`ops-backoffice`) **não** é log técnico. São dois fluxos.
 
+## Quando não usar
+
+- Causa de defeito: `debug-hypotheses`.
+- `/health` `/ready` como contrato HTTP: `http-apis`.
+- Sem evidência de lentidão: não “otimize” — meça (gate `architecture`).
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| Logar o body ajuda o suporte | PII. correlation_id. |
+| APM no core | SDK no adapter. |
+| Acho que o N+1 é aqui | Medir, achar o gargalo, guardar regressão. |
+
 ## Red flags
 
 - PII ou token em log, trace, métrica, URL de erro

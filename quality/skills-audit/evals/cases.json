@@ -1,0 +1,321 @@
+{
+  "architecture": {
+    "positive": [
+      {"prompt": "desenhar bounded contexts e um ADR hexagonal"},
+      {"prompt": "onde mora esta capacidade no layout hexagonal"},
+      {"prompt": "escrever ADR de limites de módulo /architecture"}
+    ],
+    "negative": [
+      {"prompt": "varredura hexagonal SSOT SRP no diff e PDF", "owner": "principles-audit"},
+      {"prompt": "abrir worktree a partir da produção e PR", "owner": "git-activity"}
+    ]
+  },
+  "agent-orchestration": {
+    "positive": [
+      {"prompt": "criar ConversationalSpec GraphSpec specs/job node.py edge.py"},
+      {"prompt": "scaffolding do motor conversacional prompts/guardrails.md"},
+      {"prompt": "birthing a product agent NodeType ANALYSIS schemas.py"}
+    ],
+    "negative": [
+      {"prompt": "ativar OrchestrationRuntimePort in-process vs Make", "owner": "orchestration-runtime"},
+      {"prompt": "publicar tool MCP no catálogo do connector", "owner": "mcp-tools"}
+    ]
+  },
+  "auth": {
+    "positive": [
+      {"prompt": "adicionar JWT OIDC SSO MFA session cookies PKCE"},
+      {"prompt": "webhook HMAC e client_credentials service-to-service"},
+      {"prompt": "authorization of a principal MCP_BEARER"}
+    ],
+    "negative": [
+      {"prompt": "rota REST /api/v1 OpenAPI Pydantic no handler", "owner": "http-apis"},
+      {"prompt": "página de login form-card sign-in", "owner": "frontend-login"}
+    ]
+  },
+  "background-workers": {
+    "positive": [
+      {"prompt": "worker job scheduler graceful shutdown WORKER_BATCH_SIZE"},
+      {"prompt": "handler não pode asyncio.create_task BackgroundTasks"},
+      {"prompt": "supervisor de processo e drain do shard TENANT_ID"}
+    ],
+    "negative": [
+      {"prompt": "outbox dual-write RabbitMQ at-least-once", "owner": "reliable-messaging"},
+      {"prompt": "GitHub Actions Makefile coverage floor pipeline", "owner": "cicd"}
+    ]
+  },
+  "cache-ports": {
+    "positive": [
+      {"prompt": "Redis GET SET TTL cache-aside stampede tenant-scoped keys"},
+      {"prompt": "use case não importa redis.asyncio para cache"},
+      {"prompt": "porta de cache derivado com TTL"}
+    ],
+    "negative": [
+      {"prompt": "Redis Streams outbox evento de domínio", "owner": "reliable-messaging"},
+      {"prompt": "repositório RLS tenant isolation SQLAlchemy", "owner": "persistence-ports"}
+    ]
+  },
+  "http-apis": {
+    "positive": [
+      {"prompt": "criar endpoint REST FastAPI /api/v1 OpenAPI webhook"},
+      {"prompt": "health ready probe Pydantic ao lado do handler"},
+      {"prompt": "route_factory não no descriptor do agente HTTP"}
+    ],
+    "negative": [
+      {"prompt": "Streamable HTTP MCP_ENABLED remote MCP server", "owner": "mcp-servers"},
+      {"prompt": "JWT login OAuth2 sessão cookie", "owner": "auth"}
+    ]
+  },
+  "mcp-servers": {
+    "positive": [
+      {"prompt": "expor produto no Grok Cursor MCP host Streamable HTTP"},
+      {"prompt": "MCP_ENABLED MCP_BEARER remote MCP grok.com/connectors"},
+      {"prompt": "transporte /mcp do servidor"}
+    ],
+    "negative": [
+      {"prompt": "tool allowlist catalog vs profile execute_turn MCP", "owner": "mcp-tools"},
+      {"prompt": "endpoint REST /api/v1 OpenAPI", "owner": "http-apis"}
+    ]
+  },
+  "mcp-tools": {
+    "positive": [
+      {"prompt": "publicar MCP tool jornada allowlist catalog vs profile"},
+      {"prompt": "internal_probe tool scopes tenant_id in arguments open_conversation"},
+      {"prompt": "specific tool versus complete agent on the MCP server"}
+    ],
+    "negative": [
+      {"prompt": "transporte Streamable HTTP MCP_ENABLED", "owner": "mcp-servers"},
+      {"prompt": "GraphSpec specs/job NodeType do grafo interno", "owner": "agent-orchestration"}
+    ]
+  },
+  "object-storage": {
+    "positive": [
+      {"prompt": "upload blob S3 Azure Blob signed URL quarantine magic-number"},
+      {"prompt": "handler não escreve em disco nem bucket público"},
+      {"prompt": "signed URL blob S3 Azure Blob quarantine magic-number"}
+    ],
+    "negative": [
+      {"prompt": "repositório SQL RLS persistence", "owner": "persistence-ports"},
+      {"prompt": "JWT authorization principal", "owner": "auth"}
+    ]
+  },
+  "observability": {
+    "positive": [
+      {"prompt": "logs metrics traces correlation_id redaction OpenTelemetry"},
+      {"prompt": "handler não pode logar request body token PII"},
+      {"prompt": "health vs ready dashboards RED metrics"}
+    ],
+    "negative": [
+      {"prompt": "defeito root cause hipóteses concorrentes", "owner": "debug-hypotheses"},
+      {"prompt": "/health /ready probe na API HTTP", "owner": "http-apis"}
+    ]
+  },
+  "ops-backoffice": {
+    "positive": [
+      {"prompt": "fila institucional ticket SLA atribuição protocolo ops-backoffice"},
+      {"prompt": "fila institucional protocolo /ops-backoffice SLA atribuição"},
+      {"prompt": "backoffice operacional não é a UI"}
+    ],
+    "negative": [
+      {"prompt": "inbox UI ticket list SLA badges frontend-backoffice", "owner": "frontend-backoffice"},
+      {"prompt": "conversation list chat thread composer", "owner": "frontend-chat"}
+    ]
+  },
+  "orchestration-runtime": {
+    "positive": [
+      {"prompt": "OrchestrationRuntimePort RuntimeCapabilities in-process vs Make vs LangGraph"},
+      {"prompt": "execute_turn cancel CancelConversation turn_idempotency"},
+      {"prompt": "ativar o runtime de orquestração build_orchestration"}
+    ],
+    "negative": [
+      {"prompt": "ConversationalSpec specs/job NodeType ANALYSIS", "owner": "agent-orchestration"},
+      {"prompt": "worker supervisor graceful shutdown", "owner": "background-workers"}
+    ]
+  },
+  "persistence-ports": {
+    "positive": [
+      {"prompt": "repositório ORM RLS tenant isolation SQLAlchemy asyncpg"},
+      {"prompt": "use case não importa Prisma nem provider SDK de banco"},
+      {"prompt": "database port RLS no SQL"}
+    ],
+    "negative": [
+      {"prompt": "YYYYMMDD_VV Alembic migration filename", "owner": "sql-migrations"},
+      {"prompt": "Postgres SQL Server JSONB ON CONFLICT DATABASE_URL", "owner": "sql-dialects"}
+    ]
+  },
+  "reliable-messaging": {
+    "positive": [
+      {"prompt": "outbox inbox DLQ dual-write RabbitMQ Azure Service Bus"},
+      {"prompt": "domain events at-least-once broker na mesma transação que SQL"},
+      {"prompt": "outbox inbox DLQ dual-write RabbitMQ Redis Streams"}
+    ],
+    "negative": [
+      {"prompt": "Redis GET SET cache TTL", "owner": "cache-ports"},
+      {"prompt": "worker drain supervisor job", "owner": "background-workers"}
+    ]
+  },
+  "sql-dialects": {
+    "positive": [
+      {"prompt": "Postgres e SQL Server via DATABASE_URL JSONB ON CONFLICT UNIQUEIDENTIFIER"},
+      {"prompt": "MERGE mssql asyncpg dialect no mesmo arquivo SQL"},
+      {"prompt": "SQLAlchemy que roda em mais de um engine"}
+    ],
+    "negative": [
+      {"prompt": "YYYYMMDD_VV schema_migrations um arquivo por dia", "owner": "sql-migrations"},
+      {"prompt": "RLS repositório tenant_id no porto", "owner": "persistence-ports"}
+    ]
+  },
+  "sql-migrations": {
+    "positive": [
+      {"prompt": "migration YYYYMMDD_VV Alembic docker-entrypoint 001_init.sql"},
+      {"prompt": "demasiados arquivos de schema no mesmo dia schema_migrations"},
+      {"prompt": "alterar schema SQL filename YYYYMMDD_VV"}
+    ],
+    "negative": [
+      {"prompt": "JSONB ON CONFLICT SQL Server MERGE dialect", "owner": "sql-dialects"},
+      {"prompt": "GitHub Actions workflow.yml pipeline gates", "owner": "cicd"}
+    ]
+  },
+  "whatsapp-channel": {
+    "positive": [
+      {"prompt": "WhatsApp inbound Evolution Twilio WABA sendText 24h window remoteJid"},
+      {"prompt": "ChannelOutboundPort messages.upsert X-Twilio-Signature"},
+      {"prompt": "WABA 24h window remoteJid messages.upsert ChannelOutboundPort"}
+    ],
+    "negative": [
+      {"prompt": "ConversationalSpec turno do agente specs/job", "owner": "agent-orchestration"},
+      {"prompt": "webhook REST /api/v1 health ready", "owner": "http-apis"}
+    ]
+  },
+  "frontend-backoffice": {
+    "positive": [
+      {"prompt": "inbox UI ticket list detail SLA badges operator reply"},
+      {"prompt": "authenticated operations UI triage queue /frontend-backoffice"},
+      {"prompt": "ticket list detail SLA badges /frontend-backoffice inbox UI"}
+    ],
+    "negative": [
+      {"prompt": "conversation thread ChatGPT-style composer", "owner": "frontend-chat"},
+      {"prompt": "SLA atribuição protocolo no domínio da fila", "owner": "ops-backoffice"}
+    ]
+  },
+  "frontend-chat": {
+    "positive": [
+      {"prompt": "conversation list conversation thread ChatGPT-style composer thinking indicator"},
+      {"prompt": "product chat widget panel auto title mobile tablet desktop"},
+      {"prompt": "lista de conversas e thread do chat de produto"}
+    ],
+    "negative": [
+      {"prompt": "UserMenu sidebar AppSidebar cockpit autenticado", "owner": "frontend-shell"},
+      {"prompt": "ticket inbox SLA badges backoffice", "owner": "frontend-backoffice"}
+    ]
+  },
+  "frontend-login": {
+    "positive": [
+      {"prompt": "login page form-card forgot-password /frontend-login"},
+      {"prompt": "página de login labels errors forgot-password"},
+      {"prompt": "restyling da tela de acesso /frontend-login"}
+    ],
+    "negative": [
+      {"prompt": "JWT OAuth2 sessão cookie no servidor", "owner": "auth"},
+      {"prompt": "left sidebar UserMenu AppSidebar", "owner": "frontend-shell"}
+    ]
+  },
+  "frontend-shell": {
+    "positive": [
+      {"prompt": "AppSidebar UserMenu su-sidebar cockpit hamburger panel toggle"},
+      {"prompt": "authenticated app shell left sidebar collapsible nav avatar dropdown"},
+      {"prompt": "theme in the user dropdown layout logado"}
+    ],
+    "negative": [
+      {"prompt": "conversation thread composer chat", "owner": "frontend-chat"},
+      {"prompt": "sign-in form-card login page", "owner": "frontend-login"}
+    ]
+  },
+  "frontend-surfaces": {
+    "positive": [
+      {"prompt": "i18n PT/EN ThemeToggle LanguageSwitch DataTable PublicHeader tokens.css"},
+      {"prompt": "tenant visual tokens dark light theme public home hero"},
+      {"prompt": "primitivos ui/ StatusBadge empty state viewport"}
+    ],
+    "negative": [
+      {"prompt": "sign-in password reset form-card", "owner": "frontend-login"},
+      {"prompt": "AppSidebar UserMenu shell autenticado", "owner": "frontend-shell"}
+    ]
+  },
+  "cicd": {
+    "positive": [
+      {"prompt": "GitHub Actions Makefile coverage floor ruff mypy import-linter OIDC"},
+      {"prompt": "workflow.yml pipeline required checks deploy workflow"},
+      {"prompt": "CI CD gates que falham fechados"}
+    ],
+    "negative": [
+      {"prompt": "YYYYMMDD_VV migration filename", "owner": "sql-migrations"},
+      {"prompt": "varredura hexagonal PDF principles-audit", "owner": "principles-audit"}
+    ]
+  },
+  "client-harness": {
+    "positive": [
+      {"prompt": "stockfy-harness tenda-harness overlay de cliente privado"},
+      {"prompt": "mover skills hooks MCP para o repositório irmão /client-harness"},
+      {"prompt": "install overlay ~/.config/ai-harness/overlay"}
+    ],
+    "negative": [
+      {"prompt": "Streamable HTTP MCP server de produto", "owner": "mcp-servers"},
+      {"prompt": "worktree dual delivery ATIVIDADES.md", "owner": "git-activity"}
+    ]
+  },
+  "debug-hypotheses": {
+    "positive": [
+      {"prompt": "teste vermelho regressão root cause hipóteses concorrentes"},
+      {"prompt": "defeito inesperado production incident refutar hipóteses"},
+      {"prompt": "o que quebrou e por que /debug-hypotheses"}
+    ],
+    "negative": [
+      {"prompt": "OpenTelemetry correlation_id redaction PII log", "owner": "observability"},
+      {"prompt": "bounded context ADR desenhar sistema", "owner": "architecture"}
+    ]
+  },
+  "git-activity": {
+    "positive": [
+      {"prompt": "worktree a partir da produção cherry-pick delivery ATIVIDADES.md"},
+      {"prompt": "branch feature dual delivery PR origin/main"},
+      {"prompt": "abrir pasta de atividade git-activity"}
+    ],
+    "negative": [
+      {"prompt": "GitHub Actions Makefile pipeline CI", "owner": "cicd"},
+      {"prompt": "overlay de cliente stockfy-harness", "owner": "client-harness"}
+    ]
+  },
+  "principles-audit": {
+    "positive": [
+      {"prompt": "varredura hexagonal SSOT SRP DRY YAGNI KISS SOLID PDF"},
+      {"prompt": "file size limits import leaks /principles-audit"},
+      {"prompt": "auditar princípios do diff TDD dead code"}
+    ],
+    "negative": [
+      {"prompt": "IDOR XSS hardcoded secrets security audit PDF", "owner": "security-audit"},
+      {"prompt": "10/10 catálogo de skills XOR", "owner": "skills-audit"}
+    ]
+  },
+  "security-audit": {
+    "positive": [
+      {"prompt": "IDOR RLS tenant isolation XSS hardcoded secrets broken access control"},
+      {"prompt": "gerar security audit PDF /auditoria-seguranca"},
+      {"prompt": "IDOR XSS hardcoded secrets /security-audit PDF"}
+    ],
+    "negative": [
+      {"prompt": "hexagonal SSOT SRP YAGNI principles PDF", "owner": "principles-audit"},
+      {"prompt": "JWT PKCE session cookies login", "owner": "auth"}
+    ]
+  },
+  "skills-audit": {
+    "positive": [
+      {"prompt": "auditar catálogo de skills 10/10 inconsistências XOR"},
+      {"prompt": "review all skills coverage of architecture standards /skills-audit"},
+      {"prompt": "/skills-audit catálogo 10/10 XOR name pasta"}
+    ],
+    "negative": [
+      {"prompt": "hexagonal SSOT PDF do produto", "owner": "principles-audit"},
+      {"prompt": "IDOR XSS security PDF", "owner": "security-audit"}
+    ]
+  }
+}

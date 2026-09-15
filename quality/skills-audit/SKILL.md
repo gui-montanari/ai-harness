@@ -27,6 +27,7 @@ O objetivo é saber se um agente que só lê este catálogo implementa certo —
 - [ ] 2. Inventário de todo SKILL.md (não amostrar)
 - [ ] 3. Catálogo cruzado: árvore README (inclui `rules/` e `hooks/`), tabelas README, architecture «Onde mora», name=pasta
 - [ ] 4. Cada skill lida por completo; Conferência presente e cobre as invariantes dela
+- [ ] 4b. Execução tem «Quando não usar» + «Desculpas que não valem»; `python3 quality/skills-audit/eval_catalog.py` verde
 - [ ] 5. Pontes redirecionam; colisões XOR apontam para o dono certo
 - [ ] 6. Constituição × skill: sem contradição, sem segundo dono da mesma regra
 - [ ] 7. HOW gap: princípio sem procedimento só vira achado se o agente inventaria errado
@@ -172,6 +173,8 @@ YAGNI: feature flags, segundo APM, OCR, nanoserviço, portal futuro — ausênci
 
 Toda skill termina em **Conferência**. Caixas = invariantes **dela**, testáveis no diff. Teatro (caixas genéricas que qualquer skill marcaria) = `material`. Ponte: conferência = “li a canônica” + o único fato da ponte.
 
+Execução (não ponte) tem `## Quando não usar` (XOR) e `## Desculpas que não valem`. Subset mecânico: [`eval_catalog.py`](eval_catalog.py) — anatomia, colisão de description, roteamento dos cases. Verde não substitui este relatório.
+
 ## Relatório (chat)
 
 Nesta ordem. Sem PDF, sem arquivo novo, sem PR.
@@ -191,6 +194,18 @@ Nesta ordem. Sem PDF, sem arquivo novo, sem PR.
 7. Veredito: **10/10** ou **não 10/10** + a lista curta do que falta para o 10.
 
 Não corrija o catálogo a menos que o humano peça. Se pedir: um dono por fato, sem passe cosmético no mesmo diff.
+
+## Quando não usar
+
+- Código de produto: `principles-audit` / `security-audit`.
+- Evals mecânicos (roteamento/anatomia) não substituem este relatório humano.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| Olhei as principais | Inventário completo. |
+| Nota 8/10 pelo tom | Cosmético não entra. 10/10 = zero bloqueante/material. |
 
 ## Red flags — PARE
 

@@ -57,6 +57,19 @@ Reset de senha e “conta criada” reutilizam o **mesmo** layout e os mesmos to
 - Rate-limit e lockout são servidor; a UI só mostra a mensagem canônica.
 - Após sucesso: navega para o shell autenticado (`frontend-shell`). Nunca deixa token em `localStorage` se o produto usa cookie httpOnly.
 
+## Quando não usar
+
+- JWT / sessão no servidor: `auth`.
+- Shell autenticado: `frontend-shell`.
+- Tokens / home pública: `frontend-surfaces`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| Placeholder substitui o label | Label visível. |
+| Token no localStorage | Cookie httpOnly se o produto usa cookie. |
+
 ## Red flags
 
 - Input de 36px “compacto”

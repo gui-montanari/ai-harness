@@ -57,6 +57,19 @@ Com `turn_idempotency` (`orchestration-runtime`), a conversa **não** basta. No 
 
 `processed_ids` em RAM, turno só no agregado da conversa, ou schema `workspace` dono do turno = achado.
 
+## Quando não usar
+
+- Filename de migration: `sql-migrations`.
+- Dialeto Postgres/SQL Server: `sql-dialects`.
+- Blob: `object-storage`. Cache: `cache-ports`. Evento: `reliable-messaging`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| SQLAlchemy no use case | Porto no core; adapter na infra. |
+| Filtro de tenant copiado no handler | RLS / contexto global. |
+
 ## Red flags
 
 - `asyncpg.connect` no use case ou no `graph.py`

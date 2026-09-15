@@ -59,6 +59,19 @@ MCP_ENABLED=true MCP_BEARER=<token> MCP_TENANT_ID=<tenant> \
 
 Provar, nesta ordem: `GET /health` 200; `POST /mcp` sem Bearer → 401; `initialize`; `tools/list` = só o perfil (sem `run_agent`, sem capacidade só de catálogo); `tools/call` com `tenant_id` no body → 400; turno + mesma `idempotency_key` = replay.
 
+## Quando não usar
+
+- Cada tool / jornada / perfil: `mcp-tools`.
+- REST `/api/v1`: `http-apis`.
+- Overlay MCP da máquina de um cliente: `client-harness`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| O host precisa de um motor próprio | `/mcp` chama o mesmo runtime. |
+| MCP_ENABLED default on | Default off. |
+
 ## Red flags
 
 - Segundo backend “só para MCP”

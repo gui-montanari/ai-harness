@@ -66,6 +66,19 @@ App interno distinto da home pública: sessão, cookie, CSP, `noindex`. Permiss�
 
 Outbound (e-mail, WhatsApp, …) pelo porto de mensageria do **item**, não pelo handler HTTP.
 
+## Quando não usar
+
+- UI da inbox: `frontend-backoffice`.
+- Chat de produto: `frontend-chat`.
+- Auth HTTP: `auth` / `http-apis`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| A fila vive no front | Domínio da fila é servidor. |
+| Atribuir para não ficar vazio | Automática só depois de triagem; inelegível não recebe. |
+
 ## Red flags
 
 - Django Admin / equivalente como fila do suporte

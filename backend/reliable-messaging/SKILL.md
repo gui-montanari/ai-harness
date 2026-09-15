@@ -100,6 +100,19 @@ I/O **async**. Segredo na URL/connection string: env, não git. Startup falha se
 - Credencial: connection string **ou** identidade gerenciada. Nunca as duas divergindo.
 - Event Hubs só se o volume for stream de ingestão (CDC); work events cabem no Service Bus. Não misture os dois no mesmo porto.
 
+## Quando não usar
+
+- Cache Redis GET/SET: `cache-ports`.
+- Processo worker / drain: `background-workers`.
+- Contrato de ANALYSIS: `agent-orchestration`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| Publico no broker na mesma transação SQL | Outbox. Dual-write é mentira. |
+| reject(requeue=True) incrementa x-death | Não incrementa. |
+
 ## Red flags
 
 - Implementar os três adapters no mesmo PR

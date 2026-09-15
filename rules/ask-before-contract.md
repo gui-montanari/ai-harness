@@ -20,6 +20,10 @@ No chat, **antes** do patch, em 4 linhas:
 3. O que acontece hoje sem isso.
 4. Por que agora.
 
+Campo, coluna ou API que outro consumidor já usa: **expand/contract**. Nasce o novo, os dois convivem, o último leitor some, aí remove. Não DROP no mesmo deploy que o código parou de ler.
+
+Deprecação **advisory** (aviso, os consumidores migram) vs **compulsory** (prazo; só com risco/custo que justifique, e com caminho de migração). Default: advisory.
+
 Espere o “pode” **deste** turno. Autorização de **editar um repo** não cobre contrato/trava. Refator interno de tipo privado, teste, ou trava que só o dono do fato já exige no mesmo bounded context: esta rule não dispara.
 
 Stockfy: overlay `stockfy-repos-autorizacao` (time, `stockfy-integracao`, anti-corruption no `stockfy-ai`).

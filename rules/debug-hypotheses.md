@@ -8,6 +8,7 @@ alwaysApply: true
 Vale em todo projeto e todo host. HOW: skill `debug-hypotheses`.
 Aplica quando o trabalho é **defeito, falha, regressão, teste vermelho ou comportamento inesperado**. Feature nova sem sintoma: esta rule não substitui `analyze-before-implement`.
 
+- **Stop-the-line.** Sintoma novo: pare de acrescentar feature, preserve evidência (log, repro, saída do teste), diagnostique, só então o patch. Não empurre o próximo recorte com o teste vermelho.
 - **Sem causa, sem patch.** “É provavelmente X” não autoriza editar X.
 - **Hipóteses no chat**, antes da primeira correção: 2–4 concorrentes, cada uma com um teste que a **refutaria** (não que a confirmaria).
 - **Refutar primeiro.** Rode o teste mais barato. Hipótese morta sai. Não empilhar mudanças para “ver se passa”.

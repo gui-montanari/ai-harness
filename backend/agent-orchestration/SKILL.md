@@ -431,6 +431,19 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
   pontuação, caixa, acento e paráfrases de alto risco definidas pelo produto
 - teste de mutação: remover/afrouxar cada regra crítica faz ao menos um teste falhar
 
+## Quando não usar
+
+- Ativar in-process/Make/LangGraph: `orchestration-runtime`.
+- Tool publicada no MCP: `mcp-tools`.
+- Envelope WhatsApp: `whatsapp-channel`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| O registry lista, a rota nasce sozinha | Sem router explícito no mesmo commit. |
+| JSON no ANALYSIS e eu tipifico depois | Tipo em `schemas.py` agora. |
+
 ## Red flags
 
 - SDK de runtime no `core/` / `application/` (ativação: `orchestration-runtime`)

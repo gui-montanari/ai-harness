@@ -399,6 +399,12 @@ Status: rascunho | aprovado | feito
 | consistência (nomes, schema/model, YYYYMMDD_VV) | ... |
 | completude vertical (fonte → entrada → principal → use case → dado → saída → falha/teste) | ... |
 
+## Capability map (só se o pedido empacota vários módulos independentes)
+| Module id | Responsabilidade | Depende de |
+|-----------|------------------|------------|
+| … | … | — |
+Build order: …
+
 ## Abordagem
 <uma abordagem. Não três ensaios.>
 
@@ -425,6 +431,8 @@ Plano não é diário. Quando o trabalho termina, o plano fica como registro ou 
 ---
 
 ## 6. TDD
+
+Antes do primeiro teste: descubra **como este repositório testa**. `Makefile`, `package.json`, `pyproject.toml`, wrapper (`./gradlew`, `make test`). O comando focado no loop RED/GREEN e o da suíte no fim. Não invente `npm test` num repo pytest.
 
 Ordem sagrada:
 
