@@ -94,6 +94,19 @@ Proibido: `from langgraph.graph import StateGraph` em `core/`, `application/`, `
 
 O runtime de orquestração **não** é o supervisor de filas. Consumidor, drain, restart: `background-workers`. O worker **chama** `execute_turn`. Supervisor que recria o processo não recria o spec.
 
+## Quando não usar
+
+- Spec / NodeType / ANALYSIS: `agent-orchestration`.
+- Supervisor de processo: `background-workers`.
+- StateGraph no adapter: ponte `langgraph-agents`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| LangGraph agora, Make depois | Um runtime. ADR. |
+| execute_turn no worker “é a mesma coisa” | Porta de turno ≠ supervisor. |
+
 ## Red flags
 
 - SDK de orquestração no use case ou no domínio

@@ -64,6 +64,18 @@ git clone git@github.com:gui-montanari/{cliente}-harness.git ~/projetos/ferramen
 
 Fluxo de worktree/PR: skill `git-activity`. Borda MCP de um **produto**: `mcp-servers` / `mcp-tools`.
 
+## Quando não usar
+
+- MCP de produto: `mcp-servers` / `mcp-tools`.
+- Worktree/PR: `git-activity`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| Subpasta no ai-harness público | Repo privado irmão. |
+| Skill de cliente em ~/.grok/skills | Vaza para os outros clientes. |
+
 ## Conferência
 
 Antes de declarar pronto, copie e marque. Caixa vazia = falta.

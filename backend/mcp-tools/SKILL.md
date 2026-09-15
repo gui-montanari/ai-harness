@@ -63,6 +63,19 @@ A mesma capacidade pode estar em HTTP e em um ou mais perfis MCP **sem** copiar 
 - Timeout, retry e idempotência **herdados**. Sem `for _ in range` no binding.
 - Retorno: `conversation_id`, `reply` já passado na guarda, flags. Sem draft, relato, prompt, path interno ou PII.
 
+## Quando não usar
+
+- Transporte `/mcp`: `mcp-servers`.
+- `tools/` interno do grafo: `agent-orchestration`.
+- Use case HTTP: `http-apis` — a tool chama o mesmo.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| Uma tool “faz tudo” | Atômica vs jornada é escolha explícita. |
+| tenant_id no argumento da tool | Tenant do principal. |
+
 ## Red flags
 
 - `run_agent`, `execute_sql`, shell, `run_query`

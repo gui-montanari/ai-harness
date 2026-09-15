@@ -62,6 +62,19 @@ Classes de chrome usam `--bg`, `--surface`, `--ink`, `--muted`, `--border`, `--a
 
 Título da **jornada** (fila, caso) é H1 **do conteúdo**, não de um header de chrome. Título da **aba** (`document.title`) é o tenant — skill `frontend-surfaces`. Não copiar o rótulo da fila para a aba.
 
+## Quando não usar
+
+- Thread de chat: `frontend-chat`.
+- Formulário de login: `frontend-login`.
+- UserMenu: um sul só — não desenhe o mesmo no chat.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| Tema só na home | `data-theme` nas duas superfícies. |
+| Topbar no miolo do backoffice | Chrome é esta skill; miolo é `frontend-backoffice`. |
+
 ## Red flags
 
 - Sidebar à direita “porque o chat é o centro”

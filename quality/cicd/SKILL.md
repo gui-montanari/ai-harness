@@ -186,6 +186,19 @@ GitLab: mesmos alvos; `rules:` no lugar de `on:`; `id_tokens` para OIDC; `CI_JOB
 
 Testes em `tests/architecture/` **entram** no job `architecture` (ou em `test` se o Makefile unificar — um dono). Diretório de produção fora do linter de import = gate mal configurado.
 
+## Quando não usar
+
+- Filename de migration: `sql-migrations`.
+- Varredura humana do diff: `principles-audit` / `security-audit`.
+- Worktree/PR: `git-activity`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| `or true` no gate | Fail-closed. |
+| Coverage caiu, mas o feature é urgente | Piso não desce. Ratchet. |
+
 ## Red flags — PARE
 
 - Workflow sem `permissions:` ou com `write-all`

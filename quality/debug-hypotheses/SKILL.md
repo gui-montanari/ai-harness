@@ -15,6 +15,18 @@ TDD depois da causa: constituição §1. Dono do fato: SSOT.
 
 Skill de cliente chamada `debug` (logs Azure, etc.) é **fonte de evidência**, não este método.
 
+## Stop-the-line
+
+Quando algo inesperado aparece:
+
+1. **Pare** de acrescentar feature ou o próximo recorte.
+2. **Preserve** evidência (saída do teste, log, repro).
+3. Diagnostique (hipóteses abaixo).
+4. Conserte a causa; **guarde** com o teste que falharia se o bug voltasse.
+5. Só então retome.
+
+Não empurre um teste vermelho ou build quebrado para “terminar o slice”.
+
 ## 1. Sintoma, não causa
 
 No chat, uma linha: o que quebra, onde aparece, desde quando, como reproduzir.
@@ -52,6 +64,20 @@ A hipótese que sobrevive é a causa de trabalho. Declare-a em uma frase. Aí:
 
 Retry, timeout maior, `except: pass`, flag, “tratar o erro na UI” sem a causa = sintoma.
 
+## Quando não usar
+
+- Pedido/skill antes de implementar: `analyze-before-implement`.
+- Como logar/tracar: `observability`.
+- Como buscar log Azure/WMS: skill `debug` de cliente.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| É o Redis | Hipótese sem teste de morte. |
+| Pressa: patch agora, hipóteses depois | Stop-the-line. Preservar evidência. |
+| Três patches “para ver” | Shotgun. Pare; é arquitetura. |
+
 ## Red flags
 
 - Patch na primeira impressão (“deve ser o Redis”)
@@ -64,8 +90,9 @@ Retry, timeout maior, `except: pass`, flag, “tratar o erro na UI” sem a caus
 
 Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
+- [ ] Stop-the-line: evidência preservada; sem patch no meio de outro recorte
 - [ ] Sintoma e reprodução/evidência escritos antes do patch
 - [ ] ≥2 hipóteses no chat, cada uma com teste que a refutaria
 - [ ] Refutações rodadas; mortas riscadas; sem shotgun
 - [ ] Causa sobrevivente em uma frase; teste que falha nela; patch no dono
-- [ ] Sem conserto de sintoma no lugar da causa
+- [ ] Sem conserto de sintoma no lugar da causa; guarda contra recidiva
