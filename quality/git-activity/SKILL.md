@@ -118,6 +118,19 @@ Remove só `mergeada`, limpa, sem `--force`. Não toca `aberta` / `pr-aberta`, o
 
 No começo de cada atividade: `--prune` neste repo **antes** de abrir outra pasta, para o diretório não acumular entrega antiga.
 
+## Quando não usar
+
+- Permissão de commit/push: rule `git-discipline`.
+- Arquivos de pipeline: `cicd`.
+- Diagnóstico: `debug-hypotheses`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| Base em develop | Produção. Dual delivery. |
+| Commit a cada fatia sozinho | Commit só se o humano pedir. |
+
 ## Red flags
 
 - Worktree ou `-b` a partir de `develop`

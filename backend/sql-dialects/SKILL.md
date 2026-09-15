@@ -57,6 +57,17 @@ RLS `FORCE` é backstop **Postgres**. Outro engine: equivalente de sessão (RLS 
 - Contract do repositório: a porta, contra o engine do requisito.
 - Dois engines no requisito: os **dois** no CI (container). Um só: ainda assim o modelo usa tipos portáteis; o teste de contract não importa `asyncpg` no `core`.
 
+## Quando não usar
+
+- Filename / ledger: `sql-migrations`.
+- Porto / RLS: `persistence-ports`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| JSONB só, a gente só usa Postgres | Segundo SGBD na DSN exige tipo portátil no mesmo arquivo. |
+
 ## Red flags
 
 - `if dialect` no use case, no domínio ou no handler HTTP

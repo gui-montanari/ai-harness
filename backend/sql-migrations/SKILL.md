@@ -42,7 +42,20 @@ Não crie `_02`, `_03`, `_04` no mesmo PR porque “cada ALTER merece um arquivo
 - Ledger de turno de agente: `<bc>.conversation_turns` no serviço dono, no mesmo arquivo do dia se `conversations` ainda não está no ledger compartilhado.
 - Role de app não é owner; sem `BYPASSRLS` em request/worker.
 - Schema e arquivo vivem no **dono** (bounded context): `agents.conversations` no serviço agents. Nunca `workspace.conversations` nem pasta `workspace/migrations` como dono de conversa/caso.
-- Destrutiva: outro deploy, depois que o último leitor sumiu.
+- Destrutiva: expand/contract — outro deploy, depois que o último leitor sumiu. Não DROP no mesmo SHA que o código parou de ler.
+
+## Quando não usar
+
+- Porto/RLS: `persistence-ports`.
+- Dialeto no SQL: `sql-dialects`.
+- Job de CI: `cicd`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| Cada ALTER é um arquivo | Mesmo dia ainda não no ledger: acrescente. |
+| DROP COLUMN no mesmo deploy que o código parou de ler | Expand/contract: outro deploy, depois que o último leitor sumiu. |
 
 ## Red flags
 
@@ -65,3 +78,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Schema = bounded context dono; arquivo no serviço dono; sem schema de artefato
 - [ ] Sem senha/PII no SQL; sem dump no entrypoint
 - [ ] Dialeto extra no mesmo arquivo (`sql-dialects`), não segundo runner
+- [ ] Destrutiva: expand/contract; não DROP no mesmo SHA que o código parou de ler

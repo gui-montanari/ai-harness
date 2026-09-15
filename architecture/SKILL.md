@@ -18,8 +18,10 @@ description: >
 2. **Dono do dado.** Um bounded context escreve; o resto consome contrato (HTTP/evento). Sem tabela compartilhada.
 3. **Camada.** presentation → application → core ← infrastructure. SDK e framework só no adapter.
 4. **Porta pequena.** Runtime de agente, IdP, banco, fila, LLM: um porto por capacidade.
-5. **Uma abordagem.** Plano em `docs/plans/<slug>.md` se não for trivial. ADR só para decisão que sobrevive ao PR.
+5. **Uma abordagem.** Plano em `docs/plans/<slug>.md` se não for trivial. ADR só para decisão que sobrevive ao PR. Pedido que empacota vários módulos independentes: **capability map** (id, responsabilidade, depende-de, ordem de build) **antes** de cada plano — o humano revisa o mapa.
+
 6. **YAGNI de serviço.** Worker no mesmo deployável antes de microsserviço. Segundo agente só com segundo domínio.
+7. **Fatia vertical.** Um caminho ponta a ponta (teste → dono → superfície), depois o próximo. Sem commit automático — `git-discipline`.
 
 ## Completude vertical antes do primeiro teste
 
@@ -82,17 +84,48 @@ platform/
 
 ## Gate depois de implementar
 
-Não declare pronto no `make test` verde. Loop **obrigatório**:
+Não declare pronto no `make test` verde.
+
+**Review do diff (não é o audit).** Cinco eixos no recorte: correção, leitura, encaixe hexagonal, segurança, desempenho. Sem inventário do repo. Repo inteiro + PDF: `principles-audit` / `security-audit`. Simplificar só com testes verdes e comportamento idêntico (cerca de Chesterton: não apague o que não entende).
+
+**Fan-out.** Dispare os dois audits **no mesmo turno, em paralelo**. O agente principal sintetiza:
+
+```
+Ship: GO | NO-GO
+Blockers (must): …
+Rollback: gatilho · procedimento · RTO
+```
+
+Crítico num audit → default NO-GO até o humano aceitar o risco. Rollback escrito **antes** de GO. Pular o fan-out só se as três forem verdade: ≤2 arquivos, <50 linhas, e o diff **não** toca auth, pagamento, dado ou config/env.
+
+**Performance.** Sem número, não otimize. Medir → gargalo → corrigir → medir → guardar regressão. Telemetria: `observability`.
+
+**Decisão não trivial** (auth, contrato publicado, migração irreversível): no chat, CLAIM + artefato; revisor em contexto fresco viesado a **desprovar**. Sessão principal; persona não despacha persona.
+
+Loop **obrigatório**:
 
 0. Reexecutar a completude vertical e as conferências de **todas** as capacidades detectadas.
 1. Rodar os gates canônicos reais (`make lint typecheck test check-architecture check-migrations build`) e validar o manifesto de deploy (`docker compose config`, quando houver).
-2. `/principles-audit` no diff.
-3. `/security-audit` no diff.
-4. Cada achado: corrige no dono do fato (não no relatório).
-5. Roda gates e **os dois** audits de novo.
-6. Entrega só com **zero** achados e zero gate vermelho. “É frontend” / “é skill” / “é migração” não isenta.
+2. Fan-out `/principles-audit` + `/security-audit` no diff.
+3. Cada achado: corrige no dono do fato (não no relatório).
+4. Roda gates e **os dois** audits de novo.
+5. Entrega só com **GO**, zero achados e zero gate vermelho. “É frontend” / “é skill” / “é migração” não isenta.
 
 Sem `|| true`, sem achar ignorado por nome. Exceção só por ADR com prazo.
+
+## Quando não usar
+
+- Diff de produto para varrer: `principles-audit` / `security-audit`.
+- Worktree, branch, PR: `git-activity`.
+- Defeito com sintoma: `debug-hypotheses` antes de redesenhar.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| É óbvio, pulo o plano | Sem invariante, não há desenho. `docs/plans/` existe para isso. |
+| Depois eu meço performance | Dimensão 9 é o mesmo diff. Medir primeiro; não adivinhar. |
+| Os audits eu corro no fim se sobrar tempo | Gate de entrega: fan-out agora, não “depois”. |
 
 ## Red flags
 
@@ -122,5 +155,6 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Skill do recorte lida e conferência dela marcada
 - [ ] Skills adicionais selecionadas pelas capacidades presentes no diff
 - [ ] Sem microsserviço/segundo agente sem o critério da constituição
-- [ ] Gates canônicos + manifesto de deploy verdes; `/principles-audit` e `/security-audit` em zero achados
+- [ ] Gates canônicos + manifesto de deploy verdes; fan-out dos dois audits em zero achados; rollback escrito se o recorte foi a produção
 - [ ] Campos escritos por humano com teto iguais na UI e no schema HTTP
+- [ ] Sem otimização sem medição; decisão não trivial cruzada se o recorte era auth/contrato/migração

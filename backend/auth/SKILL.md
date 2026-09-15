@@ -78,6 +78,19 @@ infrastructure/adapters/auth/
 presentation/http/v1/auth/   # token + well-known; sem regra de caso
 ```
 
+## Quando não usar
+
+- Rota HTTP / OpenAPI: `http-apis` (authz no use case, identidade na borda).
+- Página de login: `frontend-login`.
+- PKCE de conector MCP: ponte `oauth-connectors` → esta skill.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| O front esconde o botão | Authz é servidor. |
+| Tenant no body é mais simples | Tenant do contexto global. |
+
 ## Red flags
 
 - Quinto grant “só para este host”

@@ -142,7 +142,12 @@ depois o `{cliente}-harness` de cada cliente em que for trabalhar.
 
 O produto tem o **próprio** `AGENTS.md` (domínio, ADR, fase). Cada skill termina em **Conferência**.
 Depois: `/principles-audit` e `/security-audit` até **zero** achados (`architecture`).
-Para auditar **este** catálogo: `/skills-audit`.
+Para auditar **este** catálogo: `/skills-audit`. Subset mecânico (anatomia + roteamento):
+
+```bash
+python3 quality/skills-audit/eval_catalog.py
+python3 -m unittest discover -s quality/skills-audit -p 'test_*.py'
+```
 
 ## Convenção
 

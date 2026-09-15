@@ -73,6 +73,19 @@ Inbound hoje: form-urlencoded, 401 se a assinatura falhar. Outbound: Messages AP
 - Identidade de canal opaca; o caso não guarda telefone.
 - Sem cliente-deus, sem registry global mutável, sem circuit breaker no mesmo arquivo que o POST até haver segundo caso concreto.
 
+## Quando não usar
+
+- Turno / spec do agente: `agent-orchestration`.
+- Webhook HTTP: `http-apis`.
+- Evolution como “o canal”: ponte `channel-evolution`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| remoteJid no domínio | Anti-corruption no adapter. |
+| fromMe também é mensagem do usuário | Eco não gera turno. |
+
 ## Conferência
 
 - [ ] Uma porta; N adapters; composition escolhe

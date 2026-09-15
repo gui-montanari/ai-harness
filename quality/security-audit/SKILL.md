@@ -172,6 +172,12 @@ Nesta ordem:
 
 Não abra as issues no GitHub a menos que o usuário peça.
 
+## Quando não usar
+
+- Hexagonal / TDD / SSOT: `principles-audit`.
+- HOW de auth no produto: `auth`.
+- Review de 5 eixos no diff sem PDF: gate `architecture`.
+
 ## Red flags — PARE
 
 - Achado sem `arquivo:linha` e sem trecho

@@ -62,6 +62,19 @@ Exclusividade por agregado: no máximo um processamento em voo por conversa/caso
 
 Um container = um processo visível. Supervisor interno só se o orquestrador não puder; ainda assim o PID 1 é o supervisor, não um `nohup`.
 
+## Quando não usar
+
+- Outbox/evento: `reliable-messaging`.
+- Pipeline CI: `cicd`.
+- `asyncio.create_task` no handler para “voltar mais rápido”: ainda é esta skill — não faça.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| O k8s já reinicia | Sem drain e idempotência, restart duplica side-effect. |
+| BackgroundTasks no FastAPI é o worker | Worker é processo; request não é supervisor. |
+
 ## Red flags
 
 - `asyncio.create_task` / `BackgroundTasks` / thread no handler “para não travar”

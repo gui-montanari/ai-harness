@@ -84,6 +84,19 @@ Atribuição: select/dropdown do **mesmo** vocabulário do `UserMenu`. Destino i
 
 Herdados: light/dark, PT/EN, `dvh`, toque 44px. `robots noindex`. Verificar 375 / 768 / 1280 **e** os dois temas com um item aberto, um filtro vazio e um 403.
 
+## Quando não usar
+
+- Chat de produto: `frontend-chat`.
+- Domínio da fila: `ops-backoffice`.
+- Sidebar / UserMenu: `frontend-shell`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| Inbox e chat são a mesma lista | Conversa ≠ ticket. |
+| Authz só escondendo o botão | Servidor. |
+
 ## Red flags
 
 - Tabela CRUD com o relato na célula

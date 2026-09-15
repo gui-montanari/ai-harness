@@ -128,6 +128,19 @@ Forma canônica — SSE de invalidação:
 
 `ui/` continua burro: recebe `messages` já atualizadas. Copiar o socket da Stockfy ou de outro produto é achado — copia-se a **regra**, não o arquivo.
 
+## Quando não usar
+
+- Inbox / ticket: `frontend-backoffice`.
+- UserMenu / sidebar: `frontend-shell`.
+- Tokens / i18n / primitivos: `frontend-surfaces`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| É um ticket com bolhas | Superfície de conversa de produto. |
+| Screenshot do render basta | complete-until-done: comportamento no browser. |
+
 ## Red flags
 
 - Chat sem lista quando o produto tem “novo chat”

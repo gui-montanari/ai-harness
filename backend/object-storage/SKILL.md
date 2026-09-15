@@ -47,6 +47,18 @@ Metadado canônico (tamanho, tipo declarado, tipo real, hash, tenant, owner) viv
 
 Áudio/imagem/PDF são **tipos**, não serviços. Parser/OCR/LLM só se o requisito mandar, e nunca no upload cru.
 
+## Quando não usar
+
+- Metadado / linha SQL: `persistence-ports`.
+- Quem pode baixar: `auth`.
+
+## Desculpas que não valem
+
+| Desculpa | Realidade |
+|----------|-----------|
+| Bucket público e eu escondo a URL | Bucket privado + URL assinada. |
+| Gravo no disco do app | Blob no adapter de storage. |
+
 ## Red flags
 
 - `open('/tmp/'+filename)` no handler
