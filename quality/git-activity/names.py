@@ -8,7 +8,9 @@ from datetime import datetime
 KINDS = ("feature", "bugfix", "delivery")
 STAMP_RE = re.compile(r"^\d{8}-\d{4}$")
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-FEATURE_BRANCH_RE = re.compile(r"^(feature|bugfix)/(\d{8}-\d{4})-(.+)$")
+FEATURE_BRANCH_RE = re.compile(
+    r"^(feature|bugfix)/(\d{8}-\d{4})-(.+?)(?:/(?:not-delivery|delivered))?$"
+)
 DELIVERY_BRANCH_RE = re.compile(r"^delivery/(\d{8}-\d{4})-(.+)$")
 
 
@@ -27,7 +29,7 @@ def _validate(kind: str, stamp: str, slug: str) -> None:
 
 def branch_name(kind: str, stamp: str, slug: str) -> str:
     _validate(kind, stamp, slug)
-    return f"{kind}/{stamp}-{slug}"
+    return f"{kind}/{stamp}-{slug}/not-delivery"
 
 
 def delivery_branch(stamp: str, slug: str, *, develop: bool = False) -> str:

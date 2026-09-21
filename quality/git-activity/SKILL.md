@@ -11,11 +11,20 @@ description: >
 # Atividade git (produção → worktree → dual delivery → índice)
 
 **REQUIRED BACKGROUND:** rule `git-activity` (o gate). Esta skill é o HOW.
-`AGENTS.md` do produto prevalece em nome de branch, pasta de worktree e se existe `develop`.
+`AGENTS.md` do produto prevalece em versão, slug e pasta da worktree, e diz se existe `develop`. O segmento final `/not-delivery` é só desta skill.
 
 Não é desenho de produto (`architecture`). Não é permissão de commit (`git-discipline`).
 
-Turno ≠ atividade. Uma pasta por recorte; reabrir a que já existe.
+Turno ≠ atividade. Uma pasta por recorte.
+
+## De onde partir
+
+Neste turno, olhe se o humano citou uma branch.
+
+- **Não citou branch.** Abra worktree nova a partir de `origin/master` ou `origin/main` — o default de produção do repo, nunca `develop`. A branch nova termina em `/not-delivery`. Não entre numa `/not-delivery` que ele não nomeou, mesmo que o slug pareça o mesmo.
+- **Citou uma branch**, em especial uma que termina em `/not-delivery`. Siga essa branch. Não abra worktree nova a partir de master/main. Se a worktree dela já existe, trabalhe nela. Se a branch só está no remoto, a worktree nasce dessa branch, não da produção.
+
+O marcador é o último segmento da branch. Não entra na mensagem de commit. Quando o humano entrega em produção, ele troca só esse segmento para `delivered`.
 
 ## 1. Reusar
 
@@ -26,7 +35,7 @@ python3 <SKILL_DIR>/status.py --prune
 python3 <SKILL_DIR>/status.py --check-slug "{slug}"
 ```
 
-Exit 0: `cd` nesse path. **Não** crie outra. Pergunta, plano ou diagnóstico sem patch: nem worktree.
+`check-slug` só reaproveita a pasta quando o humano citou essa branch ou esse slug. Sem citação, worktree nova. Pergunta, plano ou diagnóstico sem patch: nem worktree.
 
 ## 2. Nomes
 
@@ -41,8 +50,6 @@ Padrão global, se o produto não especializar:
 branch:   {kind}/{YYYYMMDD}-{HHmm}-{slug}/not-delivery
 pasta:    {YYYYMMDD}-{HHmm}-{kind}-{slug}
 ```
-
-O marcador é o último segmento da branch. Não entra na mensagem de commit. Enquanto a atividade não está em produção, a branch termina em `/not-delivery`. Quando o humano entrega, ele troca só esse segmento para `delivered` (`…/not-delivery` → `…/delivered`).
 
 Diretório de worktrees compartilhado entre repos (irmão do clone, mistura vários produtos):
 
@@ -151,9 +158,9 @@ No começo de cada atividade: `--prune` neste repo **antes** de abrir outra past
 
 Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
-- [ ] `git fetch`; HEAD da atividade é ancestral-descendente de `origin/<produção>` no início
-- [ ] Reuso conferido (`status.py --check-slug`); uma worktree por atividade
-- [ ] Nome `{kind}/{YYYYMMDD}-{HHmm}-{slug}/not-delivery` e pasta `{YYYYMMDD}-{HHmm}-{kind}-{slug}` (com `{repo}` se a pasta for compartilhada), ou o do `AGENTS.md` do produto. O `/not-delivery` não vai no commit; vira `/delivered` só quando o humano entrega
+- [ ] Sem branch citada: worktree nova a partir de `origin/master` ou `origin/main`. Branch citada (`/not-delivery` ou outra): seguir essa branch, sem worktree nova na produção
+- [ ] Reuso de pasta só se o humano citou essa branch ou esse slug
+- [ ] Nome `{kind}/{YYYYMMDD}-{HHmm}-{slug}/not-delivery` e pasta `{YYYYMMDD}-{HHmm}-{kind}-{slug}` (com `{repo}` se a pasta for compartilhada). Versão e slug podem vir do `AGENTS.md` do produto. O `/not-delivery` não vai no commit; vira `/delivered` só quando o humano entrega
 - [ ] Zero merge de develop na atividade
 - [ ] Delivery de produção por cherry-pick + PR; pasta delivery removida; develop idem se a branch existir
 - [ ] `ATIVIDADES.md` reconciliado; URL de cada PR; checks green (não ausentes)

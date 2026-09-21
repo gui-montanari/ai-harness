@@ -21,7 +21,7 @@ class NamesTest(unittest.TestCase):
         stamp = "20260910-0955"
         self.assertEqual(
             mod.branch_name("feature", stamp, "git-activity-flow"),
-            "feature/20260910-0955-git-activity-flow",
+            "feature/20260910-0955-git-activity-flow/not-delivery",
         )
         self.assertEqual(
             mod.worktree_folder(stamp=stamp, kind="feature", slug="git-activity-flow"),
@@ -60,6 +60,13 @@ class NamesTest(unittest.TestCase):
                 "develop": True,
             },
         )
+
+    def test_parse_strips_delivery_marker_from_activity_slug(self) -> None:
+        parsed = mod.parse_activity_branch(
+            "feature/20260910-0955-git-activity-flow/not-delivery"
+        )
+        self.assertEqual(parsed["slug"], "git-activity-flow")
+        self.assertEqual(parsed["kind"], "feature")
 
     def test_reject_invalid_slug(self) -> None:
         with self.assertRaises(ValueError):
