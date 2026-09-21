@@ -38,9 +38,11 @@ Stamp = relógio do host: `date +%Y%m%d-%H%M`. Slug = kebab-case curto. Versão 
 Padrão global, se o produto não especializar:
 
 ```
-branch:   {kind}/{YYYYMMDD}-{HHmm}-{slug}
+branch:   {kind}/{YYYYMMDD}-{HHmm}-{slug}/not-delivery
 pasta:    {YYYYMMDD}-{HHmm}-{kind}-{slug}
 ```
+
+O marcador é o último segmento da branch. Não entra na mensagem de commit. Enquanto a atividade não está em produção, a branch termina em `/not-delivery`. Quando o humano entrega, ele troca só esse segmento para `delivered` (`…/not-delivery` → `…/delivered`).
 
 Diretório de worktrees compartilhado entre repos (irmão do clone, mistura vários produtos):
 
@@ -55,7 +57,7 @@ Delivery: `delivery/{YYYYMMDD}-{HHmm}-{slug}` e, se houver develop, o mesmo com 
 Pasta: a que o produto/workspace já usa (`worktrees/`, `.worktrees/` ignorado). Sem diretório declarado: irmão `worktrees/` do clone, ignorado pelo git.
 
 ```bash
-git worktree add -b "{kind}/{YYYYMMDD}-{HHmm}-{slug}" "$WT" origin/<produção>
+git worktree add -b "{kind}/{YYYYMMDD}-{HHmm}-{slug}/not-delivery" "$WT" origin/<produção>
 cd "$WT"
 git merge-base --is-ancestor origin/<produção> HEAD   # tem de ser verdadeiro
 python3 <SKILL_DIR>/status.py
@@ -151,7 +153,7 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
 - [ ] `git fetch`; HEAD da atividade é ancestral-descendente de `origin/<produção>` no início
 - [ ] Reuso conferido (`status.py --check-slug`); uma worktree por atividade
-- [ ] Nome `{kind}/{YYYYMMDD}-{HHmm}-{slug}` e pasta `{YYYYMMDD}-{HHmm}-{kind}-{slug}` (com `{repo}` se a pasta for compartilhada), ou o do `AGENTS.md` do produto
+- [ ] Nome `{kind}/{YYYYMMDD}-{HHmm}-{slug}/not-delivery` e pasta `{YYYYMMDD}-{HHmm}-{kind}-{slug}` (com `{repo}` se a pasta for compartilhada), ou o do `AGENTS.md` do produto. O `/not-delivery` não vai no commit; vira `/delivered` só quando o humano entrega
 - [ ] Zero merge de develop na atividade
 - [ ] Delivery de produção por cherry-pick + PR; pasta delivery removida; develop idem se a branch existir
 - [ ] `ATIVIDADES.md` reconciliado; URL de cada PR; checks green (não ausentes)
