@@ -29,6 +29,7 @@ from names import (
     activity_stamp,
     branch_name,
     delivery_branch,
+    delivery_heads_for,
     parse_activity_branch,
     worktree_folder,
 )

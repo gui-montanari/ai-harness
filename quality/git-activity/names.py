@@ -8,9 +8,8 @@ from datetime import datetime
 KINDS = ("feature", "bugfix", "delivery")
 STAMP_RE = re.compile(r"^\d{8}-\d{4}$")
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-FEATURE_BRANCH_RE = re.compile(
-    r"^(feature|bugfix)/(\d{8}-\d{4})-(.+?)(?:/(?:not-delivery|delivered))?$"
-)
+MARKERS = ("not-delivery", "delivered-dev", "delivered")
+FEATURE_BRANCH_RE = re.compile(r"^(feature|bugfix)/(\d{8}-\d{4})-(.+)$")
 DELIVERY_BRANCH_RE = re.compile(r"^delivery/(\d{8}-\d{4})-(.+)$")
 
 
@@ -47,7 +46,16 @@ def worktree_folder(
     return f"{stamp}-{kind}-{slug}"
 
 
+def split_marker(branch: str) -> tuple[str, str]:
+    for marker in MARKERS:
+        suffix = f"/{marker}"
+        if branch.endswith(suffix):
+            return branch[: -len(suffix)], marker
+    return branch, ""
+
+
 def parse_activity_branch(branch: str) -> dict | None:
+    branch, _marker = split_marker(branch)
     match = FEATURE_BRANCH_RE.match(branch)
     if match:
         return {
@@ -71,6 +79,7 @@ def parse_activity_branch(branch: str) -> dict | None:
 
 
 def delivery_heads_for(branch: str) -> tuple[str, str]:
+    branch, _marker = split_marker(branch)
     parsed = parse_activity_branch(branch)
     if parsed:
         base = f"delivery/{parsed['stamp']}-{parsed['slug']}"

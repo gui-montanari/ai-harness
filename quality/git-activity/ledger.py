@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from names import delivery_heads_for, parse_activity_branch
+from names import delivery_heads_for, parse_activity_branch, split_marker
 
 PROTECTED = {"main", "master", "develop", ""}
 HEADERS = (
@@ -88,12 +88,13 @@ def find_existing_activity(trees: list[Worktree], *, slug: str) -> Worktree | No
     for tree in trees:
         if tree.branch in PROTECTED:
             continue
-        parsed = parse_activity_branch(tree.branch)
+        base, _marker = split_marker(tree.branch)
+        parsed = parse_activity_branch(base)
         if parsed and parsed["kind"] == "delivery":
             continue
         if parsed and parsed["slug"] == slug:
             return tree
-        tail = tree.branch.rsplit("/", 1)[-1]
+        tail = base.rsplit("/", 1)[-1]
         if parsed is None and (tail == slug or tail.endswith(f"-{slug}")):
             return tree
     return None
@@ -152,9 +153,10 @@ def row_from_worktree(
 ) -> ActivityRow | None:
     if tree.branch in PROTECTED:
         return None
-    parsed = parse_activity_branch(tree.branch) or {}
-    kind = parsed.get("kind") or tree.branch.split("/", 1)[0]
-    slug = parsed.get("slug") or tree.branch.split("/", 1)[-1]
+    base, _marker = split_marker(tree.branch)
+    parsed = parse_activity_branch(base) or {}
+    kind = parsed.get("kind") or base.split("/", 1)[0]
+    slug = parsed.get("slug") or base.split("/", 1)[-1]
     pr_prod, pr_dev = match_prs(prs, tree.branch)
     url_p, merge_p = _pr_cells(pr_prod)
     url_d, merge_d = _pr_cells(pr_dev)

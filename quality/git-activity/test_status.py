@@ -62,11 +62,19 @@ class NamesTest(unittest.TestCase):
         )
 
     def test_parse_strips_delivery_marker_from_activity_slug(self) -> None:
-        parsed = mod.parse_activity_branch(
-            "feature/20260910-0955-git-activity-flow/not-delivery"
+        for marker in ("not-delivery", "delivered-dev", "delivered"):
+            parsed = mod.parse_activity_branch(
+                f"feature/20260910-0955-git-activity-flow/{marker}"
+            )
+            self.assertEqual(parsed["slug"], "git-activity-flow")
+            self.assertEqual(parsed["kind"], "feature")
+
+    def test_delivery_head_ignores_activity_marker(self) -> None:
+        prod, develop = mod.delivery_heads_for(
+            "feature/20260910-0955-git-activity-flow/delivered-dev"
         )
-        self.assertEqual(parsed["slug"], "git-activity-flow")
-        self.assertEqual(parsed["kind"], "feature")
+        self.assertEqual(prod, "delivery/20260910-0955-git-activity-flow")
+        self.assertEqual(develop, "delivery/20260910-0955-git-activity-flow-develop")
 
     def test_reject_invalid_slug(self) -> None:
         with self.assertRaises(ValueError):

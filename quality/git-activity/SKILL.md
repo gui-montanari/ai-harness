@@ -11,7 +11,7 @@ description: >
 # Atividade git (produção → worktree → dual delivery → índice)
 
 **REQUIRED BACKGROUND:** rule `git-activity` (o gate). Esta skill é o HOW.
-`AGENTS.md` do produto prevalece em versão, slug e pasta da worktree, e diz se existe `develop`. O segmento final `/not-delivery` é só desta skill.
+`AGENTS.md` do produto prevalece em versão, slug, pasta da worktree e nos refs de dev e produção. O segmento final da branch (`/not-delivery`, `/delivered-dev`, `/delivered`) é obrigatório e é só desta skill: o nome do cliente não o omite.
 
 Não é desenho de produto (`architecture`). Não é permissão de commit (`git-discipline`).
 
@@ -21,10 +21,20 @@ Turno ≠ atividade. Uma pasta por recorte.
 
 Neste turno, olhe se o humano citou uma branch.
 
-- **Não citou branch.** Abra worktree nova a partir de `origin/master` ou `origin/main` — o default de produção do repo, nunca `develop`. A branch nova termina em `/not-delivery`. Não entre numa `/not-delivery` que ele não nomeou, mesmo que o slug pareça o mesmo.
-- **Citou uma branch**, em especial uma que termina em `/not-delivery`. Siga essa branch. Não abra worktree nova a partir de master/main. Se a worktree dela já existe, trabalhe nela. Se a branch só está no remoto, a worktree nasce dessa branch, não da produção.
+- **Não citou branch.** Abra worktree nova a partir de `origin/master` ou `origin/main` — o default de produção do repo, nunca `develop`. A branch nova termina em `/not-delivery`. Não entre numa `/not-delivery` ou `/delivered-dev` que ele não nomeou, mesmo que o slug pareça o mesmo.
+- **Citou uma branch** que termina em `/not-delivery` ou `/delivered-dev`. Siga essa branch. Não abra worktree nova a partir de master/main. Se a worktree dela já existe, trabalhe nela. Se a branch só está no remoto, a worktree nasce dessa branch, não da produção.
 
-O marcador é o último segmento da branch. Não entra na mensagem de commit. Quando o humano entrega em produção, ele troca só esse segmento para `delivered`.
+## Marcador
+
+Último segmento da branch da atividade. Não entra na mensagem de commit. A pasta da worktree não muda. A troca é `git branch -m` só desse segmento, na mesma branch. Não criar outra branch para o marcador.
+
+| Segmento | Quando |
+|---|---|
+| `/not-delivery` | Nasce assim. Trabalho em curso, ainda fora de ambiente. |
+| `/delivered-dev` | Os commits da atividade já estão no ambiente anterior à produção. O `AGENTS.md` do cliente diz o ref. Cliente com um ambiente só não usa este segmento. |
+| `/delivered` | Os commits da atividade já estão em produção. O `AGENTS.md` do cliente diz o ref. |
+
+O PR `delivery/…` integra o código no GitHub e **não** troca o segmento. O segmento só muda quando os commits da atividade são ancestrais do ref daquele ambiente.
 
 ## 1. Reusar
 
@@ -158,9 +168,9 @@ No começo de cada atividade: `--prune` neste repo **antes** de abrir outra past
 
 Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 
-- [ ] Sem branch citada: worktree nova a partir de `origin/master` ou `origin/main`. Branch citada (`/not-delivery` ou outra): seguir essa branch, sem worktree nova na produção
+- [ ] Sem branch citada: worktree nova em `/not-delivery` a partir de `origin/master` ou `origin/main`. Branch citada em `/not-delivery` ou `/delivered-dev`: seguir essa branch, sem worktree nova
 - [ ] Reuso de pasta só se o humano citou essa branch ou esse slug
-- [ ] Nome `{kind}/{YYYYMMDD}-{HHmm}-{slug}/not-delivery` e pasta `{YYYYMMDD}-{HHmm}-{kind}-{slug}` (com `{repo}` se a pasta for compartilhada). Versão e slug podem vir do `AGENTS.md` do produto. O `/not-delivery` não vai no commit; vira `/delivered` só quando o humano entrega
+- [ ] Nome `{kind}/{YYYYMMDD}-{HHmm}-{slug}/not-delivery` e pasta `{YYYYMMDD}-{HHmm}-{kind}-{slug}` (com `{repo}` se a pasta for compartilhada). Versão, slug e pasta podem vir do `AGENTS.md` do produto. O segmento não vai no commit. `/delivered-dev` quando os commits estão no ref de dev do cliente; `/delivered` quando estão no ref de produção. O PR `delivery/…` não troca o segmento
 - [ ] Zero merge de develop na atividade
 - [ ] Delivery de produção por cherry-pick + PR; pasta delivery removida; develop idem se a branch existir
 - [ ] `ATIVIDADES.md` reconciliado; URL de cada PR; checks green (não ausentes)
