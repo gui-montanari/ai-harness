@@ -9,7 +9,7 @@ description: >
 
 # Persistência por porta
 
-O banco é um **adapter**. Grafo LangGraph, rota HTTP e MCP **não** importam o driver. Use case fala com `OrderRepository` / `ObjectStoragePort`.
+O banco é um **adapter**. Grafo de orquestração (LangGraph, CrewAI), rota HTTP e MCP **não** importam o driver. Use case fala com `OrderRepository` / `ObjectStoragePort`.
 
 **REQUIRED BACKGROUND:** `AGENTS.md` §3 e §8.6 (RLS, tenant no contexto).
 

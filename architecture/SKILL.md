@@ -131,8 +131,8 @@ Sem `|| true`, sem achar ignorado por nome. Exceção só por ADR com prazo.
 
 - Pasta por entidade (`/users`, `/orders`) como “serviço”
 - Segundo runtime ou segundo agente sem capability matrix / ADR
-- Começar pelo provider (Make, LangGraph, Auth SaaS) e encaixar o domínio depois
-- Runtime ou canal throwaway (“LangGraph agora, Make depois”; “Evolution agora, provider oficial depois”)
+- Começar pelo provider (LangGraph, CrewAI, Make, Auth SaaS) e encaixar o domínio depois
+- Runtime ou canal throwaway (“LangGraph agora, CrewAI ou Make depois”; “Evolution agora, provider oficial depois”)
 - Porta/stub/`node.py` sem caminho de execução
 - Grafo com nó ANALYSIS sem tipo de saída em `schemas.py` (JSON/`dict` no use case)
 - Pular o loop de auditoria

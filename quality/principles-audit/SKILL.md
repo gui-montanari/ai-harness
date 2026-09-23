@@ -96,7 +96,7 @@ Não feche sem o inventário do scanner **e** sem o PDF verificado.
 | “prompts na raiz, depois a gente fatia” | Motor em `conversational/` + um spec por pasta. Sem isso o segundo job copia o primeiro. |
 | “specialists/ vazio para nascer multi-agent” | YAGNI. O segundo spec é pasta nova + ADR. Skill `agent-orchestration`. |
 | “um spec.py com nó, aresta e copy” | SRP: `node.py` / `edge.py` / `graph.py` com corpo. Vazio é morto. Skill `agent-orchestration`. |
-| “LangGraph agora, Make depois” | Um runtime. Throwaway não é stepping stone. Skill `orchestration-runtime`. |
+| “LangGraph agora, CrewAI ou Make depois” | Um runtime. Throwaway não é stepping stone. Skill `orchestration-runtime`. |
 | “Evolution agora, Twilio depois” | Canal não oficial não substitui o provider do requisito. Fake/sandbox na mesma porta. |
 | “stub de fala / presentation sem consumidor, a gente liga depois” | Código morto. Se não corre, não entra. |
 | “logs.py e postgres.py na raiz do platform, é pouco arquivo” | SRP: uma pasta por capacidade. Raiz do pacote só `__init__.py`. |

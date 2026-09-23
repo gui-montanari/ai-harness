@@ -39,6 +39,7 @@ backend/
   agent-orchestration/
   orchestration-runtime/
   langgraph-agents/        # ponte → orchestration-runtime
+  crewai-agents/           # ponte → orchestration-runtime
   make-scenarios/          # ponte → orchestration-runtime ou skills oficiais Make
   ops-backoffice/
   whatsapp-channel/
@@ -105,7 +106,7 @@ Skills `mcp-servers` e `mcp-tools` continuam sendo o HOW da **borda MCP de um pr
 | [`observability`](./backend/observability/) | Log, trace, métrica, sem PII. `/observability` |
 | [`background-workers`](./backend/background-workers/) | API ≠ worker; drain; job single-flight. `/background-workers` |
 | [`agent-orchestration`](./backend/agent-orchestration/) | Motor + specs/<job>, NodeType, contratos de ANALYSIS, guardas. `/agent-orchestration` |
-| [`orchestration-runtime`](./backend/orchestration-runtime/) | Ativar o runtime de processo: in-process / Make / LangGraph. `/orchestration-runtime` |
+| [`orchestration-runtime`](./backend/orchestration-runtime/) | Ativar o runtime: in-process, LangGraph, CrewAI ou Make (automação de processo). `/orchestration-runtime` |
 | [`ops-backoffice`](./backend/ops-backoffice/) | Fila, atribuição, SLA, protocolo. `/ops-backoffice` |
 | [`whatsapp-channel`](./backend/whatsapp-channel/) | WhatsApp: porta de canal; Evolution e Twilio são adapters. `/whatsapp-channel` |
 

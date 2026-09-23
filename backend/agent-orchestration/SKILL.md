@@ -13,14 +13,14 @@ description: >
   executable agent HTTP endpoint, route_factory, allowed_specialist_keys,
   HubResolver, NodeType, ANALYSIS node, specs/job/schemas.py, structured
   output contract, FieldPatch, packages/contracts event from a graph.
-  Activating Make/LangGraph/in-process: orchestration-runtime. MCP /mcp:
-  mcp-servers + mcp-tools. LangGraph mention: langgraph-agents.
-  Make.com scenario/blueprint: make-scenarios.
+  Activating in-process/LangGraph/CrewAI/Make: orchestration-runtime. MCP /mcp:
+  mcp-servers + mcp-tools. LangGraph mention: langgraph-agents. CrewAI
+  mention: crewai-agents. Make.com scenario/blueprint: make-scenarios.
 ---
 
 # Orquestração de agentes
 
-O fluxo é **declarativo e neutro** (`ConversationalSpec` / `GraphSpec` / `WorkflowSpec`). O motor conversacional **recebe** o spec; o job concreto vive em `specs/<job>/`. Make.com, LangGraph ou outro runtime **compilam** o spec no adapter. O domínio não importa SDK de Make nem `StateGraph`.
+O fluxo é **declarativo e neutro** (`ConversationalSpec` / `GraphSpec` / `WorkflowSpec`). O motor conversacional **recebe** o spec; o job concreto vive em `specs/<job>/`. LangGraph, CrewAI ou Make **compilam** o spec no adapter. O domínio não importa SDK de Make, `StateGraph` nem `Crew`.
 
 Como o runtime de processo é escolhido e ligado no startup: skill `orchestration-runtime`. A pasta do spec é a mesma, qualquer que seja o adapter.
 
@@ -98,7 +98,7 @@ Não abra PR / não declare pronto com item da conferência vazio.
 
 Nascer `graph.py` + `node.py` + `edge.py` **sem** os contratos das outras camadas é teatro: o motor anda, o produto não escala. O grafo é topologia. Cada nó que **analisa** (LLM ou heurística) devolve um **tipo fechado**. `dict` cru e `json.loads` no use case são o anti-padrão.
 
-Indústria (LangGraph / PydanticAI / `with_structured_output`): estado do grafo **tipado** (`TypedDict` / dataclass / Pydantic); saída do LLM **amarrada a um schema** no adapter; plano sem efeito, depois executor determinístico; `extra="forbid"` no schema do modelo. `NodeType` **não** é API do LangGraph — é o mapa deste harness para esses papéis.
+Indústria (LangGraph / CrewAI / PydanticAI / `with_structured_output`): estado do grafo **tipado** (`TypedDict` / dataclass / Pydantic); saída do LLM **amarrada a um schema** no adapter; plano sem efeito, depois executor determinístico; `extra="forbid"` no schema do modelo. `NodeType` **não** é API do LangGraph — é o mapa deste harness para esses papéis.
 
 ### NodeType (mapa deste harness)
 
@@ -188,11 +188,11 @@ Arquivo só existe com corpo. `node.py` / `edge.py` / `graph.py` **vazios**, `sp
 
 `tools/` do grafo **não** entram em `tools/list` do MCP. Publicar capacidade ou jornada: skill `mcp-tools`. Rota REST do agente executável: skill `http-apis` — o spec **não** conhece FastAPI.
 
-Quem **liga o processo** (in-process / Make / LangGraph) é `orchestration-runtime`. O motor conversacional interpreta o grafo no turno.
+Quem **liga o processo** (in-process, LangGraph, CrewAI ou Make) é `orchestration-runtime`. O motor conversacional interpreta o grafo no turno. LangGraph e CrewAI são os frameworks multi-agente. Make é automação de processos.
 
 ### Node e edge (vocabulário da indústria)
 
-Grafo (LangGraph, StateGraph, cenário Make): **node** = unidade de trabalho; **edge** = transição. No in-process isso **é** dado, não função LangGraph:
+Grafo (LangGraph, CrewAI, cenário Make): **node** = unidade de trabalho; **edge** = transição. No in-process isso **é** dado, não função de framework:
 
 | Grafo | Arquivo do job | Tipo de domínio |
 |-------|----------------|-----------------|
@@ -205,9 +205,13 @@ Grafo (LangGraph, StateGraph, cenário Make): **node** = unidade de trabalho; **
 
 `token=None` = aresta linear (depois de coletar o campo). `token="continuar"` / `"sim"` = aresta condicional. Nó sem `field` e sem aresta de saída = terminal.
 
-Quando LangGraph é o runtime escolhido: `infrastructure/adapters/langgraph/` lê o **mesmo** `ConversationalSpec` (`nodes` + `edges`) e compila `StateGraph`. Um turno de usuário = um `ainvoke` (aresta para END). Banco do serviço continua SSOT — checkpointer do LangGraph não substitui `ConversationStore`. Não copie o grafo para um segundo `graph.py` com SDK. `from langgraph.graph import StateGraph` no spec, no engine ou no use case é defeito. Ponte: `langgraph-agents`. Montar cenário **na conta Make** (blueprint, módulo, IML) não é spec — ponte `make-scenarios`.
+Quando LangGraph é o runtime escolhido: `infrastructure/adapters/langgraph/` lê o **mesmo** `ConversationalSpec` (`nodes` + `edges`) e compila `StateGraph`. Um turno de usuário = um `ainvoke` (aresta para END). Banco do serviço continua SSOT — checkpointer do LangGraph não substitui `ConversationStore`. Não copie o grafo para um segundo `graph.py` com SDK. `from langgraph.graph import StateGraph` no spec, no engine ou no use case é defeito. Ponte: `langgraph-agents`.
 
-Não crie `nodes/` extra “para quando o LangGraph chegar”. Função de node LLM só nasce com o adapter e o `LlmPort` ligados.
+Quando CrewAI é o runtime escolhido: `infrastructure/adapters/crewai/` lê o **mesmo** spec e compila `Crew` / `Agent` / `Task`. Memória do Crew não substitui `ConversationStore`. `from crewai import Crew` no spec, no engine ou no use case é defeito. Ponte: `crewai-agents`.
+
+Montar cenário **na conta Make** (blueprint, módulo, IML) não é spec — ponte `make-scenarios`. Make é automação de processos.
+
+Não crie `nodes/` extra “para quando o LangGraph ou o CrewAI chegar”. Função de node LLM só nasce com o adapter e o `LlmPort` ligados.
 
 ### Acrescentar um spec
 
@@ -221,7 +225,7 @@ O registry **já** é N. Acrescentar não muda o tipo.
 
 ### Um runtime, um canal — não throwaway
 
-LangGraph **agora** para “depois trocar por Make” = dois adapters descartáveis. Escolha **um** (`orchestration-runtime`) e compile o spec nele. In-process já orquestra o grafo de coleta. LangGraph entra quando a ADR o escolhe como **o** runtime — não como ensaio.
+LangGraph **agora** para “depois trocar por CrewAI” (ou por Make) = dois adapters descartáveis. Escolha **um** (`orchestration-runtime`) e compile o spec nele. In-process já orquestra o grafo de coleta. LangGraph ou CrewAI entra quando a ADR o escolhe como **o** runtime — não como ensaio.
 
 Canal de entrada **não** mora no serviço de agentes. WhatsApp: skill `whatsapp-channel`. Twilio, Evolution e qualquer outro webhook vivem em `messaging-gateway/infrastructure/adapters/<provider>/`, mesma porta, vocabulário neutro.
 
@@ -433,7 +437,7 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 
 ## Quando não usar
 
-- Ativar in-process/Make/LangGraph: `orchestration-runtime`.
+- Ativar in-process, LangGraph, CrewAI ou Make: `orchestration-runtime`.
 - Tool publicada no MCP: `mcp-tools`.
 - Envelope WhatsApp: `whatsapp-channel`.
 
@@ -484,7 +488,7 @@ Validators reutilizáveis (regex/exato) vivem num módulo de application; SDK de
 - `schemas.py` do job misturado com `presentation/schemas/` HTTP
 - Pasta `nodes/` / `specialists/` sem função que corre
 - Stub de fala / porta / `presentation/` sem caminho de execução
-- LangGraph (ou segundo runtime) como ensaio do Make
+- LangGraph ou CrewAI como ensaio um do outro, ou como ensaio do Make
 - Canal não oficial (Evolution, Baileys) como ensaio do provider do requisito
 - `prompts/` na raiz do serviço de agentes (o job mora em `specs/<job>/prompts/`)
 - Engine importando um spec concreto ou `canonical_texts`
@@ -535,7 +539,7 @@ Antes de declarar pronto, copie e marque. Caixa vazia = o agente **não nasceu**
 - [ ] Falha/ausência de LLM persiste turno pendente; nenhum fallback de formulário avança estado
 - [ ] `active("guardrails")` e `active("reflection")` sensibilizados; vazio = no-op; reflection nunca substitui a saída
 - [ ] `config.py` com protocol + provider + model_name por node; catálogo de providers na infra; adapter sem `getenv`
-- [ ] Um adapter da porta (`in-process` ou `langgraph`); SDK LangGraph só em `adapters/langgraph/`
+- [ ] Um adapter da porta (`in-process`, `langgraph` ou `crewai`); SDK só em `adapters/<runtime>/`
 - [ ] Testes de nascimento verdes (slots, `active`, bloqueio, abertura, recap, `get` desconhecido, cancel, replay/`prefix`, MCP 401/perfil se houver `/mcp`, composição, config LLM)
 - [ ] Guardas críticas têm matriz adversarial + teste de mutação; capacidades anunciadas possuem adapter e caminho e2e ativos
 - [ ] Título de conversa (se houver lista): use case após a 1ª resposta, ≤6 palavras
