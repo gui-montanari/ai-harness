@@ -3,12 +3,13 @@ name: orchestration-runtime
 description: >
   Use when activating or swapping an agent orchestration runtime, wiring
   OrchestrationRuntimePort, checking RuntimeCapabilities at startup, choosing
-  in-process vs Make vs LangGraph, or when the user mentions execute_turn,
-  cancel, CancelConversation, build_orchestration, turn_idempotency,
-  conversation_turns, checkpointer, runtime activation, or /orchestration-runtime.
-  Spec of the agent: agent-orchestration. Worker process: background-workers.
-  LLM text generation is a different port. Make.com scenario/blueprint in the
-  Make account: make-scenarios.
+  in-process vs LangGraph vs CrewAI vs Make, or when the user mentions
+  execute_turn, cancel, CancelConversation, build_orchestration,
+  turn_idempotency, conversation_turns, checkpointer, runtime activation,
+  or /orchestration-runtime. Spec of the agent: agent-orchestration. Worker
+  process: background-workers. LLM text generation is a different port.
+  LangGraph adapter: langgraph-agents. CrewAI adapter: crewai-agents.
+  Make.com scenario/blueprint in the Make account: make-scenarios.
 ---
 
 # Ativação do runtime de orquestração
@@ -33,13 +34,14 @@ Se o runtime **ainda não** está no ADR/`AGENTS.md`:
 
 > Qual runtime de orquestração neste produto?
 > 1. In-process determinístico (use case no próprio serviço — candidato do primeiro lançamento)
-> 2. Make.com (candidato conhecido da empresa, se a capability matrix fechar)
-> 3. LangGraph (adapter; spec continua neutro)
-> 4. Outro (nomeie)
+> 2. LangGraph (framework multi-agente; adapter; spec continua neutro)
+> 3. CrewAI (framework multi-agente; adapter; spec continua neutro)
+> 4. Make.com (automação de processos; se a capability matrix fechar)
+> 5. Outro (nomeie)
 
 Implemente **um**. Segundo runtime só com capability **obrigatória** ausente no primeiro + ADR. Airflow, Celery beat ou “composite” extra não nascem para ter simetria de pasta.
 
-LangGraph **agora** para “depois trocar por Make” é o mesmo defeito: dois adapters, um deles lixo. Se a ADR escolher LangGraph, ele **é** o runtime. Se escolher Make, compile o spec no adapter Make. In-process **é** runtime: o `ConversationalEngine` percorre `NodeSpec` / `EdgeSpec` do spec (`agent-orchestration`). Não puxe LangGraph para “completar a arquitetura”. `node.py`/`edge.py`/`graph.py` **com corpo** são o spec; vazios são mortos.
+LangGraph **agora** para “depois trocar por CrewAI” (ou por Make) é o mesmo defeito: dois adapters, um deles lixo. Se a ADR escolher LangGraph, ele **é** o runtime. Se escolher CrewAI, compile o spec no adapter CrewAI. Se escolher Make, compile o spec no adapter Make. In-process **é** runtime: o `ConversationalEngine` percorre `NodeSpec` / `EdgeSpec` do spec (`agent-orchestration`). Não puxe LangGraph nem CrewAI para “completar a arquitetura”. `node.py`/`edge.py`/`graph.py` **com corpo** são o spec; vazios são mortos.
 
 In-process já cumpre o primeiro lançamento com guardas, HITL e persistência no banco do serviço.
 
@@ -84,11 +86,13 @@ LLM é `LlmPort` (gerar texto / structured). O runtime **chama** a porta nos **t
 
 **In-process:** o use case de turno chama o `ConversationalEngine` com o spec obtido no registry (`agent-orchestration`). Sem pasta `adapters/langgraph`. Sem `StateGraph`. Persistência, HITL e `cancel` já no domínio. Ativação = `build_orchestration` no composition root + capabilities que ele de fato oferece (`turn_idempotency` sim).
 
-**Make.com:** só depois da capability matrix. Cenário no adapter; regra canônica no serviço. Callback autenticado, idempotente, correlacionado. Make não escolhe tenant nem guarda saída. Montar/deployar blueprint **na conta Make** (módulo, IML, webhook) não é esta skill — ponte `make-scenarios`.
+**LangGraph:** framework multi-agente. `infrastructure/adapters/langgraph/`. Compila `ConversationalSpec.nodes/edges` → `StateGraph`. Um turno = um `ainvoke`; persistência no `ConversationStore`, não no checkpointer. `interrupt` vira HITL no domínio. Ponte: `langgraph-agents`.
 
-**LangGraph:** `infrastructure/adapters/langgraph/`. Compila `ConversationalSpec.nodes/edges` → `StateGraph`. Um turno = um `ainvoke`; persistência no `ConversationStore`, não no checkpointer. `interrupt` vira HITL no domínio. Ponte: `langgraph-agents`.
+**CrewAI:** framework multi-agente. `infrastructure/adapters/crewai/`. Compila o mesmo spec em `Crew` / `Agent` / `Task`. Persistência no `ConversationStore`, não na memória do Crew. Ponte: `crewai-agents`.
 
-Proibido: `from langgraph.graph import StateGraph` em `core/`, `application/`, `specs/<job>/graph.py`. O `graph.py` do job monta o **spec**.
+**Make.com:** automação de processos, não framework multi-agente. Só depois da capability matrix. Cenário no adapter; regra canônica no serviço. Callback autenticado, idempotente, correlacionado. Make não escolhe tenant nem guarda saída. Montar/deployar blueprint **na conta Make** (módulo, IML, webhook) não é esta skill — ponte `make-scenarios`.
+
+Proibido: `from langgraph.graph import StateGraph` ou `from crewai import Crew` em `core/`, `application/`, `specs/<job>/graph.py`. O `graph.py` do job monta o **spec**.
 
 ## Relação com o processo
 
@@ -99,18 +103,21 @@ O runtime de orquestração **não** é o supervisor de filas. Consumidor, drain
 - Spec / NodeType / ANALYSIS: `agent-orchestration`.
 - Supervisor de processo: `background-workers`.
 - StateGraph no adapter: ponte `langgraph-agents`.
+- Crew / Agent / Task no adapter: ponte `crewai-agents`.
 
 ## Desculpas que não valem
 
 | Desculpa | Realidade |
 |----------|-----------|
-| LangGraph agora, Make depois | Um runtime. ADR. |
+| LangGraph agora, CrewAI ou Make depois | Um runtime. ADR. |
+| Make é a plataforma multi-agente | Make é automação de processos. Multi-agente: LangGraph ou CrewAI, um só. |
 | execute_turn no worker “é a mesma coisa” | Porta de turno ≠ supervisor. |
 
 ## Red flags
 
 - SDK de orquestração no use case ou no domínio
-- Segundo motor “para ter LangGraph e Make” / LangGraph como ensaio do Make
+- Segundo motor “para ter LangGraph e CrewAI” / um framework como ensaio do outro
+- Make tratado como plataforma multi-agente
 - `node.py` / `edge.py` / `graph.py` vazios no in-process (o spec já é o grafo; HOW: `agent-orchestration`)
 - Capabilities declaradas e não verificadas no startup
 - Checkpointer do provider como única cópia do estado

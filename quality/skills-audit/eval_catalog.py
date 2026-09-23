@@ -16,6 +16,7 @@ PONTE_FOLDERS = frozenset(
     {
         "oauth-connectors",
         "langgraph-agents",
+        "crewai-agents",
         "make-scenarios",
         "channel-evolution",
     }

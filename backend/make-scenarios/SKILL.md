@@ -21,7 +21,7 @@ Dois trabalhos — classifique **antes** de editar:
 
 Skills oficiais (MIT, [integromat/make-skills](https://github.com/integromat/make-skills), [skills.make.com](https://skills.make.com/)): `make-scenario-building`, `make-module-configuring`, `make-mcp-reference`, `make-api-shell-connection-workflow`. O `install.sh` clona o cache em `~/.local/share/make-skills` e liga o que `skills.publish.json` listar em `~/.cursor/skills` e `~/.agents/skills`. Não vendoriza neste git.
 
-Make.com ou LangGraph é **um** adapter da mesma porta — skill `orchestration-runtime` pergunta qual, e implementa **um**. Não desenhe o domínio em cenário Make. Não instale LangGraph “para depois trocar por Make”.
+Make.com é automação de processos. LangGraph e CrewAI são os frameworks multi-agente. Cada um é **um** adapter da mesma porta — skill `orchestration-runtime` pergunta qual, e implementa **um**. Não desenhe o domínio em cenário Make. Não instale LangGraph ou CrewAI “para depois trocar por Make”, nem trate o Make como plataforma multi-agente.
 
 Ação ao vivo: as skills oficiais e o MCP alteram cenário e conexão na conta. Conta de teste antes de produção.
 
@@ -32,4 +32,4 @@ Antes de declarar pronto, copie e marque. Caixa vazia = falta.
 - [ ] Classifiquei o recorte: adapter de produto vs cenário na conta Make
 - [ ] Adapter: li e marquei a conferência de `orchestration-runtime` (e `agent-orchestration` se o spec mudou)
 - [ ] Conta Make: li as skills oficiais presentes em `~/.cursor/skills`; não reescrevi o HOW delas neste git
-- [ ] Sem pasta `backend/make-*` com a doc do Make; sem segundo runtime “para ter Make e LangGraph”
+- [ ] Sem pasta `backend/make-*` com a doc do Make; sem segundo runtime “para ter Make, LangGraph e CrewAI”
